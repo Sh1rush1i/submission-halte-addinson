@@ -13,7 +13,7 @@ import { SidebarModule } from 'primeng/sidebar';
   styleUrl: './app.css',
 })
 export class App {
-  protected readonly title = signal('submission-halte-addinson');
+  protected readonly title = signal('Halte 🥀');
 
   viewState = signal('Desktop');
 
