@@ -1,5 +1,5 @@
-import { Component, signal } from '@angular/core';
-import { RouterModule } from '@angular/router'; // 1. Import RouterModule
+import { Component, Output, signal, EventEmitter, effect } from '@angular/core';
+import { RouterModule } from '@angular/router';
 import { AvatarModule } from 'primeng/avatar';
 import { SidebarModule } from 'primeng/sidebar';
 import { ButtonModule } from 'primeng/button';
@@ -23,6 +23,8 @@ interface NavGroup {
   styleUrl: './sidebars.css',
 })
 export class Sidebars {
+  @Output() sidebarState = new EventEmitter<boolean>();
+
   isMobile = signal(false);
   sidebarOpen = signal(true);
 
@@ -41,6 +43,10 @@ export class Sidebars {
   ]);
 
   constructor() {
+    effect(() => {
+      this.sidebarState.emit(this.isMobile());
+    });
+
     if (typeof window === 'undefined') return;
     const mql = window.matchMedia('(max-width: 1023px)');
 

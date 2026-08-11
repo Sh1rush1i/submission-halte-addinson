@@ -15,6 +15,16 @@ import { SidebarModule } from 'primeng/sidebar';
 export class App {
   protected readonly title = signal('submission-halte-addinson');
 
+  viewState = signal('Desktop');
+
+  handleSidebarState(isMobile: boolean) {
+    if (isMobile) {
+      this.viewState.set('Mobile');
+    } else {
+      this.viewState.set('Desktop');
+    }
+  }
+
   // constructor(
   //   private config: PrimeNG,
   //   private translateService: TranslateService,
