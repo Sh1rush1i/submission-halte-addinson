@@ -1,0 +1,141 @@
+<div class="border border-surface-200 dark:border-surface-700 rounded-lg overflow-hidden">
+  <p-sidebar-layout class="min-h-192! relative!">
+    @if (isMobile()) {
+      <p-sidebar-backdrop class="absolute!" />
+    }
+    <p-sidebar
+      id="mobile-nav"
+      [collapsible]="isMobile() ? 'offcanvas' : 'icon'"
+      [overlay]="isMobile()"
+      [open]="!isMobile()"
+      width="14rem"
+    >
+      <p-sidebar-spacer />
+      <p-sidebar-aside>
+        <p-sidebar-panel>
+          <p-sidebar-header class="px-3 py-4">
+            <p-sidebar-menu>
+              <p-sidebar-menu-item>
+                <button pSidebarMenuButton class="p-1!">
+                  <div
+                    class="flex size-6 shrink-0 items-center justify-center rounded-md bg-linear-to-br from-violet-500 to-indigo-600 text-white text-xs font-bold leading-none"
+                  >
+                    A
+                  </div>
+                  <span class="font-semibold text-sm">Acme Inc</span>
+                </button>
+              </p-sidebar-menu-item>
+            </p-sidebar-menu>
+          </p-sidebar-header>
+          <p-sidebar-content class="px-3">
+            <p-sidebar-group>
+              <p-sidebar-group-label
+                class="px-3 py-2 text-xs font-semibold text-muted-color uppercase tracking-wider"
+              >
+                Menu
+              </p-sidebar-group-label>
+
+              <p-sidebar-group-content>
+                <p-sidebar-menu class="flex flex-col gap-1">
+                  <p-sidebar-menu-item>
+                    <button
+                      pSidebarMenuButton
+                      [isActive]="true"
+                      class="flex items-center gap-3 px-3 py-2 w-full rounded-md bg-surface-100 dark:bg-surface-800 font-medium transition-colors"
+                    >
+                      <i class="pi pi-home shrink-0 text-lg"></i>
+                      <span>Home</span>
+                    </button>
+                  </p-sidebar-menu-item>
+
+                  <p-sidebar-menu-item>
+                    <button
+                      pSidebarMenuButton
+                      class="flex items-center gap-3 px-3 py-2 w-full rounded-md hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
+                    >
+                      <i class="pi pi-inbox shrink-0 text-lg"></i>
+                      <span>Inbox</span>
+                      <p-sidebar-menu-badge class="ml-auto">3</p-sidebar-menu-badge>
+                    </button>
+                  </p-sidebar-menu-item>
+
+                  <p-sidebar-menu-item>
+                    <button
+                      pSidebarMenuButton
+                      class="flex items-center gap-3 px-3 py-2 w-full rounded-md hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
+                    >
+                      <i class="pi pi-search shrink-0 text-lg"></i>
+                      <span>Search</span>
+                    </button>
+                  </p-sidebar-menu-item>
+
+                  <p-sidebar-menu-item>
+                    <button
+                      pSidebarMenuButton
+                      class="flex items-center gap-3 px-3 py-2 w-full rounded-md hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
+                    >
+                      <i class="pi pi-users shrink-0 text-lg"></i>
+                      <span>Team</span>
+                    </button>
+                  </p-sidebar-menu-item>
+
+                  <p-sidebar-menu-item>
+                    <button
+                      pSidebarMenuButton
+                      class="flex items-center gap-3 px-3 py-2 w-full rounded-md hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
+                    >
+                      <i class="pi pi-bell shrink-0 text-lg"></i>
+                      <span>Notifications</span>
+                    </button>
+                  </p-sidebar-menu-item>
+
+                  <p-sidebar-menu-item>
+                    <button
+                      pSidebarMenuButton
+                      class="flex items-center gap-3 px-3 py-2 w-full rounded-md hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
+                    >
+                      <i class="pi pi-cog shrink-0 text-lg"></i>
+                      <span>Settings</span>
+                    </button>
+                  </p-sidebar-menu-item>
+                </p-sidebar-menu>
+              </p-sidebar-group-content>
+            </p-sidebar-group>
+          </p-sidebar-content>
+
+          <p-sidebar-footer class="px-4 py-3 border-t border-surface-200 dark:border-surface-700">
+            <p-sidebar-menu>
+              <p-sidebar-menu-item>
+                <button
+                  pSidebarMenuButton
+                  class="flex items-center gap-3 p-2 w-full rounded-md hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
+                >
+                  <p-avatar label="JD" shape="circle" class="size-8 shrink-0 text-xs font-bold" />
+                  <span class="font-medium text-sm">John Doe</span>
+                </button>
+              </p-sidebar-menu-item>
+            </p-sidebar-menu>
+          </p-sidebar-footer>
+        </p-sidebar-panel>
+      </p-sidebar-aside>
+    </p-sidebar>
+    <p-sidebar-main>
+      <header
+        class="flex h-12 items-center gap-2 border-b border-surface-200 dark:border-surface-700 px-4"
+      >
+        <button pButton pSidebarTrigger target="mobile-nav" severity="secondary" text size="small">
+          <svg data-p-icon="sidebar"></svg>
+        </button>
+        <span class="text-sm font-medium">Dashboard</span>
+        <span
+          class="ml-auto text-xs text-muted-color rounded-md bg-surface-100 dark:bg-surface-800 px-2 py-1"
+          >{{ isMobile() ? 'Mobile' : 'Desktop' }}</span
+        >
+      </header>
+      <div class="flex-1 p-4 flex flex-col gap-4">
+        <div class="rounded-lg bg-surface-100 dark:bg-surface-800 h-48"></div>
+        <div class="rounded-lg bg-surface-100 dark:bg-surface-800 flex-1"></div>
+      </div>
+    </p-sidebar-main>
+  </p-sidebar-layout>
+</div>
