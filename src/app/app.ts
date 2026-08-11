@@ -1,12 +1,14 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { Sidebars } from './component/misc/sidebars/sidebars';
+import { ButtonModule } from 'primeng/button';
+import { SidebarModule } from 'primeng/sidebar';
 // import { PrimeNG } from 'primeng/config';
 // import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, Sidebars],
+  imports: [RouterOutlet, Sidebars, SidebarModule, ButtonModule],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })

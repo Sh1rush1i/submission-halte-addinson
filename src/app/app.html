@@ -1,1 +1,20 @@
-<app-sidebar></app-sidebar><router-outlet></router-outlet>
+<div class="border border-surface-200 dark:border-surface-700 rounded-lg overflow-hidden">
+  <p-sidebar-layout class="min-h-192! relative!">
+    <app-sidebar />
+
+    <p-sidebar-main>
+      <header
+        class="flex h-12 items-center gap-2 border-b border-surface-200 dark:border-surface-700 px-4"
+      >
+        <button pButton pSidebarTrigger target="mobile-nav" severity="secondary" text size="small">
+          <i class="pi pi-bars"></i>
+        </button>
+        <span class="text-sm font-medium">Dashboard</span>
+      </header>
+
+      <div class="flex-1 p-4 flex flex-col gap-4">
+        <router-outlet />
+      </div>
+    </p-sidebar-main>
+  </p-sidebar-layout>
+</div>
