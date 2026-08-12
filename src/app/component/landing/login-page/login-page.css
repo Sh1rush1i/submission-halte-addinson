@@ -1,0 +1,19 @@
+.auth-visual-mobile__rings {
+  animation: auth-visual-drift 40s linear infinite;
+  transform-origin: 50% 50%;
+}
+
+@keyframes auth-visual-drift {
+  from {
+    transform: rotate(0deg) scale(1);
+  }
+  to {
+    transform: rotate(360deg) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-visual-mobile__rings {
+    animation: none;
+  }
+}

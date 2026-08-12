@@ -17,10 +17,14 @@ import { InputTextModule } from 'primeng/inputtext';
 import { InputPasswordModule } from 'primeng/inputpassword';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
+import { AuthService } from '../../../service/auth-service';
+import { Router } from '@angular/router';
+import { AuthVisual } from '../../misc/auth-visual/auth-visual';
 
 @Component({
   selector: 'app-login-page',
   imports: [
+    AuthVisual,
     CommonModule,
     ReactiveFormsModule,
     ButtonModule,
@@ -45,7 +49,11 @@ export class LoginPage {
   submitted = false;
   mask: boolean = true;
 
-  constructor(private messageService: MessageService) {}
+  constructor(
+    private messageService: MessageService,
+    private authService: AuthService,
+    private router: Router,
+  ) {}
 
   login = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
@@ -56,11 +64,41 @@ export class LoginPage {
   register = this.fb.group(
     {
       email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(8)]],
-      confirmPassword: ['', [Validators.required, Validators.minLength(8)]],
+      password: ['', [Validators.required, this.passwordRequirementsValidator]],
+      confirmPassword: ['', [Validators.required]],
     },
     { validators: this.matchPasswords },
   );
+
+  value: string = '';
+
+  requirements = [
+    { id: 'minLength', label: 'At least 12 characters', test: (v: string) => v.length >= 12 },
+    { id: 'uppercase', label: 'Contains uppercase letter', test: (v: string) => /[A-Z]/.test(v) },
+    { id: 'lowercase', label: 'Contains lowercase letter', test: (v: string) => /[a-z]/.test(v) },
+    { id: 'number', label: 'Contains number', test: (v: string) => /[0-9]/.test(v) },
+    {
+      id: 'symbol',
+      label: 'Contains special character',
+      test: (v: string) => /[^a-zA-Z0-9]/.test(v),
+    },
+  ];
+
+  passwordRequirementsValidator(control: AbstractControl): ValidationErrors | null {
+    const value = control.value ?? '';
+
+    const rules = [
+      { id: 'minLength', test: (v: string) => v.length >= 12 },
+      { id: 'uppercase', test: (v: string) => /[A-Z]/.test(v) },
+      { id: 'lowercase', test: (v: string) => /[a-z]/.test(v) },
+      { id: 'number', test: (v: string) => /[0-9]/.test(v) },
+      { id: 'symbol', test: (v: string) => /[^a-zA-Z0-9]/.test(v) },
+    ];
+
+    const failed = rules.filter((r) => !r.test(value)).map((r) => r.id);
+
+    return failed.length ? { passwordRequirements: failed } : null;
+  }
 
   private matchPasswords(group: AbstractControl): ValidationErrors | null {
     const pass = group.get('password')?.value;
@@ -106,12 +144,25 @@ export class LoginPage {
 
     this.loading = true;
 
-    this.invokeToast('Sign in successful!', 'success');
+    this.authService
+      .login(this.login.value.email ?? '', this.login.value.password ?? '')
+      .subscribe({
+        next: (response: any) => {
+          this.loading = false;
+          this.invokeToast('Login successful!', 'success');
 
-    setTimeout(() => {
-      this.loading = false;
-      console.log('Sign in payload', this.login.value);
-    }, 900);
+          localStorage.setItem('access_token', response.access_token);
+          localStorage.setItem('id_token', response.id_token);
+
+          this.authService.triggerLoginSuccess();
+          this.router.navigate(['/dashboard']);
+        },
+        error: (err) => {
+          this.loading = false;
+          const errorMsg = err.error?.error_description || 'Login failed';
+          this.invokeToast(errorMsg, 'error');
+        },
+      });
   }
 
   onRegister(): void {
@@ -120,18 +171,26 @@ export class LoginPage {
     if (this.register.invalid) {
       this.register.markAllAsTouched();
       this.invokeToast('Please fill in all required fields correctly.', 'error');
-
       return;
     }
 
     this.loading = true;
+    const { email, password } = this.register.value;
 
-    this.invokeToast('Registration successful!', 'success');
+    this.authService.register(email ?? '', password ?? '').subscribe({
+      next: (response: any) => {
+        this.loading = false;
 
-    setTimeout(() => {
-      this.loading = false;
-      console.log('Sign up payload', this.register.value);
-    }, 900);
+        this.invokeToast('Registration successful! Please log in.', 'success');
+
+        this.toggleLogin();
+      },
+      error: (err) => {
+        this.loading = false;
+        const errorMsg = err.error?.description || err.error?.message || 'Registration failed';
+        this.invokeToast(errorMsg, 'error');
+      },
+    });
   }
 
   invokeToast(message: string, severity: 'success' | 'info' | 'warn' | 'error') {

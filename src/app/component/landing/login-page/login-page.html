@@ -1,81 +1,40 @@
 <div class="min-h-screen grid grid-cols-1 lg:grid-cols-12 bg-[#FAFAF7]">
   <div
-    class="hidden lg:flex lg:col-span-5 relative overflow-hidden bg-[#161A33] flex-col justify-between px-14 py-16"
+    class="hidden lg:flex lg:col-span-5 relative overflow-hidden bg-[#161A33] flex-col justify-between"
   >
-    <svg
-      class="absolute inset-0 h-full w-full opacity-[0.55]"
-      viewBox="0 0 500 800"
-      preserveAspectRatio="xMidYMid slice"
-      fill="none"
-    >
-      <g stroke="#8C97D9" stroke-width="1">
-        <ellipse cx="250" cy="400" rx="60" ry="380" opacity="0.35" />
-        <ellipse cx="250" cy="400" rx="160" ry="380" opacity="0.3" />
-        <ellipse cx="250" cy="400" rx="260" ry="380" opacity="0.25" />
-        <ellipse cx="250" cy="400" rx="360" ry="380" opacity="0.18" />
-      </g>
-      <g stroke="#8C97D9" stroke-width="1.25" opacity="0.5">
-        <path d="M -20 400 H 520" />
-        <path d="M -10 220 Q 250 260 510 220" opacity="0.6" />
-        <path d="M -10 580 Q 250 540 510 580" opacity="0.6" />
-      </g>
-      <circle cx="250" cy="400" r="3.5" fill="#8C97D9" />
-      <circle cx="120" cy="256" r="2.5" fill="#8C97D9" opacity="0.8" />
-      <circle cx="360" cy="548" r="2.5" fill="#8C97D9" opacity="0.8" />
-    </svg>
-
-    <div
-      class="absolute inset-0 bg-linear-to-t from-[#311921] via-transparent to-[#491d2c]/40"
-    ></div>
-
-    <!-- Wordmark -->
-    <div class="relative z-10 flex items-center gap-3">
-      <span
-        class="flex h-9 w-9 items-center justify-center rounded-full border border-purple-500/60 text-purple-500 font-display text-sm"
-        >A</span
-      >
-      <span class="font-display text-xl tracking-wide text-[#F5F3EC]">Addinson 🥀</span>
-    </div>
-
-    <div class="relative z-10 max-w-sm">
-      <p class="font-display text-[2.5rem] leading-[1.15] text-[#F5F3EC]">SKRIPSI</p>
-      <p class="mt-5 text-sm leading-relaxed text-[#AEB4D6]">
-        Submission management tool for Addinson 🥀. Designed to streamline the submission process
-        and enhance collaboration.
-      </p>
-    </div>
-
-    <!-- Footer quote -->
-    <div class="relative z-10 border-t border-white/10 pt-6">
-      <p class="text-sm italic text-[#C9CDE8]">"Dua tiga tutup botol 🥀, kamu botol."</p>
-      <p class="mt-2 text-xs uppercase tracking-[0.2em] text-[#8C97D9]">Mawl — Developer, Fih 🥀</p>
-    </div>
+    <app-auth-visual class="auth-visual-host" />
   </div>
 
-  <!-- ============ MOBILE BANNER (replaces left pane below lg) ============ -->
   <div
-    class="lg:hidden relative overflow-hidden bg-[#161A33] px-6 pt-10 pb-8 flex flex-col items-center text-center"
+    class="lg:hidden relative overflow-hidden bg-black flex flex-col items-center justify-center gap-3 px-6 py-10 text-center"
   >
     <svg
-      class="absolute inset-0 h-full w-full opacity-40"
+      class="absolute inset-0 h-full w-full opacity-40 auth-visual-mobile__rings"
       viewBox="0 0 400 200"
       preserveAspectRatio="xMidYMid slice"
       fill="none"
+      aria-hidden="true"
     >
       <g stroke="#8C97D9" stroke-width="1">
         <ellipse cx="200" cy="260" rx="120" ry="220" opacity="0.35" />
         <ellipse cx="200" cy="260" rx="220" ry="220" opacity="0.25" />
+        <ellipse cx="200" cy="260" rx="320" ry="220" opacity="0.15" />
       </g>
+
+      <circle cx="140" cy="90" r="2.5" class="fill-white" opacity="0.9" />
+      <circle cx="270" cy="150" r="2" class="fill-white" opacity="0.8" />
     </svg>
+
     <div class="relative z-10 flex items-center gap-2">
       <span
-        class="flex h-8 w-8 items-center justify-center rounded-full border border-[#E8B04B]/60 text-[#E8B04B] font-display text-xs"
-        >M</span
+        class="flex h-8 w-8 items-center justify-center rounded-full border border-gray-200/60 text-white font-display text-xs font-extrabold"
+        >A</span
       >
-      <span class="font-display text-lg tracking-wide text-[#F5F3EC]">Meridian</span>
+      <span class="font-display text-lg tracking-wide text-white">Addinson</span>
     </div>
-    <p class="relative z-10 mt-3 max-w-xs text-xs text-[#AEB4D6]">
-      Find your bearing before the day does.
+    <p class="relative z-10 max-w-xs text-xs text-[#AEB4D6]">
+      Submission management tool for Addinson 🥀. Streamline the submission process and enhance
+      collaboration.
     </p>
   </div>
 
@@ -104,9 +63,10 @@
             <p-floatlabel variant="on">
               <input
                 pInputText
+                pSize="large"
                 id="email"
                 type="email"
-                class="w-full text-black"
+                class="w-full h-12 text-black"
                 formControlName="email"
                 [ngClass]="submitted && email.invalid ? 'ng-invalid ng-dirty' : ''"
                 autocomplete="email"
@@ -125,9 +85,10 @@
               <p-iconfield>
                 <input
                   pInputPassword
+                  pSize="large"
                   id="password"
                   formControlName="password"
-                  class="w-full text-black"
+                  class="w-full h-12 text-black"
                   autocomplete="current-password"
                   [(mask)]="mask"
                   [ngClass]="submitted && password.invalid ? 'ng-invalid ng-dirty' : ''"
@@ -165,7 +126,7 @@
                 pInputText
                 id="email"
                 type="email"
-                class="w-full text-black"
+                class="w-full h-12 text-black"
                 formControlName="email"
                 [ngClass]="submitted && emailRegister.invalid ? 'ng-invalid ng-dirty' : ''"
                 autocomplete="email"
@@ -186,7 +147,7 @@
                   pInputPassword
                   id="password"
                   formControlName="password"
-                  class="w-full text-black"
+                  class="w-full h-12 text-black"
                   [(mask)]="mask"
                   [ngClass]="submitted && passwordRegister.invalid ? 'ng-invalid ng-dirty' : ''"
                 />
@@ -199,11 +160,30 @@
               </p-iconfield>
               <label for="password" class="bg-white px-1 text-gray-600">Enter password</label>
             </p-floatlabel>
-            @if (submitted && passwordRegister.hasError('required')) {
-              <span class="text-xs text-red-500">Password is required.</span>
-            } @else if (submitted && passwordRegister.hasError('minlength')) {
-              <span class="text-xs text-red-500">Password must be at least 8 characters.</span>
-            }
+            <ul class="flex flex-col gap-2 list-none ms-5 my-2 p-0 w-full">
+              @for (req of requirements; track req.id) {
+                <li class="flex items-center text-sm transition-all duration-300">
+                  <i
+                    class="pi pi-check-circle transition-all duration-300 ease-out me-4"
+                    [ngClass]="
+                      req.test(register.controls.password.value ?? '')
+                        ? 'text-green-500 scale-110 opacity-100'
+                        : 'text-surface-400 scale-90 opacity-70'
+                    "
+                  ></i>
+                  <span
+                    [class]="
+                      'transition-all duration-300 ease-out ' +
+                      (req.test(register.controls.password.value ?? '')
+                        ? 'text-green-700 dark:text-green-400 line-through decoration-2 decoration-green-500/70'
+                        : 'text-surface-400 dark:text-surface-300 dark:opacity-70')
+                    "
+                  >
+                    {{ req.label }}
+                  </span>
+                </li>
+              }
+            </ul>
           </div>
 
           <div class="flex flex-col gap-2">
@@ -213,7 +193,7 @@
                   pInputPassword
                   id="confirmPassword"
                   formControlName="confirmPassword"
-                  class="w-full text-black"
+                  class="w-full h-12 text-black"
                   [(mask)]="mask"
                   [ngClass]="submitted && confirmPassword.invalid ? 'ng-invalid ng-dirty' : ''"
                 />

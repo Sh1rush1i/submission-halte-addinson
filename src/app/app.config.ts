@@ -14,14 +14,23 @@ import Aura from '@primeuix/themes/aura';
 import { environment } from '../environments/environment';
 import { FilterMatchMode } from 'primeng/api';
 // import { provideTranslateService } from '@ngx-translate/core';
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { authHttpInterceptorFn, provideAuth0 } from '@auth0/auth0-angular';
+import { authInterceptor } from './authInterceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes, withViewTransitions(), withComponentInputBinding()),
     provideClientHydration(),
-    provideHttpClient(),
+    provideAuth0({
+      domain: environment.domain,
+      clientId: environment.clientId,
+      authorizationParams: {
+        redirect_uri: window.location.origin,
+      },
+    }),
+    provideHttpClient(withInterceptors([authInterceptor, authHttpInterceptorFn])),
     // provideTranslateService({
     //   // loader: provideTranslateHttpLoader({
     //   //   prefix: '/assets/i18n/',
