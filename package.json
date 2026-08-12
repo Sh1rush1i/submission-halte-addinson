@@ -4,7 +4,7 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "ng build",
+    "build": "node set-env.js && ng build --configuration production",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "serve:ssr:submission-halte-addinson": "node dist/submission-halte-addinson/server/server.mjs"
@@ -31,7 +31,8 @@
     "primeng": "^22.0.0",
     "rxjs": "~7.8.0",
     "tailwindcss-primeui": "^0.6.1",
-    "tslib": "^2.3.0"
+    "tslib": "^2.3.0",
+    "yargs": "^18.1.0"
   },
   "devDependencies": {
     "@angular/build": "^22.1.3",
