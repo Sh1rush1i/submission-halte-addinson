@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-const targetFolder = './environments';
+const targetFolder = './src/environments';
 const envProdPath = `${targetFolder}/environment.production.ts`;
 const envDefaultPath = `${targetFolder}/environment.ts`;
 
