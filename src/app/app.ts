@@ -1,8 +1,9 @@
 import { Component, OnInit, signal } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { NavigationEnd, RouterOutlet } from '@angular/router';
 import { Sidebars } from './component/misc/sidebars/sidebars';
 import { ButtonModule } from 'primeng/button';
 import { SidebarModule } from 'primeng/sidebar';
+import { Router } from '@angular/router';
 // import { PrimeNG } from 'primeng/config';
 // import { TranslateService } from '@ngx-translate/core';
 
@@ -15,6 +16,19 @@ import { SidebarModule } from 'primeng/sidebar';
 export class App {
   protected readonly title = signal('Halte 🥀');
 
+  firstSegment() {
+    const url = window.location.pathname;
+    const segments = url.split('/').filter((segment) => segment.length > 0);
+    console.log('firstSegment', segments.length > 0 ? segments[0] : '');
+    return segments.length > 0 ? segments[0] : '';
+  }
+
+  constructor(
+    // private config: PrimeNG,
+    // private translateService: TranslateService,
+    private router: Router,
+  ) {}
+
   viewState = signal('Desktop');
 
   handleSidebarState(isMobile: boolean) {
@@ -25,10 +39,7 @@ export class App {
     }
   }
 
-  // constructor(
-  //   private config: PrimeNG,
-  //   private translateService: TranslateService,
-  // ) {}
+  //
   // ngOnInit() {
   //   this.translateService.setDefaultLang('en');
   // }
