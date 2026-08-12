@@ -12,7 +12,7 @@ if (!fs.existsSync(targetFolder)) {
 const envConfigFile = `
 export const environment = {
   production: true,
-  primeng: '${process.env.PRIMENG}',
+  primeNG: '${process.env.PRIMENG}',
   domain: '${process.env.AUTH0_DOMAIN}',
   clientId: '${process.env.AUTH0_CLIENT_ID}',
   clientSecret: '${process.env.AUTH0_CLIENT_SECRET}',
