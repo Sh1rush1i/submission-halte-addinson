@@ -1,9 +1,7 @@
 <div class="min-h-screen grid grid-cols-1 lg:grid-cols-12 bg-[#FAFAF7]">
-  <!-- ============ LEFT / DECORATIVE PANE (desktop) ============ -->
   <div
     class="hidden lg:flex lg:col-span-5 relative overflow-hidden bg-[#161A33] flex-col justify-between px-14 py-16"
   >
-    <!-- Meridian arc field -->
     <svg
       class="absolute inset-0 h-full w-full opacity-[0.55]"
       viewBox="0 0 500 800"
@@ -16,48 +14,41 @@
         <ellipse cx="250" cy="400" rx="260" ry="380" opacity="0.25" />
         <ellipse cx="250" cy="400" rx="360" ry="380" opacity="0.18" />
       </g>
-      <g stroke="#E8B04B" stroke-width="1.25" opacity="0.5">
+      <g stroke="#8C97D9" stroke-width="1.25" opacity="0.5">
         <path d="M -20 400 H 520" />
         <path d="M -10 220 Q 250 260 510 220" opacity="0.6" />
         <path d="M -10 580 Q 250 540 510 580" opacity="0.6" />
       </g>
-      <circle cx="250" cy="400" r="3.5" fill="#E8B04B" />
-      <circle cx="120" cy="256" r="2.5" fill="#E8B04B" opacity="0.8" />
-      <circle cx="360" cy="548" r="2.5" fill="#E8B04B" opacity="0.8" />
+      <circle cx="250" cy="400" r="3.5" fill="#8C97D9" />
+      <circle cx="120" cy="256" r="2.5" fill="#8C97D9" opacity="0.8" />
+      <circle cx="360" cy="548" r="2.5" fill="#8C97D9" opacity="0.8" />
     </svg>
 
     <div
-      class="absolute inset-0 bg-linear-to-t from-[#161A33] via-transparent to-[#161A33]/40"
+      class="absolute inset-0 bg-linear-to-t from-[#311921] via-transparent to-[#491d2c]/40"
     ></div>
 
     <!-- Wordmark -->
     <div class="relative z-10 flex items-center gap-3">
       <span
-        class="flex h-9 w-9 items-center justify-center rounded-full border border-[#E8B04B]/60 text-[#E8B04B] font-display text-sm"
-        >M</span
+        class="flex h-9 w-9 items-center justify-center rounded-full border border-purple-500/60 text-purple-500 font-display text-sm"
+        >A</span
       >
-      <span class="font-display text-xl tracking-wide text-[#F5F3EC]">Meridian</span>
+      <span class="font-display text-xl tracking-wide text-[#F5F3EC]">Addinson 🥀</span>
     </div>
 
-    <!-- Headline -->
     <div class="relative z-10 max-w-sm">
-      <p class="font-display text-[2.5rem] leading-[1.15] text-[#F5F3EC]">
-        Find your bearing before the day does.
-      </p>
+      <p class="font-display text-[2.5rem] leading-[1.15] text-[#F5F3EC]">SKRIPSI</p>
       <p class="mt-5 text-sm leading-relaxed text-[#AEB4D6]">
-        One line of sight across every project, every teammate, every deadline — plotted the moment
-        you sign in.
+        Submission management tool for Addinson 🥀. Designed to streamline the submission process
+        and enhance collaboration.
       </p>
     </div>
 
     <!-- Footer quote -->
     <div class="relative z-10 border-t border-white/10 pt-6">
-      <p class="text-sm italic text-[#C9CDE8]">
-        "The first tool that made 'where are we on this' a five-second answer."
-      </p>
-      <p class="mt-2 text-xs uppercase tracking-[0.2em] text-[#8C97D9]">
-        Dara Solis — Ops Lead, Fernway
-      </p>
+      <p class="text-sm italic text-[#C9CDE8]">"Dua tiga tutup botol 🥀, kamu botol."</p>
+      <p class="mt-2 text-xs uppercase tracking-[0.2em] text-[#8C97D9]">Mawl — Developer, Fih 🥀</p>
     </div>
   </div>
 
@@ -88,87 +79,185 @@
     </p>
   </div>
 
-  <!-- ============ RIGHT / FORM PANE ============ -->
   <div class="lg:col-span-7 flex items-center justify-center px-6 py-10 sm:py-14">
     <div class="w-full max-w-sm">
-      <h1 class="font-display text-3xl text-[#1B1F3B]">Welcome back</h1>
-      <p class="mt-2 text-sm text-[#6B7094]">Sign in to pick up right where you left off.</p>
+      <h1 class="font-display text-3xl text-[#1B1F3B]">
+        {{ isLogin ? 'Welcome back' : 'Create an account' }}
+      </h1>
+      <p class="mt-2 text-sm text-[#6B7094]">
+        {{
+          isLogin
+            ? 'Sign in to pick up right where you left off.'
+            : 'Get started with your brand new account.'
+        }}
+      </p>
 
-      <form class="mt-9 flex flex-col gap-6" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
-        <!-- Email -->
-        <div class="flex flex-col gap-1.5">
-          <p-iconfield>
-            <p-inputicon class="pi pi-envelope" />
-            <p-floatlabel variant="on" class="w-full">
+      <form
+        class="mt-9 flex flex-col gap-6"
+        [formGroup]="isLogin ? login : register"
+        (ngSubmit)="isLogin ? onSubmit() : onRegister()"
+        novalidate
+      >
+        @if (isLogin) {
+          <!-- Email -->
+          <div class="flex flex-col gap-2">
+            <p-floatlabel variant="on">
               <input
                 pInputText
                 id="email"
                 type="email"
-                class="w-full"
+                class="w-full text-black"
                 formControlName="email"
-                [class.ng-invalid]="submitted && email.invalid"
-                [class.ng-dirty]="submitted && email.invalid"
+                [ngClass]="submitted && email.invalid ? 'ng-invalid ng-dirty' : ''"
                 autocomplete="email"
               />
-              <label for="email">Email address</label>
+              <label for="email" class="bg-white px-1 text-gray-600">Enter email address</label>
             </p-floatlabel>
-          </p-iconfield>
-          @if (submitted && email.hasError('required')) {
-            <span class="text-xs text-red-500">Email is required.</span>
-          } @else if (submitted && email.hasError('email')) {
-            <span class="text-xs text-red-500">Enter a valid email address.</span>
-          }
-        </div>
+            @if (submitted && email.hasError('required')) {
+              <span class="text-xs text-red-500">Email is required.</span>
+            } @else if (submitted && email.hasError('email')) {
+              <span class="text-xs text-red-500">Enter a valid email address.</span>
+            }
+          </div>
 
-        <!-- Password -->
-        <div class="flex flex-col gap-1.5">
-          <p-floatlabel variant="on" class="w-full">
-            <p-password
-              id="password"
-              formControlName="password"
-              styleClass="w-full"
-              inputStyleClass="w-full"
-              [toggleMask]="true"
-              [feedback]="false"
-              [class.ng-invalid]="submitted && password.invalid"
-              [class.ng-dirty]="submitted && password.invalid"
-              autocomplete="current-password"
-            />
-            <label for="password">Password</label>
-          </p-floatlabel>
-          @if (submitted && password.hasError('required')) {
-            <span class="text-xs text-red-500">Password is required.</span>
-          } @else if (submitted && password.hasError('minlength')) {
-            <span class="text-xs text-red-500">Password must be at least 8 characters.</span>
-          }
-        </div>
+          <div class="flex flex-col gap-2">
+            <p-floatlabel variant="on">
+              <p-iconfield>
+                <input
+                  pInputPassword
+                  id="password"
+                  formControlName="password"
+                  class="w-full text-black"
+                  autocomplete="current-password"
+                  [(mask)]="mask"
+                  [ngClass]="submitted && password.invalid ? 'ng-invalid ng-dirty' : ''"
+                />
+                <p-inputicon
+                  (click)="mask = !mask"
+                  class="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-500"
+                >
+                  <i class="pi" [ngClass]="mask ? 'pi-eye-slash' : 'pi-eye'"></i>
+                </p-inputicon>
+              </p-iconfield>
+              <label for="password" class="bg-white px-1 text-gray-600">Enter password</label>
+            </p-floatlabel>
+            @if (submitted && password.hasError('required')) {
+              <span class="text-xs text-red-500">Password is required.</span>
+            } @else if (submitted && password.hasError('minlength')) {
+              <span class="text-xs text-red-500">Password must be at least 8 characters.</span>
+            }
+          </div>
 
-        <!-- Remember + forgot -->
-        <div class="flex items-center justify-between text-sm">
-          <label class="flex items-center gap-2 text-[#4B4F6B]">
-            <p-checkbox formControlName="remember" [binary]="true" inputId="remember" />
-            <span>Remember me</span>
-          </label>
-          <a href="#" class="font-medium text-[#1B1F3B] underline-offset-4 hover:underline">
-            Forgot password?
-          </a>
-        </div>
+          <!-- Remember + forgot -->
+          <div class="flex items-center justify-between text-sm">
+            <label class="flex items-center gap-2 text-[#4B4F6B]">
+              <p-checkbox formControlName="remember" [binary]="true" inputId="remember" />
+              <span>Remember me</span>
+            </label>
+            <a href="#" class="font-medium text-[#1B1F3B] underline-offset-4 hover:underline">
+              Forgot password?
+            </a>
+          </div>
+        } @else if (!isLogin) {
+          <div class="flex flex-col gap-2">
+            <p-floatlabel variant="on">
+              <input
+                pInputText
+                id="email"
+                type="email"
+                class="w-full text-black"
+                formControlName="email"
+                [ngClass]="submitted && emailRegister.invalid ? 'ng-invalid ng-dirty' : ''"
+                autocomplete="email"
+              />
+              <label for="email" class="bg-white px-1 text-gray-600">Enter email address</label>
+            </p-floatlabel>
+            @if (submitted && emailRegister.hasError('required')) {
+              <span class="text-xs text-red-500">Email is required.</span>
+            } @else if (submitted && emailRegister.hasError('email')) {
+              <span class="text-xs text-red-500">Enter a valid email address.</span>
+            }
+          </div>
+
+          <div class="flex flex-col gap-2">
+            <p-floatlabel variant="on">
+              <p-iconfield>
+                <input
+                  pInputPassword
+                  id="password"
+                  formControlName="password"
+                  class="w-full text-black"
+                  [(mask)]="mask"
+                  [ngClass]="submitted && passwordRegister.invalid ? 'ng-invalid ng-dirty' : ''"
+                />
+                <p-inputicon
+                  (click)="mask = !mask"
+                  class="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-500"
+                >
+                  <i class="pi" [ngClass]="mask ? 'pi-eye-slash' : 'pi-eye'"></i>
+                </p-inputicon>
+              </p-iconfield>
+              <label for="password" class="bg-white px-1 text-gray-600">Enter password</label>
+            </p-floatlabel>
+            @if (submitted && passwordRegister.hasError('required')) {
+              <span class="text-xs text-red-500">Password is required.</span>
+            } @else if (submitted && passwordRegister.hasError('minlength')) {
+              <span class="text-xs text-red-500">Password must be at least 8 characters.</span>
+            }
+          </div>
+
+          <div class="flex flex-col gap-2">
+            <p-floatlabel variant="on">
+              <p-iconfield>
+                <input
+                  pInputPassword
+                  id="confirmPassword"
+                  formControlName="confirmPassword"
+                  class="w-full text-black"
+                  [(mask)]="mask"
+                  [ngClass]="submitted && confirmPassword.invalid ? 'ng-invalid ng-dirty' : ''"
+                />
+                <p-inputicon
+                  (click)="mask = !mask"
+                  class="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-500"
+                >
+                  <i class="pi" [ngClass]="mask ? 'pi-eye-slash' : 'pi-eye'"></i>
+                </p-inputicon>
+              </p-iconfield>
+              <label for="password" class="bg-white px-1 text-gray-600">Re-enter password</label>
+            </p-floatlabel>
+            @if (submitted && confirmPassword.hasError('required')) {
+              <span class="text-xs text-red-500">Confirm password is required.</span>
+            } @else if (submitted && confirmPassword.hasError('minlength')) {
+              <span class="text-xs text-red-500">Password must be at least 8 characters.</span>
+            } @else if (submitted && register.hasError('passwordMismatch')) {
+              <span class="text-xs text-red-500">Passwords do not match.</span>
+            }
+          </div>
+        }
 
         <!-- Submit -->
-        <p-button
+        <button
+          pButton
           type="submit"
           label="Sign in"
-          styleClass="w-full justify-center !bg-[#E8B04B] !border-[#E8B04B] !text-[#1B1F3B] !font-semibold hover:!bg-[#DDA234]"
-          [loading]="loading"
-        />
+          class="w-full py-2.5 justify-center bg-gray-600 text-white hover:bg-gray-800 rounded font-semibold transition-colors"
+        >
+          {{ isLogin ? 'Sign In' : 'Sign Up' }}
+        </button>
 
         <p class="text-center text-sm text-[#6B7094]">
-          New to Meridian?
-          <a href="#" class="font-medium text-[#1B1F3B] underline-offset-4 hover:underline"
-            >Create an account</a
+          {{ isLogin ? 'New to Addinson Submission?' : 'Already have an account?' }}
+          <a
+            href="javascript:void(0)"
+            (click)="toggleLogin()"
+            class="font-medium text-[#1B1F3B] underline-offset-4 hover:underline"
+            >{{ isLogin ? 'Sign up' : 'Sign in' }}</a
           >
         </p>
       </form>
     </div>
   </div>
 </div>
+
+<p-toast position="top-right" class="p-5"></p-toast>
