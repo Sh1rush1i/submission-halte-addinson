@@ -1,7 +1,13 @@
 const fs = require('fs');
 const { argv } = require('yargs');
 
-const targetPath = './src/environments/environment.production.ts';
+const targetFolder = './src/environments';
+const targetPath = `${targetFolder}/environment.production.ts`;
+
+if (!fs.existsSync(targetFolder)) {
+  console.log(`Folder ${targetFolder} tidak ditemukan. Membuat folder baru...`);
+  fs.mkdirSync(targetFolder, { recursive: true });
+}
 
 const envConfigFile = `
 export const environment = {
@@ -16,7 +22,7 @@ export const environment = {
 
 fs.writeFile(targetPath, envConfigFile, function (err) {
   if (err) {
-    console.error(err);
+    console.error('Gagal membuat file environment:', err);
     throw err;
   } else {
     console.log(`Berhasil membuat file environment di ${targetPath}`);
