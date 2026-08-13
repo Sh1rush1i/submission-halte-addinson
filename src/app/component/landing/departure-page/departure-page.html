@@ -1,5 +1,5 @@
 <div class="h-full min-w-0 overflow-y-auto">
-  <div class="mx-auto flex h-full min-w-0 max-w-7xl flex-col px-4 py-4 sm:px-6 sm:py-8 lg:px-8">
+  <div class="mx-auto flex h-full min-w-0 flex-col px-4 py-4 sm:px-6 sm:py-8 lg:px-8">
     <div class="flex flex-col gap-5 pb-6 sm:flex-row sm:items-end sm:justify-between">
       <div>
         <p class="text-xs font-semibold uppercase tracking-widest text-gray-400">Operational</p>
@@ -50,167 +50,174 @@
       </div>
     </div>
 
-    @if (!hasData()) {
-      <div
-        class="mt-6 flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-300 text-center h-screen"
-      >
-        <i class="pi pi-inbox text-4xl text-gray-300"></i>
-        <h2 class="mt-4 text-base font-semibold text-gray-200">There is no departure data yet</h2>
-        <p class="mt-1 max-w-sm text-sm text-gray-500">
-          Stop departure entry will appear here. Start by adding the first entry.
-        </p>
-        <button
-          pButton
-          class="mt-6 py-2 px-3 rounded-md bg-sky-800 hover:bg-sky-600 transition-colors"
-          routerLink="form"
+    @if (isLoading) {
+      <app-full-page-loading></app-full-page-loading>
+    } @else {
+      @if (!hasData()) {
+        <div
+          class="mt-6 flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-300 text-center h-screen"
         >
-          <i class="pi pi-plus"></i> Add Data
-        </button>
-      </div>
-    }
+          <i class="pi pi-inbox text-4xl text-gray-300"></i>
+          <h2 class="mt-4 text-base font-semibold text-gray-200">There is no departure data yet</h2>
+          <p class="mt-1 max-w-sm text-sm text-gray-500">
+            Stop departure entry will appear here. Start by adding the first entry.
+          </p>
+          <button
+            pButton
+            class="mt-6 py-2 px-3 rounded-md bg-sky-800 hover:bg-sky-600 transition-colors"
+            routerLink="form"
+          >
+            <i class="pi pi-plus"></i> Add Data
+          </button>
+        </div>
+      }
 
-    <!-- Table view -->
-    @if (hasData() && viewMode() === 'table') {
-      <div
-        class="mt-6 flex flex-1 min-h-0 flex-col overflow-x-auto rounded-md border border-surface-700/50"
-      >
-        <p-table
-          [value]="records()"
-          stripedRows
-          [paginator]="true"
-          [rows]="10"
-          [scrollable]="true"
-          scrollHeight="flex"
-          dataKey="id"
-          styleClass="w-full table-fixed min-w-[56rem]"
+      <!-- Table view -->
+      @else if (hasData() && viewMode() === 'table') {
+        <div
+          class="mt-6 flex flex-1 min-h-0 flex-col overflow-x-auto rounded-md border border-surface-700/50"
         >
-          <ng-template #header>
-            <tr>
-              <th class="w-12 text-center" style="min-width: 32px">No</th>
-              <th class="w-28" style="min-width: 84px">Kode Trip</th>
-              <th class="w-32" style="min-width: 100px">Waktu Berhenti</th>
-              <th class="w-20 text-center">Naik</th>
-              <th class="w-20 text-center">Turun</th>
-              <th class="w-28 text-center" style="min-width: 100px">Tidak Terangkut</th>
-              <th class="w-32 text-center" style="min-width: 100px">Waktu Jalan</th>
-              <th class="w-32 text-center" style="min-width: 100px">Durasi Berhenti</th>
-            </tr>
-          </ng-template>
+          <p-table
+            [value]="records()"
+            stripedRows
+            [paginator]="true"
+            [rows]="10"
+            [scrollable]="true"
+            scrollHeight="flex"
+            dataKey="id"
+            styleClass="w-full table-fixed min-w-[56rem]"
+          >
+            <ng-template #header>
+              <tr>
+                <th class="w-12 text-center" style="min-width: 32px">No</th>
+                <th class="w-28" style="min-width: 84px">Trip Code</th>
+                <th class="w-32" style="min-width: 100px">Stop Times</th>
+                <th class="w-20 text-center">Board</th>
+                <th class="w-20 text-center">Disembark</th>
+                <th class="w-28 text-center" style="min-width: 100px">Not Transported</th>
+                <th class="w-32 text-center" style="min-width: 100px">Trip Time</th>
+                <th class="w-32 text-center" style="min-width: 100px">Stop Duration</th>
+              </tr>
+            </ng-template>
 
-          <ng-template #body let-record let-rowIndex="rowIndex">
-            <tr>
-              <td class="text-gray-400 text-center">{{ rowIndex + 1 }}</td>
-              <td class="font-mono text-sm font-medium text-white">{{ record.kodeTrip }}</td>
-              <td class="tabular-nums text-red-200">
-                <i class="pi pi-pause-circle mr-2 text-red-600 me-2"></i
-                >{{ record.waktuBerhenti | date: 'HH:mm:ss' }}
-              </td>
-              <td class="text-center">
-                <span class="inline-flex items-center gap-1 font-semibold text-green-200">
-                  <i class="pi pi-arrow-up-right text-xs text-green-600 me-2"></i
-                  >{{ record.penumpangNaik }}
-                </span>
-              </td>
-              <td class="text-center">
-                <span class="inline-flex items-center gap-1 font-semibold text-sky-200">
-                  <i class="pi pi-arrow-down-left text-sky-600 me-2"></i>{{ record.penumpangTurun }}
-                </span>
-              </td>
-              <td class="text-center">
-                @if (record.penumpangTidakTerangkut > 0) {
-                  <span class="inline-flex items-center gap-1 font-semibold text-amber-200">
-                    <i class="pi pi-exclamation-triangle text-amber-600 me-1"></i
-                    >{{ record.penumpangTidakTerangkut }}
+            <ng-template #body let-record let-rowIndex="rowIndex">
+              <tr>
+                <td class="text-gray-400 text-center">{{ rowIndex + 1 }}</td>
+                <td class="font-mono text-sm font-medium text-white">{{ record.kodeTrip }}</td>
+                <td class="tabular-nums text-red-200">
+                  <i class="pi pi-pause-circle mr-2 text-red-600 me-2"></i
+                  >{{ record.waktuBerhenti | date: 'HH:mm:ss' }}
+                </td>
+                <td class="text-center">
+                  <span class="inline-flex items-center gap-1 font-semibold text-green-200">
+                    <i class="pi pi-arrow-up-right text-xs text-green-600 me-2"></i
+                    >{{ record.penumpangNaik }}
                   </span>
-                } @else {
-                  <span class="text-white">—</span>
-                }
-              </td>
-              <td class="tabular-nums text-green-200">
-                <i class="pi pi-play-circle mr-2 text-green-400"></i
-                >{{ record.waktuJalan | date: 'HH:mm:ss' }}
-              </td>
-              <td>
+                </td>
+                <td class="text-center">
+                  <span class="inline-flex items-center gap-1 font-semibold text-sky-200">
+                    <i class="pi pi-arrow-down-left text-sky-600 me-2"></i
+                    >{{ record.penumpangTurun }}
+                  </span>
+                </td>
+                <td class="text-center">
+                  @if (record.penumpangTidakTerangkut > 0) {
+                    <span class="inline-flex items-center gap-1 font-semibold text-amber-200">
+                      <i class="pi pi-exclamation-triangle text-amber-400 me-1"></i
+                      >{{ record.penumpangTidakTerangkut }}
+                    </span>
+                  } @else {
+                    <span class="text-white">—</span>
+                  }
+                </td>
+                <td class="tabular-nums text-center text-green-200">
+                  <i class="pi pi-play-circle mr-2 text-green-400"></i
+                  >{{ record.waktuJalan | date: 'HH:mm:ss' }}
+                </td>
+                <td class="tabular-nums text-center">
+                  <p-tag
+                    class="p-1"
+                    [value]="durationLabel(record)"
+                    [severity]="durationSeverity(record)"
+                  />
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+      }
+
+      <!-- Card view  -->
+      @else if (hasData() && viewMode() === 'card') {
+        <div class="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          @for (record of records(); track trackById($index, record)) {
+            <div
+              class="flex flex-col rounded-2xl border border-gray-600/70 bg-gray-900/25 p-5 shadow-sm transition hover:shadow-md"
+            >
+              <!-- Trip code + dwell time -->
+              <div class="flex items-center justify-between">
+                <span class="font-mono text-xs font-semibold uppercase tracking-wide text-gray-400">
+                  {{ record.kodeTrip }}
+                </span>
                 <p-tag
                   class="p-1"
                   [value]="durationLabel(record)"
                   [severity]="durationSeverity(record)"
                 />
-              </td>
-            </tr>
-          </ng-template>
-        </p-table>
-      </div>
-    }
+              </div>
 
-    <!-- Card view  -->
-    @else if (hasData() && viewMode() === 'card') {
-      <div class="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        @for (record of records(); track trackById($index, record)) {
-          <div
-            class="flex flex-col rounded-2xl border border-gray-600/70 bg-gray-900/25 p-5 shadow-sm transition hover:shadow-md"
-          >
-            <!-- Trip code + dwell time -->
-            <div class="flex items-center justify-between">
-              <span class="font-mono text-xs font-semibold uppercase tracking-wide text-gray-400">
-                {{ record.kodeTrip }}
-              </span>
-              <p-tag
-                class="p-1"
-                [value]="durationLabel(record)"
-                [severity]="durationSeverity(record)"
-              />
-            </div>
+              <!-- Timestamps -->
+              <div class="mt-4 space-y-2">
+                <div class="flex items-center justify-between rounded-lg bg-red-300 px-3 py-2">
+                  <span class="flex items-center gap-2 text-xs font-medium text-red-600">
+                    <i class="pi pi-pause-circle text-red-600"></i>Berhenti
+                  </span>
+                  <span class="tabular-nums text-sm font-semibold text-red-500">
+                    {{ record.waktuBerhenti | date: 'HH:mm:ss' }}
+                  </span>
+                </div>
+                <div class="flex items-center justify-between rounded-lg bg-green-400 px-3 py-2">
+                  <span class="flex items-center gap-2 text-xs font-medium text-green-100">
+                    <i class="pi pi-play-circle text-green-100"></i>Jalan Lagi
+                  </span>
+                  <span class="tabular-nums text-sm font-semibold text-green-100">
+                    {{ record.waktuJalan | date: 'HH:mm:ss' }}
+                  </span>
+                </div>
+              </div>
 
-            <!-- Timestamps -->
-            <div class="mt-4 space-y-2">
-              <div class="flex items-center justify-between rounded-lg bg-red-300 px-3 py-2">
-                <span class="flex items-center gap-2 text-xs font-medium text-red-600">
-                  <i class="pi pi-pause-circle text-red-600"></i>Berhenti
-                </span>
-                <span class="tabular-nums text-sm font-semibold text-red-500">
-                  {{ record.waktuBerhenti | date: 'HH:mm:ss' }}
-                </span>
-              </div>
-              <div class="flex items-center justify-between rounded-lg bg-green-400 px-3 py-2">
-                <span class="flex items-center gap-2 text-xs font-medium text-green-100">
-                  <i class="pi pi-play-circle text-green-100"></i>Jalan Lagi
-                </span>
-                <span class="tabular-nums text-sm font-semibold text-green-100">
-                  {{ record.waktuJalan | date: 'HH:mm:ss' }}
-                </span>
-              </div>
-            </div>
-
-            <!-- Passenger stats -->
-            <div class="mt-4 grid grid-cols-3 gap-2 pt-2">
-              <div class="flex flex-col items-center rounded-lg py-2 text-center">
-                <i class="pi pi-arrow-up-right text-emerald-600"></i>
-                <span class="mt-1 text-lg font-bold text-green-200">{{
-                  record.penumpangNaik
-                }}</span>
-                <span class="text-[11px] leading-tight text-gray-500">Naik</span>
-              </div>
-              <div class="flex flex-col items-center rounded-lg py-2 text-center">
-                <i class="pi pi-arrow-down-left text-sky-600"></i>
-                <span class="mt-1 text-lg font-bold text-sky-200">{{ record.penumpangTurun }}</span>
-                <span class="text-[11px] leading-tight text-gray-500">Turun</span>
-              </div>
-              <div class="flex flex-col items-center rounded-lg py-2 text-center">
-                <i
-                  class="pi pi-exclamation-triangle text-red-400"
-                  [class.text-amber-600]="record.penumpangTidakTerangkut > 0"
-                  [class.text-gray-300]="record.penumpangTidakTerangkut === 0"
-                ></i>
-                <span class="mt-1 text-lg font-bold text-red-300">{{
-                  record.penumpangTidakTerangkut
-                }}</span>
-                <span class="text-[11px] leading-tight text-gray-500">Tak Terangkut</span>
+              <!-- Passenger stats -->
+              <div class="mt-4 grid grid-cols-3 gap-2 pt-2">
+                <div class="flex flex-col items-center rounded-lg py-2 text-center">
+                  <i class="pi pi-arrow-up-right text-emerald-600"></i>
+                  <span class="mt-1 text-lg font-bold text-green-200">{{
+                    record.penumpangNaik
+                  }}</span>
+                  <span class="text-[11px] leading-tight text-gray-500">Naik</span>
+                </div>
+                <div class="flex flex-col items-center rounded-lg py-2 text-center">
+                  <i class="pi pi-arrow-down-left text-sky-600"></i>
+                  <span class="mt-1 text-lg font-bold text-sky-200">{{
+                    record.penumpangTurun
+                  }}</span>
+                  <span class="text-[11px] leading-tight text-gray-500">Turun</span>
+                </div>
+                <div class="flex flex-col items-center rounded-lg py-2 text-center">
+                  <i
+                    class="pi pi-exclamation-triangle text-red-400"
+                    [class.text-amber-600]="record.penumpangTidakTerangkut > 0"
+                    [class.text-gray-300]="record.penumpangTidakTerangkut === 0"
+                  ></i>
+                  <span class="mt-1 text-lg font-bold text-red-300">{{
+                    record.penumpangTidakTerangkut
+                  }}</span>
+                  <span class="text-[11px] leading-tight text-gray-500">Tak Terangkut</span>
+                </div>
               </div>
             </div>
-          </div>
-        }
-      </div>
+          }
+        </div>
+      }
     }
   </div>
 </div>

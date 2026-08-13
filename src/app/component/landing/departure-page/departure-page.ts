@@ -7,6 +7,7 @@ import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
 import { SelectButtonModule } from 'primeng/selectbutton';
+import { FullPageLoading } from '../../misc/full-page-loading/full-page-loading';
 
 interface DepartureRecord {
   id: number;
@@ -36,6 +37,7 @@ interface ViewOption {
     ButtonModule,
     TagModule,
     SelectButtonModule,
+    FullPageLoading,
   ],
   templateUrl: './departure-page.html',
   styleUrl: './departure-page.css',
@@ -49,63 +51,86 @@ export class DeparturePage {
   ];
 
   readonly records = signal<DepartureRecord[]>([
-    // {
-    //   id: 1,
-    //   kodeTrip: 'TRP-0231',
-    //   waktuBerhenti: new Date(2026, 7, 13, 6, 12, 0),
-    //   penumpangNaik: 14,
-    //   penumpangTurun: 9,
-    //   penumpangTidakTerangkut: 2,
-    //   waktuJalan: new Date(2026, 7, 13, 6, 14, 30),
-    // },
-    // {
-    //   id: 2,
-    //   kodeTrip: 'TRP-0232',
-    //   waktuBerhenti: new Date(2026, 7, 13, 6, 28, 0),
-    //   penumpangNaik: 21,
-    //   penumpangTurun: 17,
-    //   penumpangTidakTerangkut: 0,
-    //   waktuJalan: new Date(2026, 7, 13, 6, 31, 10),
-    // },
-    // {
-    //   id: 3,
-    //   kodeTrip: 'TRP-0233',
-    //   waktuBerhenti: new Date(2026, 7, 13, 6, 45, 0),
-    //   penumpangNaik: 8,
-    //   penumpangTurun: 6,
-    //   penumpangTidakTerangkut: 5,
-    //   waktuJalan: new Date(2026, 7, 13, 6, 49, 45),
-    // },
-    // {
-    //   id: 4,
-    //   kodeTrip: 'TRP-0234',
-    //   waktuBerhenti: new Date(2026, 7, 13, 7, 2, 0),
-    //   penumpangNaik: 30,
-    //   penumpangTurun: 25,
-    //   penumpangTidakTerangkut: 8,
-    //   waktuJalan: new Date(2026, 7, 13, 7, 6, 20),
-    // },
-    // {
-    //   id: 5,
-    //   kodeTrip: 'TRP-0235',
-    //   waktuBerhenti: new Date(2026, 7, 13, 7, 18, 0),
-    //   penumpangNaik: 12,
-    //   penumpangTurun: 11,
-    //   penumpangTidakTerangkut: 0,
-    //   waktuJalan: new Date(2026, 7, 13, 7, 20, 5),
-    // },
-    // {
-    //   id: 6,
-    //   kodeTrip: 'TRP-0236',
-    //   waktuBerhenti: new Date(2026, 7, 13, 7, 33, 0),
-    //   penumpangNaik: 19,
-    //   penumpangTurun: 14,
-    //   penumpangTidakTerangkut: 3,
-    //   waktuJalan: new Date(2026, 7, 13, 7, 36, 40),
-    // },
+    {
+      id: 1,
+      kodeTrip: 'TRP-0231',
+      waktuBerhenti: new Date(2026, 7, 13, 6, 12, 0),
+      penumpangNaik: 14,
+      penumpangTurun: 9,
+      penumpangTidakTerangkut: 2,
+      waktuJalan: new Date(2026, 7, 13, 6, 14, 30),
+    },
+    {
+      id: 2,
+      kodeTrip: 'TRP-0232',
+      waktuBerhenti: new Date(2026, 7, 13, 6, 28, 0),
+      penumpangNaik: 21,
+      penumpangTurun: 17,
+      penumpangTidakTerangkut: 0,
+      waktuJalan: new Date(2026, 7, 13, 6, 31, 10),
+    },
+    {
+      id: 3,
+      kodeTrip: 'TRP-0233',
+      waktuBerhenti: new Date(2026, 7, 13, 6, 45, 0),
+      penumpangNaik: 8,
+      penumpangTurun: 6,
+      penumpangTidakTerangkut: 5,
+      waktuJalan: new Date(2026, 7, 13, 6, 49, 45),
+    },
+    {
+      id: 4,
+      kodeTrip: 'TRP-0234',
+      waktuBerhenti: new Date(2026, 7, 13, 7, 2, 0),
+      penumpangNaik: 30,
+      penumpangTurun: 25,
+      penumpangTidakTerangkut: 8,
+      waktuJalan: new Date(2026, 7, 13, 7, 6, 20),
+    },
+    {
+      id: 5,
+      kodeTrip: 'TRP-0235',
+      waktuBerhenti: new Date(2026, 7, 13, 7, 18, 0),
+      penumpangNaik: 12,
+      penumpangTurun: 11,
+      penumpangTidakTerangkut: 0,
+      waktuJalan: new Date(2026, 7, 13, 7, 20, 5),
+    },
+    {
+      id: 6,
+      kodeTrip: 'TRP-0236',
+      waktuBerhenti: new Date(2026, 7, 13, 7, 33, 0),
+      penumpangNaik: 19,
+      penumpangTurun: 14,
+      penumpangTidakTerangkut: 3,
+      waktuJalan: new Date(2026, 7, 13, 7, 36, 40),
+    },
   ]);
 
   readonly hasData = computed(() => this.records().length > 0);
+
+  isLoading: boolean = true;
+
+  ngOnInit() {
+    this.getData();
+    this.isLoading = false;
+  }
+
+  getData() {
+    const stored = localStorage.getItem('departureRecords');
+    if (stored) {
+      try {
+        const parsed: DepartureRecord[] = JSON.parse(stored).map((rec: any) => ({
+          ...rec,
+          waktuBerhenti: new Date(rec.waktuBerhenti),
+          waktuJalan: new Date(rec.waktuJalan),
+        }));
+        this.records.set(parsed);
+      } catch (err) {
+        console.error('Error parsing localStorage data:', err);
+      }
+    }
+  }
 
   setView(mode: ViewMode): void {
     this.viewMode.set(mode);
