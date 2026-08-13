@@ -7,6 +7,8 @@ import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
 import { SelectButtonModule } from 'primeng/selectbutton';
+import { TooltipModule } from 'primeng/tooltip';
+
 import { FullPageLoading } from '../../misc/full-page-loading/full-page-loading';
 
 interface DepartureRecord {
@@ -38,6 +40,7 @@ interface ViewOption {
     TagModule,
     SelectButtonModule,
     FullPageLoading,
+    TooltipModule,
   ],
   templateUrl: './departure-page.html',
   styleUrl: './departure-page.css',

@@ -1,6 +1,8 @@
 <div class="h-full min-w-0 overflow-y-auto">
   <div class="mx-auto flex h-full min-w-0 flex-col px-4 py-4 sm:px-6 sm:py-8 lg:px-8">
-    <div class="flex flex-col gap-5 pb-6 sm:flex-row sm:items-end sm:justify-between">
+    <div
+      class="flex flex-col gap-5 pb-6 border-b border-b-gray-500 sm:flex-row sm:items-end sm:justify-between"
+    >
       <div>
         <p class="text-xs font-semibold uppercase tracking-widest text-gray-400">Operational</p>
         <h1 class="mt-1 text-2xl font-bold tracking-tight text-gray-100 sm:text-3xl">
@@ -16,7 +18,7 @@
         <div
           role="group"
           aria-label="Ubah tampilan"
-          class="inline-flex items-center gap-1 rounded-lg border border-surface-700 bg-surface-900/60 p-1"
+          class="flex items-center gap-1 rounded-lg border border-surface-700 bg-surface-900/60 p-2.5 lg:p-1"
         >
           <button
             type="button"
@@ -24,7 +26,7 @@
             [attr.aria-pressed]="viewMode() === 'table'"
             [class]="tabButtonClass('table')"
           >
-            <i class="pi pi-table text-sm"></i>
+            <i class="pi pi-table"></i>
             <span class="hidden font-medium sm:inline">Table</span>
           </button>
 
@@ -34,7 +36,7 @@
             [attr.aria-pressed]="viewMode() === 'card'"
             [class]="tabButtonClass('card')"
           >
-            <i class="pi pi-th-large text-sm"></i>
+            <i class="pi pi-th-large"></i>
             <span class="hidden font-medium sm:inline">Card</span>
           </button>
         </div>
@@ -91,12 +93,13 @@
               <tr>
                 <th class="w-12 text-center" style="min-width: 32px">No</th>
                 <th class="w-28" style="min-width: 84px">Trip Code</th>
-                <th class="w-32" style="min-width: 100px">Stop Times</th>
-                <th class="w-20 text-center">Board</th>
-                <th class="w-20 text-center">Disembark</th>
+                <th class="w-32" style="min-width: 84px">Stop Times</th>
+                <th class="w-20 text-center" style="min-width: 84px">Board</th>
+                <th class="w-20 text-center" style="min-width: 84px">Disembark</th>
                 <th class="w-28 text-center" style="min-width: 100px">Not Transported</th>
                 <th class="w-32 text-center" style="min-width: 100px">Trip Time</th>
                 <th class="w-32 text-center" style="min-width: 100px">Stop Duration</th>
+                <th class="w-12 text-center" style="min-width: 24px">#</th>
               </tr>
             </ng-template>
 
@@ -136,10 +139,20 @@
                 </td>
                 <td class="tabular-nums text-center">
                   <p-tag
-                    class="p-1"
+                    class="py-1.5 px-2"
                     [value]="durationLabel(record)"
                     [severity]="durationSeverity(record)"
                   />
+                </td>
+                <td class="tabular-nums text-center">
+                  <a
+                    href="javascript:()void"
+                    pTooltip="Open Data"
+                    tooltipPosition="top"
+                    class="text-purple-200"
+                  >
+                    <i class="pi pi-paperclip"></i>
+                  </a>
                 </td>
               </tr>
             </ng-template>
@@ -170,7 +183,7 @@
               <div class="mt-4 space-y-2">
                 <div class="flex items-center justify-between rounded-lg bg-red-300 px-3 py-2">
                   <span class="flex items-center gap-2 text-xs font-medium text-red-600">
-                    <i class="pi pi-pause-circle text-red-600"></i>Berhenti
+                    <i class="pi pi-pause-circle text-red-600"></i>Stop
                   </span>
                   <span class="tabular-nums text-sm font-semibold text-red-500">
                     {{ record.waktuBerhenti | date: 'HH:mm:ss' }}
@@ -178,7 +191,7 @@
                 </div>
                 <div class="flex items-center justify-between rounded-lg bg-green-400 px-3 py-2">
                   <span class="flex items-center gap-2 text-xs font-medium text-green-100">
-                    <i class="pi pi-play-circle text-green-100"></i>Jalan Lagi
+                    <i class="pi pi-play-circle text-green-100"></i>On The Road Again
                   </span>
                   <span class="tabular-nums text-sm font-semibold text-green-100">
                     {{ record.waktuJalan | date: 'HH:mm:ss' }}
@@ -193,14 +206,14 @@
                   <span class="mt-1 text-lg font-bold text-green-200">{{
                     record.penumpangNaik
                   }}</span>
-                  <span class="text-[11px] leading-tight text-gray-500">Naik</span>
+                  <span class="text-[11px] leading-tight text-gray-500">Board</span>
                 </div>
                 <div class="flex flex-col items-center rounded-lg py-2 text-center">
                   <i class="pi pi-arrow-down-left text-sky-600"></i>
                   <span class="mt-1 text-lg font-bold text-sky-200">{{
                     record.penumpangTurun
                   }}</span>
-                  <span class="text-[11px] leading-tight text-gray-500">Turun</span>
+                  <span class="text-[11px] leading-tight text-gray-500">Disembark</span>
                 </div>
                 <div class="flex flex-col items-center rounded-lg py-2 text-center">
                   <i
@@ -211,7 +224,7 @@
                   <span class="mt-1 text-lg font-bold text-red-300">{{
                     record.penumpangTidakTerangkut
                   }}</span>
-                  <span class="text-[11px] leading-tight text-gray-500">Tak Terangkut</span>
+                  <span class="text-[11px] leading-tight text-gray-500">Not Transported</span>
                 </div>
               </div>
             </div>
