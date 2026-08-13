@@ -55,27 +55,8 @@
     @if (isLoading) {
       <app-full-page-loading></app-full-page-loading>
     } @else {
-      @if (!hasData()) {
-        <div
-          class="mt-6 flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-300 text-center h-screen"
-        >
-          <i class="pi pi-inbox text-4xl text-gray-300"></i>
-          <h2 class="mt-4 text-base font-semibold text-gray-200">There is no departure data yet</h2>
-          <p class="mt-1 max-w-sm text-sm text-gray-500">
-            Stop departure entry will appear here. Start by adding the first entry.
-          </p>
-          <button
-            pButton
-            class="mt-6 py-2 px-3 rounded-md bg-sky-800 hover:bg-sky-600 transition-colors"
-            routerLink="form"
-          >
-            <i class="pi pi-plus"></i> Add Data
-          </button>
-        </div>
-      }
-
       <!-- Table view -->
-      @else if (hasData() && viewMode() === 'table') {
+      @if (viewMode() === 'table') {
         <div
           class="mt-6 flex flex-1 min-h-0 flex-col overflow-x-auto rounded-md border border-surface-700/50"
         >
@@ -93,7 +74,8 @@
               <tr>
                 @for (col of columnsField; track col.field) {
                   <th
-                    [class]="col.widthClass + (col.align === 'center' ? ' text-center' : '')"
+                    class="transition duration-250 ease-in-out hover:scale-105"
+                    [ngClass]="col.widthClass + (col.align === 'center' ? ' text-center' : '')"
                     [style.minWidth]="col.minWidth"
                   >
                     {{ col.header }}
@@ -106,17 +88,12 @@
               <tr>
                 @for (col of columnsField; track col.field) {
                   <td
-                    [class]="col.align === 'center' ? 'tabular-nums text-center' : ''"
-                    [class.transition]="
+                    [ngClass]="[
+                      col.align === 'center' ? 'tabular-nums text-center' : '',
                       col.type !== 'action' && col.type !== 'tag' && col.type !== 'index'
-                    "
-                    [class.duration-1000]="
-                      col.type !== 'action' && col.type !== 'tag' && col.type !== 'index'
-                    "
-                    [ngClass]="{
-                      'hover:shadow-[6px_6px_12px_rgba(255,255,255,0.4),inset_-3px_-3px_6px_rgba(255,255,255,0.3),inset_3px_3px_6px_rgba(0,0,0,0.5)]':
-                        col.type !== 'action' && col.type !== 'tag' && col.type !== 'index',
-                    }"
+                        ? 'transition duration-250 ease-in-out hover:scale-110'
+                        : '',
+                    ]"
                   >
                     @switch (col.type) {
                       @case ('index') {
@@ -187,80 +164,124 @@
                 }
               </tr>
             </ng-template>
+            <ng-template #emptymessage>
+              <tr>
+                <td colspan="9" class="p-0">
+                  <div
+                    class="flex flex-col items-center justify-center w-full min-h-[60vh] text-center bg-transparent"
+                  >
+                    <i
+                      class="pi pi-info-circle text-red-400 text-3xl mb-2 transition duration-250 ease-in-out hover:scale-105"
+                    ></i>
+                    <span
+                      class="text-gray-300 text-lg font-medium transition duration-250 ease-in-out hover:scale-105"
+                    >
+                      No data available
+                    </span>
+                    <p class="mt-1 max-w-sm text-sm text-gray-500">
+                      Stop departure entry will appear here. Start by adding the first entry.
+                    </p>
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
           </p-table>
         </div>
       }
 
       <!-- Card view  -->
-      @else if (hasData() && viewMode() === 'card') {
-        <div class="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          @for (record of records(); track trackById($index, record)) {
-            <div
-              class="flex flex-col rounded-2xl border border-gray-600/70 bg-gray-900/25 p-5 transition duration-1000 hover:shadow-[6px_6px_12px_rgba(255,255,255,0.4),inset_-3px_-3px_6px_rgba(255,255,255,0.3),inset_3px_3px_6px_rgba(0,0,0,0.5)]"
+      @else if (viewMode() === 'card') {
+        @if (!hasData()) {
+          <div
+            class="mt-6 flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-300 text-center h-screen"
+          >
+            <i class="pi pi-inbox text-4xl text-gray-300"></i>
+            <h2 class="mt-4 text-base font-semibold text-gray-200">
+              There is no departure data yet
+            </h2>
+            <p class="mt-1 max-w-sm text-sm text-gray-500">
+              Stop departure entry will appear here. Start by adding the first entry.
+            </p>
+            <button
+              pButton
+              class="mt-6 py-2 px-3 rounded-md bg-sky-800 hover:bg-sky-600 transition-colors"
+              routerLink="form"
             >
-              <!-- Trip code + dwell time -->
-              <div class="flex items-center justify-between">
-                <span class="font-mono text-xs font-semibold uppercase tracking-wide text-gray-400">
-                  {{ record.kodeTrip }}
-                </span>
-                <p-tag
-                  class="p-1"
-                  [value]="durationLabel(record)"
-                  [severity]="durationSeverity(record)"
-                />
-              </div>
+              <i class="pi pi-plus"></i> Add Data
+            </button>
+          </div>
+        } @else {
+          <div class="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            @for (record of records(); track trackById($index, record)) {
+              <div
+                class="flex flex-col rounded-2xl border border-gray-600/70 bg-gray-900/25 p-5 transition duration-250 ease-in-out hover:scale-101 hover:shadow-[6px_6px_12px_rgba(255,255,255,0.4),inset_-3px_-3px_6px_rgba(255,255,255,0.3),inset_3px_3px_6px_rgba(0,0,0,0.5)]"
+              >
+                <!-- Trip code + dwell time -->
+                <div class="flex items-center justify-between">
+                  <span
+                    class="font-mono text-xs font-semibold uppercase tracking-wide text-gray-400"
+                  >
+                    {{ record.kodeTrip }}
+                  </span>
+                  <p-tag
+                    class="p-1"
+                    [value]="durationLabel(record)"
+                    [severity]="durationSeverity(record)"
+                  />
+                </div>
 
-              <!-- Timestamps -->
-              <div class="mt-4 space-y-2">
-                <div class="flex items-center justify-between rounded-lg bg-red-300 px-3 py-2">
-                  <span class="flex items-center gap-2 text-xs font-medium text-red-600">
-                    <i class="pi pi-pause-circle text-red-600"></i>Stop
-                  </span>
-                  <span class="tabular-nums text-sm font-semibold text-red-500">
-                    {{ record.waktuBerhenti | date: 'HH:mm:ss' }}
-                  </span>
+                <!-- Timestamps -->
+                <div class="mt-4 space-y-2">
+                  <div class="flex items-center justify-between rounded-lg bg-red-300 px-3 py-2">
+                    <span class="flex items-center gap-2 text-xs font-medium text-red-600">
+                      <i class="pi pi-pause-circle text-red-600"></i>Stop
+                    </span>
+                    <span class="tabular-nums text-sm font-semibold text-red-500">
+                      {{ record.waktuBerhenti | date: 'HH:mm:ss' }}
+                    </span>
+                  </div>
+                  <div class="flex items-center justify-between rounded-lg bg-green-400 px-3 py-2">
+                    <span class="flex items-center gap-2 text-xs font-medium text-green-100">
+                      <i class="pi pi-play-circle text-green-100"></i>On The Road Again
+                    </span>
+                    <span class="tabular-nums text-sm font-semibold text-green-100">
+                      {{ record.waktuJalan | date: 'HH:mm:ss' }}
+                    </span>
+                  </div>
                 </div>
-                <div class="flex items-center justify-between rounded-lg bg-green-400 px-3 py-2">
-                  <span class="flex items-center gap-2 text-xs font-medium text-green-100">
-                    <i class="pi pi-play-circle text-green-100"></i>On The Road Again
-                  </span>
-                  <span class="tabular-nums text-sm font-semibold text-green-100">
-                    {{ record.waktuJalan | date: 'HH:mm:ss' }}
-                  </span>
-                </div>
-              </div>
 
-              <!-- Passenger stats -->
-              <div class="mt-4 grid grid-cols-3 gap-2 pt-2">
-                <div class="flex flex-col items-center rounded-lg py-2 text-center">
-                  <i class="pi pi-arrow-up-right text-emerald-600"></i>
-                  <span class="mt-1 text-lg font-bold text-green-200">{{
-                    record.penumpangNaik
-                  }}</span>
-                  <span class="text-[11px] leading-tight text-gray-500">Board</span>
-                </div>
-                <div class="flex flex-col items-center rounded-lg py-2 text-center">
-                  <i class="pi pi-arrow-down-left text-sky-600"></i>
-                  <span class="mt-1 text-lg font-bold text-sky-200">{{
-                    record.penumpangTurun
-                  }}</span>
-                  <span class="text-[11px] leading-tight text-gray-500">Disembark</span>
-                </div>
-                <div class="flex flex-col items-center rounded-lg py-2 text-center">
-                  <i
-                    class="pi pi-exclamation-triangle text-red-400"
-                    [class.text-amber-600]="record.penumpangTidakTerangkut > 0"
-                    [class.text-gray-300]="record.penumpangTidakTerangkut === 0"
-                  ></i>
-                  <span class="mt-1 text-lg font-bold text-red-300">{{
-                    record.penumpangTidakTerangkut
-                  }}</span>
-                  <span class="text-[11px] leading-tight text-gray-500">Not Transported</span>
+                <!-- Passenger stats -->
+                <div class="mt-4 grid grid-cols-3 gap-2 pt-2">
+                  <div class="flex flex-col items-center rounded-lg py-2 text-center">
+                    <i class="pi pi-arrow-up-right text-emerald-600"></i>
+                    <span class="mt-1 text-lg font-bold text-green-200">{{
+                      record.penumpangNaik
+                    }}</span>
+                    <span class="text-[11px] leading-tight text-gray-500">Board</span>
+                  </div>
+                  <div class="flex flex-col items-center rounded-lg py-2 text-center">
+                    <i class="pi pi-arrow-down-left text-sky-600"></i>
+                    <span class="mt-1 text-lg font-bold text-sky-200">{{
+                      record.penumpangTurun
+                    }}</span>
+                    <span class="text-[11px] leading-tight text-gray-500">Disembark</span>
+                  </div>
+                  <div class="flex flex-col items-center rounded-lg py-2 text-center">
+                    <i
+                      class="pi pi-exclamation-triangle text-red-400"
+                      [class.text-amber-600]="record.penumpangTidakTerangkut > 0"
+                      [class.text-gray-300]="record.penumpangTidakTerangkut === 0"
+                    ></i>
+                    <span class="mt-1 text-lg font-bold text-red-300">{{
+                      record.penumpangTidakTerangkut
+                    }}</span>
+                    <span class="text-[11px] leading-tight text-gray-500">Not Transported</span>
+                  </div>
                 </div>
               </div>
-            </div>
-          }
-        </div>
+            }
+          </div>
+        }
       }
     }
   </div>
