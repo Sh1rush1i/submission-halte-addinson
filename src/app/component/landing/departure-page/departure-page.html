@@ -85,7 +85,7 @@
             </ng-template>
 
             <ng-template #body let-record let-rowIndex="rowIndex">
-              <tr>
+              <tr class="transition duration-250 ease-in-out hover:scale-103">
                 @for (col of columnsField; track col.field) {
                   <td
                     [ngClass]="[
