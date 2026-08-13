@@ -17,7 +17,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { InputPasswordModule } from 'primeng/inputpassword';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
-import { AuthService } from '../../../service/auth-service';
+import { AuthService } from '../../../service/auth.service';
 import { Router } from '@angular/router';
 import { AuthVisual } from '../../misc/auth-visual/auth-visual';
 

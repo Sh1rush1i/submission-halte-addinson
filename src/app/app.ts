@@ -4,7 +4,7 @@ import { Sidebars } from './component/misc/sidebars/sidebars';
 import { ButtonModule } from 'primeng/button';
 import { SidebarModule } from 'primeng/sidebar';
 import { Router } from '@angular/router';
-import { AuthService } from './service/auth-service';
+import { AuthService } from './service/auth.service';
 import { MessageService } from 'primeng/api';
 import { Subscription } from 'rxjs';
 import { ToastModule } from 'primeng/toast';
