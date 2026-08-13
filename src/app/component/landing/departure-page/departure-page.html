@@ -43,7 +43,7 @@
 
         <button
           pButton
-          class="bg-sky-800 hover:bg-sky-600 rounded-md py-1.5 px-4 transition-all flex items-center gap-2"
+          class="bg-sky-800 hover:bg-sky-600 rounded-md py-1.5 px-4 transition duration-700 flex items-center gap-2"
           label="Add"
           routerLink="form"
         >
@@ -91,69 +91,100 @@
           >
             <ng-template #header>
               <tr>
-                <th class="w-12 text-center" style="min-width: 32px">No</th>
-                <th class="w-28" style="min-width: 84px">Trip Code</th>
-                <th class="w-32" style="min-width: 84px">Stop Times</th>
-                <th class="w-20 text-center" style="min-width: 84px">Board</th>
-                <th class="w-20 text-center" style="min-width: 84px">Disembark</th>
-                <th class="w-28 text-center" style="min-width: 100px">Not Transported</th>
-                <th class="w-32 text-center" style="min-width: 100px">Trip Time</th>
-                <th class="w-32 text-center" style="min-width: 100px">Stop Duration</th>
-                <th class="w-12 text-center" style="min-width: 24px">#</th>
+                @for (col of columnsField; track col.field) {
+                  <th
+                    [class]="col.widthClass + (col.align === 'center' ? ' text-center' : '')"
+                    [style.minWidth]="col.minWidth"
+                  >
+                    {{ col.header }}
+                  </th>
+                }
               </tr>
             </ng-template>
 
             <ng-template #body let-record let-rowIndex="rowIndex">
               <tr>
-                <td class="text-gray-400 text-center">{{ rowIndex + 1 }}</td>
-                <td class="font-mono text-sm font-medium text-white">{{ record.kodeTrip }}</td>
-                <td class="tabular-nums text-red-200">
-                  <i class="pi pi-pause-circle mr-2 text-red-400 me-2"></i
-                  >{{ record.waktuBerhenti | date: 'HH:mm:ss' }}
-                </td>
-                <td class="text-center">
-                  <span class="inline-flex items-center gap-1 font-semibold text-green-200">
-                    <i class="pi pi-arrow-up-right text-xs text-green-600 me-2"></i
-                    >{{ record.penumpangNaik }}
-                  </span>
-                </td>
-                <td class="text-center">
-                  <span class="inline-flex items-center gap-1 font-semibold text-sky-200">
-                    <i class="pi pi-arrow-down-left text-sky-600 me-2"></i
-                    >{{ record.penumpangTurun }}
-                  </span>
-                </td>
-                <td class="text-center">
-                  @if (record.penumpangTidakTerangkut > 0) {
-                    <span class="inline-flex items-center gap-1 font-semibold text-amber-200">
-                      <i class="pi pi-exclamation-triangle text-amber-400 me-1"></i
-                      >{{ record.penumpangTidakTerangkut }}
-                    </span>
-                  } @else {
-                    <span class="text-white">—</span>
-                  }
-                </td>
-                <td class="tabular-nums text-center text-green-200">
-                  <i class="pi pi-play-circle mr-2 text-green-400"></i
-                  >{{ record.waktuJalan | date: 'HH:mm:ss' }}
-                </td>
-                <td class="tabular-nums text-center">
-                  <p-tag
-                    class="py-1.5 px-2"
-                    [value]="durationLabel(record)"
-                    [severity]="durationSeverity(record)"
-                  />
-                </td>
-                <td class="tabular-nums text-center">
-                  <a
-                    href="javascript:()void"
-                    pTooltip="Open Data"
-                    tooltipPosition="top"
-                    class="text-purple-200"
+                @for (col of columnsField; track col.field) {
+                  <td
+                    [class]="col.align === 'center' ? 'tabular-nums text-center' : ''"
+                    [class.transition]="
+                      col.type !== 'action' && col.type !== 'tag' && col.type !== 'index'
+                    "
+                    [class.duration-1000]="
+                      col.type !== 'action' && col.type !== 'tag' && col.type !== 'index'
+                    "
+                    [ngClass]="{
+                      'hover:shadow-[6px_6px_12px_rgba(255,255,255,0.4),inset_-3px_-3px_6px_rgba(255,255,255,0.3),inset_3px_3px_6px_rgba(0,0,0,0.5)]':
+                        col.type !== 'action' && col.type !== 'tag' && col.type !== 'index',
+                    }"
                   >
-                    <i class="pi pi-external-link"></i>
-                  </a>
-                </td>
+                    @switch (col.type) {
+                      @case ('index') {
+                        <span class="text-gray-400">{{ rowIndex + 1 }}</span>
+                      }
+                      @case ('text') {
+                        <span class="font-mono text-sm font-medium text-white">{{
+                          record[col.field]
+                        }}</span>
+                      }
+                      @case ('stop') {
+                        <span class="text-red-200">
+                          <i class="pi pi-pause-circle mr-2 text-red-400 me-2"></i
+                          >{{ record[col.field] | date: 'HH:mm:ss' }}
+                        </span>
+                      }
+                      @case ('go') {
+                        <span class="text-green-200">
+                          <i class="pi pi-play-circle mr-2 text-green-400"></i
+                          >{{ record[col.field] | date: 'HH:mm:ss' }}
+                        </span>
+                      }
+                      @case ('passenger') {
+                        <span
+                          class="inline-flex items-center gap-1 font-semibold"
+                          [class.text-green-200]="col.field === 'penumpangNaik'"
+                          [class.text-sky-200]="col.field === 'penumpangTurun'"
+                        >
+                          @if (col.field === 'penumpangNaik') {
+                            <i class="pi pi-arrow-up-right text-xs text-green-600 me-2"></i>
+                          } @else {
+                            <i class="pi pi-arrow-down-left text-sky-600 me-2"></i>
+                          }
+                          {{ record[col.field] }}
+                        </span>
+                      }
+                      @case ('notTransported') {
+                        <span class="text-amber-200">
+                          @if (record.penumpangTidakTerangkut > 0) {
+                            <span class="inline-flex items-center gap-1 font-semibold">
+                              <i class="pi pi-exclamation-triangle text-amber-400 me-1"></i
+                              >{{ record.penumpangTidakTerangkut }}
+                            </span>
+                          } @else {
+                            <span class="text-white">—</span>
+                          }
+                        </span>
+                      }
+                      @case ('tag') {
+                        <p-tag
+                          class="py-1.5 px-2"
+                          [value]="durationLabel(record)"
+                          [severity]="durationSeverity(record)"
+                        />
+                      }
+                      @case ('action') {
+                        <a
+                          href="javascript:void(0)"
+                          pTooltip="Open Data"
+                          tooltipPosition="top"
+                          class="text-purple-200"
+                        >
+                          <i class="pi pi-external-link"></i>
+                        </a>
+                      }
+                    }
+                  </td>
+                }
               </tr>
             </ng-template>
           </p-table>
@@ -165,7 +196,7 @@
         <div class="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           @for (record of records(); track trackById($index, record)) {
             <div
-              class="flex flex-col rounded-2xl border border-gray-600/70 bg-gray-900/25 p-5 shadow-sm transition hover:shadow-md"
+              class="flex flex-col rounded-2xl border border-gray-600/70 bg-gray-900/25 p-5 transition duration-1000 hover:shadow-[6px_6px_12px_rgba(255,255,255,0.4),inset_-3px_-3px_6px_rgba(255,255,255,0.3),inset_3px_3px_6px_rgba(0,0,0,0.5)]"
             >
               <!-- Trip code + dwell time -->
               <div class="flex items-center justify-between">

@@ -1,5 +1,5 @@
 import { Component, computed, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
@@ -29,6 +29,26 @@ interface ViewOption {
   icon: string;
 }
 
+interface ColumnConfig<T> {
+  label: string;
+  field?: keyof T;
+  class?: string;
+  minWidth?: string;
+  render?: (record: T, rowIndex: number) => string | number | null;
+}
+
+type ColumnType =
+  'index' | 'text' | 'stop' | 'go' | 'passenger' | 'notTransported' | 'tag' | 'action';
+
+interface ColumnDef {
+  field: string;
+  header: string;
+  type: ColumnType;
+  widthClass: string;
+  minWidth: string;
+  align?: 'center';
+}
+
 @Component({
   selector: 'app-departure-page',
   imports: [
@@ -44,6 +64,7 @@ interface ViewOption {
   ],
   templateUrl: './departure-page.html',
   styleUrl: './departure-page.css',
+  providers: [DatePipe],
 })
 export class DeparturePage {
   readonly viewMode = signal<ViewMode>('table');
@@ -110,9 +131,110 @@ export class DeparturePage {
     },
   ]);
 
+  formatTime(date: Date): string {
+    return this.datePipe.transform(date, 'HH:mm:ss') ?? '';
+  }
+
+  columns: ColumnConfig<DepartureRecord>[] = [
+    { label: 'No', class: 'w-12 text-center', minWidth: '32px', render: (_, i) => i + 1 },
+    {
+      label: 'Trip Code',
+      field: 'kodeTrip',
+      class: 'w-28 font-mono text-sm font-medium text-white',
+    },
+    {
+      label: 'Stop Times',
+      class: 'w-32 tabular-nums text-red-200',
+      render: (r) => this.formatTime(r.waktuBerhenti),
+    },
+    { label: 'Board', field: 'penumpangNaik', class: 'w-20 text-center text-green-200' },
+    { label: 'Disembark', field: 'penumpangTurun', class: 'w-20 text-center text-sky-200' },
+    {
+      label: 'Not Transported',
+      field: 'penumpangTidakTerangkut',
+      class: 'w-28 text-center text-amber-200',
+    },
+    {
+      label: 'Trip Time',
+      class: 'w-32 text-center text-green-200',
+      render: (r) => this.formatTime(r.waktuJalan),
+    },
+    { label: 'Stop Duration', class: 'w-32 text-center', render: (r) => this.durationLabel(r) },
+    { label: '#', class: 'w-12 text-center' },
+  ];
+
+  columnsField: ColumnDef[] = [
+    {
+      field: 'no',
+      header: 'No',
+      type: 'index',
+      widthClass: 'w-12',
+      minWidth: '32px',
+      align: 'center',
+    },
+    { field: 'kodeTrip', header: 'Trip Code', type: 'text', widthClass: 'w-28', minWidth: '84px' },
+    {
+      field: 'waktuBerhenti',
+      header: 'Stop Times',
+      type: 'stop',
+      widthClass: 'w-32',
+      minWidth: '84px',
+    },
+    {
+      field: 'penumpangNaik',
+      header: 'Board',
+      type: 'passenger',
+      widthClass: 'w-20',
+      minWidth: '84px',
+      align: 'center',
+    },
+    {
+      field: 'penumpangTurun',
+      header: 'Disembark',
+      type: 'passenger',
+      widthClass: 'w-20',
+      minWidth: '84px',
+      align: 'center',
+    },
+    {
+      field: 'penumpangTidakTerangkut',
+      header: 'Not Transported',
+      type: 'notTransported',
+      widthClass: 'w-28',
+      minWidth: '100px',
+      align: 'center',
+    },
+    {
+      field: 'waktuJalan',
+      header: 'Trip Time',
+      type: 'go',
+      widthClass: 'w-32',
+      minWidth: '100px',
+      align: 'center',
+    },
+    {
+      field: 'duration',
+      header: 'Stop Duration',
+      type: 'tag',
+      widthClass: 'w-32',
+      minWidth: '100px',
+      align: 'center',
+    },
+    {
+      field: 'action',
+      header: '#',
+      type: 'action',
+      widthClass: 'w-12',
+      minWidth: '24px',
+      align: 'center',
+    },
+  ];
+
   readonly hasData = computed(() => this.records().length > 0);
 
   isLoading: boolean = true;
+
+  constructor(private datePipe: DatePipe) {}
 
   ngOnInit() {
     this.getData();
