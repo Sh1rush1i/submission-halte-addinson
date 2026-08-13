@@ -17,7 +17,13 @@ export const routes: Routes = [
   },
 
   {
-    path: 'dashboard',
+    path: 'departure',
+    component: FullPageLoading,
+    canActivate: [authGuard],
+  },
+
+  {
+    path: 'arrival',
     component: FullPageLoading,
     canActivate: [authGuard],
   },

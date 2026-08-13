@@ -33,8 +33,8 @@ export class Sidebars {
       label: 'Menu',
       items: [
         { icon: 'pi pi-home', label: 'Home', route: '/dashboard' },
-        { icon: 'pi pi-sign-out', label: 'Departure', route: '/inbox', badge: '3' },
-        { icon: 'pi pi-sign-in', label: 'Arrival', route: '/search' },
+        { icon: 'pi pi-sign-out', label: 'Departure', route: '/departure', badge: '3' },
+        { icon: 'pi pi-sign-in', label: 'Arrival', route: '/arrival' },
       ],
     },
   ]);
