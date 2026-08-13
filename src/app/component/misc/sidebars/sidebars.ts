@@ -75,6 +75,46 @@ export class Sidebars {
     });
   }
 
+  ngOnInit() {
+    this.getDataNumber();
+  }
+
+  getDataNumber() {
+    const departure = localStorage.getItem('departureRecords');
+    const arrival = localStorage.getItem('arrivalRecords');
+    const traffic = localStorage.getItem('trafficRecords');
+
+    const departureCount = departure ? JSON.parse(departure).length : 0;
+    const arrivalCount = arrival ? JSON.parse(arrival).length : 0;
+    const trafficCount = traffic ? JSON.parse(traffic).length : 0;
+
+    this.menuGroups.update((groups) =>
+      groups.map((group) => {
+        if (group.label === 'Halte') {
+          return {
+            ...group,
+            items: group.items.map((item) =>
+              item.label === 'Departure'
+                ? { ...item, badge: departureCount }
+                : item.label === 'Arrival'
+                  ? { ...item, badge: arrivalCount }
+                  : item,
+            ),
+          };
+        }
+        if (group.label === 'Traffic') {
+          return {
+            ...group,
+            items: group.items.map((item) =>
+              item.label === 'Traffic 1' ? { ...item, badge: trafficCount } : item,
+            ),
+          };
+        }
+        return group;
+      }),
+    );
+  }
+
   onNavClick() {
     if (this.isMobile()) {
       this.sidebarOpen.set(false);
