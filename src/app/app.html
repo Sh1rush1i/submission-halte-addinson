@@ -4,12 +4,12 @@
   <div
     class="border border-surface-200 dark:border-surface-700 rounded-lg overflow-hidden h-screen"
   >
-    <p-sidebar-layout class="min-h-screen relative">
+    <p-sidebar-layout class="h-full relative flex">
       <app-sidebar (sidebarState)="handleSidebarState($event)" />
 
-      <p-sidebar-main>
+      <p-sidebar-main class="flex flex-col h-full min-h-0">
         <header
-          class="flex h-12 items-center gap-2 border-b border-surface-200 dark:border-surface-700 px-4"
+          class="flex h-12 shrink-0 items-center gap-2 border-b border-surface-200 dark:border-surface-700 px-4"
         >
           <button
             pButton
@@ -28,12 +28,10 @@
           >
         </header>
 
-        <div class="flex-1 p-4 flex flex-col gap-4">
+        <div class="flex-1 min-w-0 min-h-0 overflow-y-auto">
           <router-outlet></router-outlet>
         </div>
       </p-sidebar-main>
     </p-sidebar-layout>
   </div>
 }
-
-<p-toast></p-toast>
