@@ -153,7 +153,7 @@ export class DeparturePage {
     );
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
-    return minutes === 0 ? `${seconds}dtk` : `${minutes}m ${seconds}dtk`;
+    return minutes === 0 ? `${seconds} s` : `${minutes} m ${seconds} s`;
   }
 
   durationSeverity(record: DepartureRecord): 'success' | 'warn' | 'danger' {

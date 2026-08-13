@@ -8,26 +8,28 @@
   [overlay]="isMobile()"
   [(open)]="sidebarOpen"
   width="14rem"
+  class="border-r-gray-600"
 >
   <p-sidebar-spacer />
-  <p-sidebar-aside>
+  <p-sidebar-aside class="border-r border-r-gray-600/50">
     <p-sidebar-panel>
       <p-sidebar-header class="px-2 py-2">
         <p-sidebar-menu>
           <p-sidebar-menu-item>
             <button pSidebarMenuButton class="p-1!">
-              <div
-                class="flex size-6 shrink-0 items-center justify-center rounded-md bg-linear-to-br from-violet-500 to-indigo-600 text-white text-xs font-bold leading-none"
-              >
-                A
-              </div>
+              <img
+                src="favicon/favicon-96x96.png"
+                alt="Buzz buzz buzzz"
+                class="flex size-6 shrink-0"
+              />
+
               <span class="font-semibold text-sm">Addinson's Halte 🥀</span>
             </button>
           </p-sidebar-menu-item>
         </p-sidebar-menu>
       </p-sidebar-header>
 
-      <p-sidebar-content class="px-0.5">
+      <p-sidebar-content class="px-0.5 gap-2.5">
         @for (group of menuGroups(); track group.label) {
           <p-sidebar-group>
             <p-sidebar-group-label

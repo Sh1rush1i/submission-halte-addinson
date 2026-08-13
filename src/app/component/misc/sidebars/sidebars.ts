@@ -8,7 +8,7 @@ interface NavItem {
   icon: string;
   label: string;
   route: string;
-  badge?: string;
+  badge?: number;
 }
 
 interface NavGroup {
@@ -30,11 +30,30 @@ export class Sidebars {
 
   menuGroups = signal<NavGroup[]>([
     {
-      label: 'Menu',
+      label: 'Home',
+      items: [{ icon: 'pi pi-home', label: 'Home', route: '/dashboard' }],
+    },
+    {
+      label: 'Halte',
       items: [
-        { icon: 'pi pi-home', label: 'Home', route: '/dashboard' },
-        { icon: 'pi pi-sign-out', label: 'Departure', route: '/departure', badge: '3' },
-        { icon: 'pi pi-sign-in', label: 'Arrival', route: '/arrival' },
+        { icon: 'pi pi-file-o', label: 'Departure', route: '/departure', badge: 3 },
+        { icon: 'pi pi-cloud', label: 'Arrival', route: '/arrival' },
+      ],
+    },
+    {
+      label: 'Traffic',
+      items: [
+        { icon: 'pi pi-file-o', label: 'Traffic 1', route: '/red-light', badge: 3 },
+        { icon: 'pi pi-cloud', label: 'Traffic 2', route: '/green-light' },
+      ],
+    },
+    {
+      label: 'Form',
+      items: [
+        { icon: 'pi pi-file-plus', label: 'Form Departure', route: '/form-1' },
+        { icon: 'pi pi-file-plus', label: 'Form Arrival', route: '/form-2' },
+        { icon: 'pi pi-file-plus', label: 'Form Traffic', route: '/form-3' },
+        { icon: 'pi pi-file-plus', label: 'Form Traffic 2', route: '/form-4' },
       ],
     },
   ]);
