@@ -26,14 +26,14 @@
         <!-- Trip info -->
         <div>
           <label for="kodeTrip" class="mb-2.5 block text-xs font-medium text-gray-400"
-            >Trip Code</label
+            >Trip Code / Halte</label
           >
           <input
             id="kodeTrip"
             type="text"
             pInputText
             formControlName="kodeTrip"
-            placeholder="TRP-0231"
+            placeholder="Enter halte / trip code identifier"
             class="w-full"
           />
           @if (form.controls.kodeTrip.invalid && form.controls.kodeTrip.touched) {
@@ -54,7 +54,7 @@
               [showTime]="true"
               hourFormat="24"
               dateFormat="yy-mm-dd"
-              placeholder="Select stop time"
+              placeholder="Enter stop time"
               [style]="{ width: '100%' }"
               [inputStyle]="{ width: '100%' }"
             />
@@ -86,7 +86,7 @@
               [showTime]="true"
               hourFormat="24"
               dateFormat="yy-mm-dd"
-              placeholder="Auto-filled on save if left empty"
+              placeholder="Enter time when vehicle start moving again"
               [style]="{ width: '100%' }"
               [inputStyle]="{ width: '100%' }"
             />
@@ -165,9 +165,12 @@
 
         @if (dwellLabel(); as label) {
           <div
-            class="flex items-center justify-between rounded-md border border-gray-700 bg-gray-900/40 px-5 py-3"
+            class="flex items-center justify-between rounded-md border border-gray-500/50 bg-gray-500/10 px-5 py-3"
           >
-            <span class="text-sm text-gray-400">Stop duration</span>
+            <div class="flex flex-row gap-2 justify-center align-center">
+              <i class="pi pi-clock text-red-400 !py-1"></i>
+              <span class="text-sm text-white">Stop duration</span>
+            </div>
             <p-tag class="p-1" [value]="label" [severity]="dwellSeverity()" />
           </div>
         }
