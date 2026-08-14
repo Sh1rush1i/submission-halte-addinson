@@ -10,8 +10,9 @@ import {
 import { ActivatedRoute, Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
-import { TagModule } from 'primeng/tag';
+import { InputNumberModule } from 'primeng/inputnumber';
 import { DatePickerModule } from 'primeng/datepicker';
+import { TagModule } from 'primeng/tag';
 import { FullPageLoading } from '../../misc/full-page-loading/full-page-loading';
 
 interface DepartureRecord {
@@ -40,8 +41,9 @@ const STORAGE_KEY = 'departureRecords';
     ReactiveFormsModule,
     ButtonModule,
     InputTextModule,
-    TagModule,
+    InputNumberModule,
     DatePickerModule,
+    TagModule,
     FullPageLoading,
   ],
   templateUrl: './departure-form.html',
@@ -59,10 +61,9 @@ export class DepartureForm {
 
   readonly form = this.fb.nonNullable.group(
     {
-      id: [0],
       kodeTrip: ['', Validators.required],
-      waktuBerhenti: ['', Validators.required],
-      waktuJalan: [''],
+      waktuBerhenti: this.fb.control<Date | null>(null, Validators.required),
+      waktuJalan: this.fb.control<Date | null>(null),
       penumpangNaik: [0, [Validators.required, Validators.min(0)]],
       penumpangTurun: [0, [Validators.required, Validators.min(0)]],
       penumpangTidakTerangkut: [0, [Validators.required, Validators.min(0)]],
@@ -88,7 +89,7 @@ export class DepartureForm {
   }
 
   setNow(control: 'waktuBerhenti' | 'waktuJalan'): void {
-    this.form.controls[control].setValue(this.toDatetimeLocal(new Date()));
+    this.form.controls[control].setValue(new Date());
     this.form.controls[control].markAsTouched();
   }
 
@@ -106,20 +107,13 @@ export class DepartureForm {
     if (!found) return;
 
     this.form.patchValue({
-      id: found.id,
       kodeTrip: found.kodeTrip,
-      waktuBerhenti: this.toDatetimeLocal(found.waktuBerhenti),
-      waktuJalan: this.toDatetimeLocal(found.waktuJalan),
+      waktuBerhenti: new Date(found.waktuBerhenti),
+      waktuJalan: found.waktuJalan ? new Date(found.waktuJalan) : null,
       penumpangNaik: found.penumpangNaik,
       penumpangTurun: found.penumpangTurun,
       penumpangTidakTerangkut: found.penumpangTidakTerangkut,
     });
-  }
-
-  private toDatetimeLocal(value: Date | string): string {
-    const d = new Date(value);
-    const pad = (n: number) => String(n).padStart(2, '0');
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
   }
 
   dwellLabel(): string | null {
@@ -130,12 +124,14 @@ export class DepartureForm {
     const totalSeconds = Math.floor(diffMs / 1000);
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
-    return minutes === 0 ? `${seconds} m` : `${minutes} m ${seconds} s`;
+    return minutes === 0 ? `${seconds} s` : `${minutes} m ${seconds} s`;
   }
 
   dwellSeverity(): 'success' | 'warn' | 'danger' {
     const { waktuBerhenti, waktuJalan } = this.form.getRawValue();
-    const minutes = (new Date(waktuJalan).getTime() - new Date(waktuBerhenti).getTime()) / 60000;
+    if (!waktuBerhenti || !waktuJalan) return 'success';
+
+    const minutes = (waktuJalan.getTime() - waktuBerhenti.getTime()) / 60000;
     if (minutes <= 3) return 'success';
     if (minutes <= 6) return 'warn';
     return 'danger';
@@ -143,7 +139,7 @@ export class DepartureForm {
 
   onSubmit(): void {
     if (!this.form.controls.waktuJalan.value) {
-      this.form.controls.waktuJalan.setValue(this.toDatetimeLocal(new Date()));
+      this.form.controls.waktuJalan.setValue(new Date());
     }
 
     if (this.form.invalid) {
@@ -155,8 +151,8 @@ export class DepartureForm {
     const record: DepartureRecord = {
       id: this.isNew() ? Date.now() : Number(this.departureId),
       kodeTrip: value.kodeTrip,
-      waktuBerhenti: new Date(value.waktuBerhenti),
-      waktuJalan: new Date(value.waktuJalan),
+      waktuBerhenti: new Date(value.waktuBerhenti!),
+      waktuJalan: new Date(value.waktuJalan!),
       penumpangNaik: value.penumpangNaik,
       penumpangTurun: value.penumpangTurun,
       penumpangTidakTerangkut: value.penumpangTidakTerangkut,
@@ -171,10 +167,10 @@ export class DepartureForm {
     }
     this.writeAll(list);
 
-    this.router.navigate(['/departure'], { relativeTo: this.activatedRoute });
+    this.router.navigate(['/departure']);
   }
 
   cancel(): void {
-    this.router.navigate(['/departure'], { relativeTo: this.activatedRoute });
+    this.router.navigate(['/departure']);
   }
 }

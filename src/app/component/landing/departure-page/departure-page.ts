@@ -268,8 +268,16 @@ export class DeparturePage {
   tabButtonClass(mode: ViewMode): string {
     const base = 'flex items-center gap-2 rounded-md px-3 py-1.5 text-sm transition-colors';
     return this.viewMode() === mode
-      ? `${base} bg-surface-700 text-white shadow-sm`
-      : `${base} text-surface-400 hover:bg-surface-800/60 hover:text-surface-200`;
+      ? `${base} bg-sky-600/70 text-white shadow-sm`
+      : `${base} text-gray-600/50 hover:bg-sky-600/20 hover:text-sky-200`;
+  }
+
+  routeTo(base: string, id?: string | number) {
+    if (id) {
+      this.router.navigate([base, id]);
+    } else {
+      this.router.navigate([base]);
+    }
   }
 
   openItem(id: string | number) {

@@ -43,9 +43,9 @@
 
         <button
           pButton
-          class="bg-sky-800 hover:bg-sky-600 border-none rounded-md py-1.5 px-4 transition duration-700 flex items-center gap-2 text-white"
+          class="bg-sky-800 hover:bg-sky-600 border-none rounded-md py-2.5 px-4 transition duration-700 flex items-center gap-2 text-white"
           label="Add"
-          routerLink="form"
+          (click)="routeTo('/departure', 'new')"
         >
           <i class="pi pi-plus"></i> Add data
         </button>
