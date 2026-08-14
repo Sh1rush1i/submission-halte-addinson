@@ -43,9 +43,9 @@
 
         <button
           pButton
-          class="bg-sky-800 hover:bg-sky-600 rounded-md py-1.5 px-4 transition duration-700 flex items-center gap-2"
+          class="bg-sky-800 hover:bg-sky-600 border-none rounded-md py-2.5 px-4 transition duration-700 flex items-center gap-2 text-white"
           label="Add"
-          routerLink="form"
+          (click)="routeTo('/departure', 'new')"
         >
           <i class="pi pi-plus"></i> Add data
         </button>
@@ -66,6 +66,7 @@
             [paginator]="true"
             [rows]="10"
             [scrollable]="true"
+            [rowsPerPageOptions]="[5, 10, 20]"
             scrollHeight="flex"
             dataKey="id"
             styleClass="w-full table-fixed min-w-[56rem]"
@@ -74,7 +75,7 @@
               <tr>
                 @for (col of columnsField; track col.field) {
                   <th
-                    class="transition duration-250 ease-in-out hover:scale-105"
+                    class="transition duration-250 ease-in-out hover:scale-105 text-sm"
                     [ngClass]="col.widthClass + (col.align === 'center' ? ' text-center' : '')"
                     [style.minWidth]="col.minWidth"
                   >
@@ -155,6 +156,7 @@
                           pTooltip="Open Data"
                           tooltipPosition="top"
                           class="text-purple-200"
+                          (click)="openItem(record.id)"
                         >
                           <i class="pi pi-external-link"></i>
                         </a>
@@ -214,7 +216,8 @@
           <div class="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             @for (record of records(); track trackById($index, record)) {
               <div
-                class="flex flex-col rounded-2xl border border-gray-600/70 bg-gray-900/25 p-5 transition duration-250 ease-in-out hover:scale-101 hover:shadow-[6px_6px_12px_rgba(255,255,255,0.4),inset_-3px_-3px_6px_rgba(255,255,255,0.3),inset_3px_3px_6px_rgba(0,0,0,0.5)]"
+                class="flex flex-col rounded-2xl border border-gray-600/50 bg-gray-900/10 p-5 transition duration-250 ease-in-out hover:scale-101 hover:shadow-[6px_6px_12px_rgba(255,255,255,0.4),inset_-3px_-3px_6px_rgba(255,255,255,0.3),inset_3px_3px_6px_rgba(0,0,0,0.5)]"
+                (click)="openItem(record.id)"
               >
                 <!-- Trip code + dwell time -->
                 <div class="flex items-center justify-between">

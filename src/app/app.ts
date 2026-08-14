@@ -26,7 +26,7 @@ export class App {
   firstSegment() {
     const url = window.location.pathname;
     const segments = url.split('/').filter((segment) => segment.length > 0);
-    console.log('firstSegment', segments.length > 0 ? segments[0] : '');
+    // console.log('firstSegment', segments.length > 0 ? segments[0] : '');
     return segments.length > 0 ? segments[0] : '';
   }
 

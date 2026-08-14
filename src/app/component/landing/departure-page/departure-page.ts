@@ -10,6 +10,7 @@ import { SelectButtonModule } from 'primeng/selectbutton';
 import { TooltipModule } from 'primeng/tooltip';
 
 import { FullPageLoading } from '../../misc/full-page-loading/full-page-loading';
+import { Router } from '@angular/router';
 
 interface DepartureRecord {
   id: number;
@@ -234,7 +235,10 @@ export class DeparturePage {
 
   isLoading: boolean = true;
 
-  constructor(private datePipe: DatePipe) {}
+  constructor(
+    private datePipe: DatePipe,
+    private router: Router,
+  ) {}
 
   ngOnInit() {
     this.getData();
@@ -264,8 +268,20 @@ export class DeparturePage {
   tabButtonClass(mode: ViewMode): string {
     const base = 'flex items-center gap-2 rounded-md px-3 py-1.5 text-sm transition-colors';
     return this.viewMode() === mode
-      ? `${base} bg-surface-700 text-white shadow-sm`
-      : `${base} text-surface-400 hover:bg-surface-800/60 hover:text-surface-200`;
+      ? `${base} bg-gray-500/10 text-white shadow-sm`
+      : `${base} text-gray-600/50 hover:bg-gray-600/10 hover:text-gray-200`;
+  }
+
+  routeTo(base: string, id?: string | number) {
+    if (id) {
+      this.router.navigate([base, id]);
+    } else {
+      this.router.navigate([base]);
+    }
+  }
+
+  openItem(id: string | number) {
+    this.router.navigate(['/departure', id]);
   }
 
   durationLabel(record: DepartureRecord): string {

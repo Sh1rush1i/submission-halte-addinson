@@ -36,21 +36,21 @@ export class Sidebars {
     {
       label: 'Halte',
       items: [
-        { icon: 'pi pi-file-o', label: 'Departure', route: '/departure', badge: 3 },
+        { icon: 'pi pi-file-o', label: 'Departure', route: '/departure' },
         { icon: 'pi pi-cloud', label: 'Arrival', route: '/arrival' },
       ],
     },
     {
       label: 'Traffic',
       items: [
-        { icon: 'pi pi-file-o', label: 'Traffic 1', route: '/red-light', badge: 3 },
+        { icon: 'pi pi-file-o', label: 'Traffic 1', route: '/red-light' },
         { icon: 'pi pi-cloud', label: 'Traffic 2', route: '/green-light' },
       ],
     },
     {
       label: 'Form',
       items: [
-        { icon: 'pi pi-file-plus', label: 'Form Departure', route: '/form-1' },
+        { icon: 'pi pi-file-plus', label: 'Form Departure', route: '/departure/new' },
         { icon: 'pi pi-file-plus', label: 'Form Arrival', route: '/form-2' },
         { icon: 'pi pi-file-plus', label: 'Form Traffic', route: '/form-3' },
         { icon: 'pi pi-file-plus', label: 'Form Traffic 2', route: '/form-4' },
