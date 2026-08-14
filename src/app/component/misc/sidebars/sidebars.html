@@ -29,7 +29,7 @@
         </p-sidebar-menu>
       </p-sidebar-header>
 
-      <p-sidebar-content class="px-0.5 gap-2.5">
+      <p-sidebar-content>
         @for (group of menuGroups(); track group.label) {
           <p-sidebar-group>
             <p-sidebar-group-label
@@ -46,10 +46,11 @@
                       pSidebarMenuButton
                       [routerLink]="item.route"
                       routerLinkActive="bg-surface-100 dark:bg-surface-800 font-medium"
+                      [routerLinkActiveOptions]="{ exact: true }"
                       #rla="routerLinkActive"
                       [isActive]="rla.isActive"
                       (click)="onNavClick()"
-                      class="flex items-center gap-3 px-3 py-2 w-full rounded-md hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors cursor-pointer"
+                      class="flex items-center gap-3 px-1.5 py-2 w-full rounded-md hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors cursor-pointer"
                     >
                       <i [class]="item.icon + ' shrink-0 text-lg'"></i>
                       <span class="ms-2">{{ item.label }}</span>

@@ -1,18 +1,13 @@
-@import 'tailwindcss';
-@import 'tailwindcss-primeui';
+@layer tailwind-base, primeng, tailwind-utilities;
+
+@layer tailwind-base {
+  @import 'tailwindcss/preflight.css';
+}
+
+@import 'tailwindcss/theme.css';
+
+@layer tailwind-utilities {
+  @import 'tailwindcss/utilities.css';
+}
+
 @import 'primeicons/primeicons.css';
-
-th {
-  padding-bottom: 1rem;
-  font-size: 0.8rem;
-  font-weight: bold;
-  justify-content: center;
-  align-items: center;
-  padding-top: 1rem;
-}
-
-td {
-  padding-top: 1.5rem;
-  padding-bottom: 1.5rem;
-  font-size: 1rem;
-}
