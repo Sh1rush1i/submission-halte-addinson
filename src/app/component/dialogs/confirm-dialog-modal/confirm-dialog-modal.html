@@ -1,0 +1,16 @@
+<p>
+  {{ message }}
+</p>
+<div class="card-footer mt-4">
+  <hr />
+  <div class="text-end">
+    <button (click)="closeDialog(false)" class="btn btn-outline-primary me-2" type="button">
+      <i class="me-2"></i>
+      Cancel
+    </button>
+    <button (click)="closeDialog(true)" class="btn btn-primary" type="button">
+      <i class="me-2"></i>
+      Confirm
+    </button>
+  </div>
+</div>
