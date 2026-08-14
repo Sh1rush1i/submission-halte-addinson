@@ -1,0 +1,195 @@
+<div class="h-full min-w-0 overflow-y-auto">
+  <div class="mx-auto flex h-full min-w-0 flex-col px-4 py-4 sm:px-6 sm:py-8 lg:px-8">
+    <div
+      class="flex flex-col gap-5 pb-6 border-b border-b-gray-500 sm:flex-row sm:items-end sm:justify-between"
+    >
+      <div>
+        <p class="text-xs font-semibold uppercase tracking-widest text-gray-400">Operational</p>
+        <h1 class="mt-1 text-2xl font-bold tracking-tight text-gray-100 sm:text-3xl">
+          Departure Data <span class="text-green-300">{{ isNew() ? 'Form' : departureId }}</span>
+        </h1>
+        <p class="mt-1 text-sm text-gray-500">
+          Stop times, the number of passengers boarding &amp; alighting, and travel time back at
+          each stop.
+        </p>
+      </div>
+    </div>
+
+    @if (isLoading) {
+      <app-full-page-loading></app-full-page-loading>
+    } @else {
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="mt-8 md:pb-6 flex flex-col gap-6">
+        <!-- Trip info -->
+        <div>
+          <label for="kodeTrip" class="mb-1.5 block text-xs font-medium text-surface-400"
+            >Trip Code</label
+          >
+          <input
+            id="kodeTrip"
+            type="text"
+            pInputText
+            formControlName="kodeTrip"
+            placeholder="TRP-0231"
+            class="w-full rounded-md border border-surface-700 bg-surface-900/60 px-3 py-2 text-sm text-white placeholder-surface-500 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+          />
+          @if (form.controls.kodeTrip.invalid && form.controls.kodeTrip.touched) {
+            <p class="mt-1 text-xs text-red-400">Kode trip wajib diisi.</p>
+          }
+        </div>
+
+        <div>
+          <label for="waktuBerhenti" class="mb-1.5 block text-xs font-medium text-surface-400">
+            <i class="pi pi-pause-circle mr-1 text-red-500"></i>Stop Time
+          </label>
+          <div class="flex gap-2">
+            <p-datepicker
+              formControlName="waktuBerhenti"
+              appendTo="body"
+              [showTime]="true"
+              hourFormat="24"
+              dateFormat="yy-mm-dd"
+              class="w-full min-w-0 rounded-md border border-surface-700 bg-surface-900/60 px-3 py-2 text-sm text-white scheme-dark focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+            ></p-datepicker>
+
+            <button
+              type="button"
+              pButton
+              (click)="setNow('waktuBerhenti')"
+              class="flex shrink-0 items-center gap-1.5 rounded-md border border-surface-700 px-3 py-2 text-xs text-surface-300 transition-colors hover:bg-surface-800"
+            >
+              <i class="pi pi-clock text-sky-300"></i>
+              <span class="hidden sm:inline">Now</span>
+            </button>
+          </div>
+          @if (form.controls.waktuBerhenti.invalid && form.controls.waktuBerhenti.touched) {
+            <p class="mt-1 text-xs text-red-400">Stop time must be filled.</p>
+          }
+
+          @if (form.controls.waktuBerhenti.invalid && form.controls.waktuBerhenti.touched) {
+            <p class="mt-1 text-xs text-red-400">Stop time must be filled.</p>
+          }
+        </div>
+
+        <div>
+          <label for="waktuJalan" class="mb-1.5 block text-xs font-medium text-surface-400">
+            <i class="pi pi-play-circle mr-1 text-green-500"></i>On Road Again
+            <span class="ml-1 font-normal normal-case text-surface-600">(Optional)</span>
+          </label>
+          <div class="flex gap-2">
+            <p-datepicker
+              formControlName="waktuJalan"
+              appendTo="body"
+              [showTime]="true"
+              hourFormat="24"
+              dateFormat="yy-mm-dd"
+              class="w-full min-w-0 rounded-md border border-surface-700 bg-surface-900/60 px-3 py-2 text-sm text-white scheme-dark focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+            ></p-datepicker>
+
+            <button
+              type="button"
+              pButton
+              (click)="setNow('waktuJalan')"
+              class="flex shrink-0 items-center gap-1.5 rounded-md border border-surface-700 px-3 py-2 text-xs text-surface-300 transition-colors hover:bg-surface-800"
+            >
+              <i class="pi pi-clock text-sky-300"></i>
+              <span class="hidden sm:inline">Now</span>
+            </button>
+          </div>
+
+          @if (form.errors?.['timeOrder'] && form.controls.waktuJalan.touched) {
+            <p class="mt-1 text-xs text-red-400">On road again must be after stop time.</p>
+          }
+        </div>
+
+        <!-- Passenger counts -->
+        <div class="rounded-2xl border border-surface-700 bg-surface-900/40 p-6">
+          <h2 class="text-sm font-semibold text-surface-200">Total Passangers</h2>
+
+          <div class="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-3">
+            <div>
+              <label
+                for="penumpangNaik"
+                class="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-surface-400"
+              >
+                <i class="pi pi-arrow-up-right text-emerald-500"></i>Board
+              </label>
+              <input
+                id="penumpangNaik"
+                type="number"
+                min="0"
+                pInputText
+                formControlName="penumpangNaik"
+                class="w-full rounded-md border border-surface-700 bg-surface-900/60 px-3 py-2 text-sm text-white focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+              />
+            </div>
+
+            <div>
+              <label
+                for="penumpangTurun"
+                class="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-surface-400"
+              >
+                <i class="pi pi-arrow-down-left text-sky-500"></i>Disembark
+              </label>
+              <input
+                id="penumpangTurun"
+                type="number"
+                min="0"
+                pInputText
+                formControlName="penumpangTurun"
+                class="w-full rounded-md border border-surface-700 bg-surface-900/60 px-3 py-2 text-sm text-white focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+              />
+            </div>
+
+            <div>
+              <label
+                for="penumpangTidakTerangkut"
+                class="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-surface-400"
+              >
+                <i class="pi pi-exclamation-triangle text-amber-500"></i>Not Transported
+              </label>
+              <input
+                id="penumpangTidakTerangkut"
+                type="number"
+                min="0"
+                pInputText
+                formControlName="penumpangTidakTerangkut"
+                class="w-full rounded-md border border-surface-700 bg-surface-900/60 px-3 py-2 text-sm text-white focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+              />
+            </div>
+          </div>
+        </div>
+
+        @if (dwellLabel(); as label) {
+          <div
+            class="flex items-center justify-between rounded-xl border border-surface-700 bg-surface-900/40 px-5 py-3"
+          >
+            <span class="text-sm text-surface-400">Stop duration</span>
+            <p-tag class="p-1" [value]="label" [severity]="dwellSeverity()" />
+          </div>
+        }
+
+        <!-- Actions -->
+        <div class="flex items-center justify-end gap-3">
+          <button
+            type="button"
+            pButton
+            (click)="cancel()"
+            class="rounded-md border border-surface-700 px-4 py-1.5 text-sm text-surface-300 transition-colors hover:bg-surface-800"
+          >
+            Back
+          </button>
+          @if (isNew()) {
+            <button
+              type="submit"
+              pButton
+              [disabled]="form.invalid"
+              class="flex items-center gap-2 rounded-md bg-sky-800 px-4 py-1.5 text-sm text-white transition duration-700 hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <i class="pi pi-check"></i> Save
+            </button>
+          }
+        </div>
+      </form>
+    }
+  </div>
+</div>
