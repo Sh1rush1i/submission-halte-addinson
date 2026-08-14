@@ -1,5 +1,7 @@
 @layer tailwind-base, primeng, tailwind-utilities;
 
+/* @plugin "tailwindcss-primeui"; */
+
 @layer tailwind-base {
   @import 'tailwindcss/preflight.css';
 }
