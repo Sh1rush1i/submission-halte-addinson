@@ -48,7 +48,7 @@
               [showTime]="true"
               hourFormat="24"
               dateFormat="yy-mm-dd"
-              class="w-full min-w-0 rounded-md border border-surface-700 bg-surface-900/60 px-3 py-2 text-sm text-white scheme-dark focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+              class="w-full min-w-0 rounded-md bg-surface-900/60 px-3 py-2 text-sm text-white scheme-dark focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
             ></p-datepicker>
 
             <button
@@ -61,10 +61,6 @@
               <span class="hidden sm:inline">Now</span>
             </button>
           </div>
-          @if (form.controls.waktuBerhenti.invalid && form.controls.waktuBerhenti.touched) {
-            <p class="mt-1 text-xs text-red-400">Stop time must be filled.</p>
-          }
-
           @if (form.controls.waktuBerhenti.invalid && form.controls.waktuBerhenti.touched) {
             <p class="mt-1 text-xs text-red-400">Stop time must be filled.</p>
           }
@@ -82,7 +78,7 @@
               [showTime]="true"
               hourFormat="24"
               dateFormat="yy-mm-dd"
-              class="w-full min-w-0 rounded-md border border-surface-700 bg-surface-900/60 px-3 py-2 text-sm text-white scheme-dark focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+              class="w-full min-w-0 bg-surface-900/60 px-3 py-2 text-sm text-white scheme-dark focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
             ></p-datepicker>
 
             <button

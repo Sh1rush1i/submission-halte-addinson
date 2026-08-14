@@ -43,7 +43,7 @@
 
         <button
           pButton
-          class="bg-sky-800 hover:bg-sky-600 rounded-md py-1.5 px-4 transition duration-700 flex items-center gap-2"
+          class="bg-sky-800 hover:bg-sky-600 border-none rounded-md py-1.5 px-4 transition duration-700 flex items-center gap-2 text-white"
           label="Add"
           routerLink="form"
         >
@@ -74,7 +74,7 @@
               <tr>
                 @for (col of columnsField; track col.field) {
                   <th
-                    class="transition duration-250 ease-in-out hover:scale-105"
+                    class="transition duration-250 ease-in-out hover:scale-105 text-sm"
                     [ngClass]="col.widthClass + (col.align === 'center' ? ' text-center' : '')"
                     [style.minWidth]="col.minWidth"
                   >
