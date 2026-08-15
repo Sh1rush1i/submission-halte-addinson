@@ -40,7 +40,7 @@
 
   <div class="lg:col-span-7 flex items-center justify-center px-6 py-10 sm:py-14">
     <div class="w-full max-w-sm">
-      <h1 class="font-display text-3xl text-[#1B1F3B]">
+      <h1 class="font-display text-3xl text-[#1B1F3B] font-semibold">
         {{ isLogin ? 'Welcome back' : 'Create an account' }}
       </h1>
       <p class="mt-2 text-sm text-[#6B7094]">
@@ -66,12 +66,17 @@
                 pSize="large"
                 id="email"
                 type="email"
-                class="w-full h-12 text-black"
+                class="w-full h-10 text-black bg-transparent shadow-none border-0 border-b border-solid border-gray-400 focus:border-primary-500 rounded-none"
                 formControlName="email"
-                [ngClass]="submitted && email.invalid ? 'ng-invalid ng-dirty' : ''"
+                [ngClass]="submitted && email.invalid ? ' border-red-500 text-red-500' : ''"
                 autocomplete="email"
               />
-              <label for="email" class="bg-white px-1 text-gray-600">Enter email address</label>
+              <label
+                for="email"
+                class="bg-white px-1 text-gray-600"
+                [ngClass]="submitted && email.invalid ? ' text-red-500' : ''"
+                >Enter email address</label
+              >
             </p-floatlabel>
             @if (submitted && email.hasError('required')) {
               <span class="text-xs text-red-500">Email is required.</span>
@@ -88,10 +93,10 @@
                   pSize="large"
                   id="password"
                   formControlName="password"
-                  class="w-full h-12 text-black"
+                  class="w-full h-10 text-black bg-transparent shadow-none border-0 border-b border-solid border-gray-400 focus:border-primary-500 rounded-none"
                   autocomplete="current-password"
                   [(mask)]="mask"
-                  [ngClass]="submitted && password.invalid ? 'ng-invalid ng-dirty' : ''"
+                  [ngClass]="submitted && password.invalid ? ' border-red-500 text-red-500' : ''"
                 />
                 <p-inputicon
                   (click)="mask = !mask"
@@ -100,7 +105,12 @@
                   <i class="pi" [ngClass]="mask ? 'pi-eye-slash' : 'pi-eye'"></i>
                 </p-inputicon>
               </p-iconfield>
-              <label for="password" class="bg-white px-1 text-gray-600">Enter password</label>
+              <label
+                for="password"
+                class="bg-white px-1 text-gray-600"
+                [ngClass]="submitted && password.invalid ? ' text-red-500' : ''"
+                >Enter password</label
+              >
             </p-floatlabel>
             @if (submitted && password.hasError('required')) {
               <span class="text-xs text-red-500">Password is required.</span>
@@ -124,14 +134,42 @@
             <p-floatlabel variant="on">
               <input
                 pInputText
-                id="email"
-                type="email"
-                class="w-full h-12 text-black"
-                formControlName="email"
-                [ngClass]="submitted && emailRegister.invalid ? 'ng-invalid ng-dirty' : ''"
+                id="name"
+                type="text"
+                class="w-full h-10 text-black bg-transparent shadow-none border-0 border-b border-solid border-gray-400 focus:border-primary-500 rounded-none"
+                formControlName="name"
+                [ngClass]="submitted && nameRegister.invalid ? ' border-red-500 text-red-500' : ''"
                 autocomplete="email"
               />
-              <label for="email" class="bg-white px-1 text-gray-600">Enter email address</label>
+              <label
+                for="name"
+                class="bg-white px-1 text-gray-600"
+                [ngClass]="submitted && nameRegister.invalid ? ' text-red-500' : ''"
+                >Enter your name</label
+              >
+            </p-floatlabel>
+            @if (submitted && nameRegister.hasError('required')) {
+              <span class="text-xs text-red-500">Email is required.</span>
+            } @else if (submitted && emailRegister.hasError('isi apa')) {}
+          </div>
+
+          <div class="flex flex-col gap-2">
+            <p-floatlabel variant="on">
+              <input
+                pInputText
+                id="email"
+                type="email"
+                class="w-full h-10 text-black bg-transparent shadow-none border-0 border-b border-solid border-gray-400 focus:border-primary-500 rounded-none"
+                formControlName="email"
+                [ngClass]="submitted && emailRegister.invalid ? ' border-red-500 text-red-500' : ''"
+                autocomplete="email"
+              />
+              <label
+                for="email"
+                class="bg-white px-1 text-gray-600"
+                [ngClass]="submitted && emailRegister.invalid ? ' text-red-500' : ''"
+                >Enter email address</label
+              >
             </p-floatlabel>
             @if (submitted && emailRegister.hasError('required')) {
               <span class="text-xs text-red-500">Email is required.</span>
@@ -147,9 +185,11 @@
                   pInputPassword
                   id="password"
                   formControlName="password"
-                  class="w-full h-12 text-black"
+                  class="w-full h-10 text-black bg-transparent shadow-none border-0 border-b border-solid border-gray-400 focus:border-primary-500 rounded-none"
                   [(mask)]="mask"
-                  [ngClass]="submitted && passwordRegister.invalid ? 'ng-invalid ng-dirty' : ''"
+                  [ngClass]="
+                    submitted && passwordRegister.invalid ? 'border-red-500 text-red-500' : ''
+                  "
                 />
                 <p-inputicon
                   (click)="mask = !mask"
@@ -158,13 +198,20 @@
                   <i class="pi" [ngClass]="mask ? 'pi-eye-slash' : 'pi-eye'"></i>
                 </p-inputicon>
               </p-iconfield>
-              <label for="password" class="bg-white px-1 text-gray-600">Enter password</label>
+              <label
+                for="password"
+                class="bg-white px-1 text-gray-600"
+                [ngClass]="submitted && passwordRegister.invalid ? ' text-red-500' : ''"
+              >
+                Enter password</label
+              >
             </p-floatlabel>
             <ul class="flex flex-col gap-2 list-none ms-5 my-2 p-0 w-full">
               @for (req of requirements; track req.id) {
                 <li class="flex items-center text-sm transition-all duration-300">
                   <i
                     class="pi pi-check-circle transition-all duration-300 ease-out me-4"
+                    [ngClass]="submitted && passwordRegister.invalid ? ' text-red-500' : ''"
                     [ngClass]="
                       req.test(register.controls.password.value ?? '')
                         ? 'text-green-500 scale-110 opacity-100'
@@ -172,6 +219,7 @@
                     "
                   ></i>
                   <span
+                    [ngClass]="submitted && passwordRegister.invalid ? ' text-red-500' : ''"
                     [class]="
                       'transition-all duration-300 ease-out ' +
                       (req.test(register.controls.password.value ?? '')
@@ -193,9 +241,11 @@
                   pInputPassword
                   id="confirmPassword"
                   formControlName="confirmPassword"
-                  class="w-full h-12 text-black"
+                  class="w-full h-10 text-black bg-transparent shadow-none border-0 border-b border-solid border-gray-400 focus:border-primary-500 rounded-none"
                   [(mask)]="mask"
-                  [ngClass]="submitted && confirmPassword.invalid ? 'ng-invalid ng-dirty' : ''"
+                  [ngClass]="
+                    submitted && confirmPassword.invalid ? 'border-red-500 text-red-500' : ''
+                  "
                 />
                 <p-inputicon
                   (click)="mask = !mask"
@@ -204,7 +254,12 @@
                   <i class="pi" [ngClass]="mask ? 'pi-eye-slash' : 'pi-eye'"></i>
                 </p-inputicon>
               </p-iconfield>
-              <label for="password" class="bg-white px-1 text-gray-600">Re-enter password</label>
+              <label
+                for="password"
+                class="bg-white px-1 text-gray-600"
+                [ngClass]="submitted && confirmPassword.invalid ? ' text-red-500' : ''"
+                >Re-enter password</label
+              >
             </p-floatlabel>
             @if (submitted && confirmPassword.hasError('required')) {
               <span class="text-xs text-red-500">Confirm password is required.</span>
@@ -221,7 +276,7 @@
           pButton
           type="submit"
           label="Sign in"
-          class="w-full py-2.5 justify-center bg-gray-600 text-white hover:bg-gray-800 rounded font-semibold transition-colors"
+          class="w-full py-2.5 justify-center border-0 bg-gray-600 text-white hover:bg-gray-800 rounded font-semibold transition-colors"
         >
           {{ isLogin ? 'Sign In' : 'Sign Up' }}
         </button>

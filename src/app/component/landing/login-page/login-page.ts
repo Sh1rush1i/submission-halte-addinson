@@ -63,6 +63,7 @@ export class LoginPage {
 
   register = this.fb.group(
     {
+      name: ['', [Validators.required, this.nameValidator]],
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, this.passwordRequirementsValidator]],
       confirmPassword: ['', [Validators.required]],
@@ -83,6 +84,23 @@ export class LoginPage {
       test: (v: string) => /[^a-zA-Z0-9]/.test(v),
     },
   ];
+
+  nameValidator(control: AbstractControl): ValidationErrors | null {
+    const value = (control.value ?? '').trim();
+
+    if (!value) {
+      return null;
+    }
+
+    const isValidLength = value.length >= 2;
+    const isValidFormat = /^[a-zA-Z\s'-]+$/.test(value);
+
+    if (!isValidLength || !isValidFormat) {
+      return { nameRequirement: true };
+    }
+
+    return null;
+  }
 
   passwordRequirementsValidator(control: AbstractControl): ValidationErrors | null {
     const value = control.value ?? '';
@@ -112,6 +130,10 @@ export class LoginPage {
 
   get password() {
     return this.login.controls.password;
+  }
+
+  get nameRegister() {
+    return this.register.controls.name;
   }
 
   get emailRegister() {
