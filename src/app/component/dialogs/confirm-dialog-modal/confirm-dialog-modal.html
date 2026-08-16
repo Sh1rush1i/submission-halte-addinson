@@ -1,15 +1,19 @@
-<p>
+<p class="text-white mb-4">
   {{ message }}
 </p>
-<div class="card-footer mt-4">
-  <hr />
-  <div class="text-end">
-    <button (click)="closeDialog(false)" class="btn btn-outline-primary me-2" type="button">
-      <i class="me-2"></i>
+
+<div class="mt-4">
+  <hr class="border-gray-200 mb-4" />
+  <div class="flex justify-end space-x-2">
+    <button
+      pButton
+      (click)="closeDialog(false)"
+      type="button"
+      class="p-button-outlined p-button-danger"
+    >
       Cancel
     </button>
-    <button (click)="closeDialog(true)" class="btn btn-primary" type="button">
-      <i class="me-2"></i>
+    <button pButton (click)="closeDialog(true)" type="button" class="p-button-primary">
       Confirm
     </button>
   </div>

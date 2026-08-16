@@ -1,11 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { ButtonModule } from 'primeng/button';
 import { DialogService, DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
 
 @Component({
   selector: 'app-confirm-dialog-modal',
-  imports: [FormsModule, CommonModule],
+  imports: [FormsModule, CommonModule, ButtonModule],
   templateUrl: './confirm-dialog-modal.html',
   styleUrl: './confirm-dialog-modal.css',
 })

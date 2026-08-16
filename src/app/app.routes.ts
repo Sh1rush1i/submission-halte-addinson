@@ -4,7 +4,7 @@ import { FullPageLoading } from './component/misc/full-page-loading/full-page-lo
 import { LoginPage } from './component/landing/login-page/login-page';
 import { authGuard } from './auth.guard';
 import { DeparturePage } from './component/landing/departure-page/departure-page';
-import { DepartureForm } from './component/forms/departure-form/departure-form';
+import { TripForm } from './component/forms/trip-form/trip-form';
 
 export const routes: Routes = [
   {
@@ -19,14 +19,14 @@ export const routes: Routes = [
   },
 
   {
-    path: 'departure',
+    path: 'trip',
     component: DeparturePage,
     canActivate: [authGuard],
   },
 
   {
-    path: 'departure/:id',
-    component: DepartureForm,
+    path: 'trip/:id',
+    component: TripForm,
     canActivate: [authGuard],
   },
 

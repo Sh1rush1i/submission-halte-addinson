@@ -1,10 +1,9 @@
 import { Injectable } from '@angular/core';
-import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
+import { DialogService } from 'primeng/dynamicdialog';
 import { ConfirmDialogModal } from '../component/dialogs/confirm-dialog-modal/confirm-dialog-modal';
-import { InfoDialogModal } from '../component/dialogs/info-dialog-modal/info-dialog-modal';
 
 @Injectable({ providedIn: 'root' })
-export class DyanamicDialogServices {
+export class DynamicDialogServices {
   constructor(private dialogService: DialogService) {}
 
   confirmModal(message: string) {
@@ -13,7 +12,9 @@ export class DyanamicDialogServices {
       style: { width: '30rem' },
       contentStyle: { 'max-height': '500px', overflow: 'auto' },
       baseZIndex: 10000,
-      data: { message },
+      data: {
+        message: message,
+      },
     });
   }
 }

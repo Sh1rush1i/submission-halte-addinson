@@ -12,11 +12,13 @@ import { provideClientHydration } from '@angular/platform-browser';
 import { providePrimeNG } from 'primeng/config';
 import Aura from '@primeuix/themes/aura';
 import { environment } from '../environments/environment';
-import { FilterMatchMode } from 'primeng/api';
+import { FilterMatchMode, MessageService } from 'primeng/api';
 // import { provideTranslateService } from '@ngx-translate/core';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { authHttpInterceptorFn, provideAuth0 } from '@auth0/auth0-angular';
 import { authInterceptor } from './authInterceptor';
+import { DialogService } from 'primeng/dynamicdialog';
+import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -92,5 +94,10 @@ export const appConfig: ApplicationConfig = {
         //translations
       },
     }),
+    DialogService,
+    MessageService,
+    DatePipe,
+    CurrencyPipe,
+    CommonModule,
   ],
 };

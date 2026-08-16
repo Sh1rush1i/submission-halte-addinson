@@ -1,17 +1,17 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { DepartureForm } from './departure-form';
+import { TripForm } from './trip-form';
 
 describe('DepartureForm', () => {
-  let component: DepartureForm;
-  let fixture: ComponentFixture<DepartureForm>;
+  let component: TripForm;
+  let fixture: ComponentFixture<TripForm>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [DepartureForm],
+      imports: [TripForm],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(DepartureForm);
+    fixture = TestBed.createComponent(TripForm);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });
