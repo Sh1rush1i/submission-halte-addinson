@@ -110,6 +110,8 @@ export class TripForm {
       } else {
         this.isLoading = true;
         this.loadTrip();
+        // const raw = localStorage.getItem('tripRecords');
+        // console.log(raw ? JSON.parse(raw) : []);
       }
     });
 
