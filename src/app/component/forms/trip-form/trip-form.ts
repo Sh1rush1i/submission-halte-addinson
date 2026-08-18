@@ -296,6 +296,11 @@ export class TripForm {
       return;
     }
 
+    if (!this.isHalteDataChanged(index)) {
+      afterSaved();
+      return;
+    }
+
     this.ref = this.dynamicDialogServices.confirmModal(
       `Save changes to "${HALTE_NAMES[index]}" before moving on?`,
     );
@@ -314,6 +319,22 @@ export class TripForm {
 
       afterSaved();
     });
+  }
+
+  private isHalteDataChanged(index: number): boolean {
+    if (!this.trip) return true;
+
+    const stored = this.trip.haltes[index];
+    const current = this.halteForm.getRawValue();
+    const toTime = (d: Date | null) => (d ? new Date(d).getTime() : null);
+
+    return (
+      toTime(current.waktuKedatangan) !== toTime(stored.waktuKedatangan) ||
+      toTime(current.waktuKeberangkatan) !== toTime(stored.waktuKeberangkatan) ||
+      (current.penumpangNaik ?? 0) !== (stored.penumpangNaik ?? 0) ||
+      (current.penumpangTurun ?? 0) !== (stored.penumpangTurun ?? 0) ||
+      (current.penumpangTidakTerangkut ?? 0) !== (stored.penumpangTidakTerangkut ?? 0)
+    );
   }
 
   private persistHalteData(index: number): boolean {
@@ -335,13 +356,27 @@ export class TripForm {
     }
 
     const updated = this.tripService.updateHalte(this.trip.id, index, value);
-    if (updated) {
-      this.trip = updated;
-      return true;
+    if (!updated) {
+      this.invokeToast('Failed to update halte stop data.', 'error');
+      return false;
     }
 
-    this.invokeToast('Failed to update halte stop data.', 'error');
-    return false;
+    this.trip = updated;
+
+    // Sinkronkan form dengan data final yang tersimpan (termasuk auto-fill waktu keberangkatan).
+    const savedHalte = updated.haltes[index];
+    this.halteForm.patchValue(
+      {
+        waktuKedatangan: savedHalte.waktuKedatangan,
+        waktuKeberangkatan: savedHalte.waktuKeberangkatan,
+        penumpangNaik: savedHalte.penumpangNaik ?? 0,
+        penumpangTurun: savedHalte.penumpangTurun ?? 0,
+        penumpangTidakTerangkut: savedHalte.penumpangTidakTerangkut ?? 0,
+      },
+      { emitEvent: false },
+    );
+
+    return true;
   }
 
   private computeDwell(
