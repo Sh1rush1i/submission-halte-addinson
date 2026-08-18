@@ -75,7 +75,7 @@ export class TripForm {
   readonly halteForm = this.fb.nonNullable.group(
     {
       halteIndex: this.fb.control<number | null>(null, Validators.required),
-      waktuKedatangan: this.fb.control<Date | null>(null),
+      waktuKedatangan: this.fb.control<Date | null>(null, Validators.required),
       waktuKeberangkatan: this.fb.control<Date | null>(null),
       penumpangNaik: [0, [Validators.min(0)]],
       penumpangTurun: [0, [Validators.min(0)]],
@@ -181,23 +181,51 @@ export class TripForm {
     this.halteForm.controls.halteIndex.setValue(index);
   }
 
-  previousHalte(): void {
-    const current = this.halteForm.controls.halteIndex.value;
-    if (current === null) return;
-    if (current > 0) {
-      this.halteForm.controls.halteIndex.setValue(current - 1);
-    }
-  }
-
   nextHalte(): void {
     const current = this.halteForm.controls.halteIndex.value;
+
     if (current === null) {
       this.halteForm.controls.halteIndex.setValue(0);
       return;
     }
-    if (current < LAST_HALTE_INDEX) {
-      this.halteForm.controls.halteIndex.setValue(current + 1);
+
+    this.confirmAndPersist(current, () => {
+      if (current < LAST_HALTE_INDEX) {
+        this.halteForm.controls.halteIndex.setValue(current + 1);
+      }
+    });
+  }
+
+  previousHalte(): void {
+    const current = this.halteForm.controls.halteIndex.value;
+    if (current === null) return;
+
+    this.confirmAndPersist(current, () => {
+      if (current > 0) {
+        this.halteForm.controls.halteIndex.setValue(current - 1);
+      }
+    });
+  }
+
+  updateHalte(): void {
+    if (this.halteForm.invalid || !this.trip) {
+      this.halteForm.markAllAsTouched();
+      return;
     }
+
+    this.ref = this.dynamicDialogServices.confirmModal('Update this halte stop data?');
+    if (!this.ref) return;
+
+    this.ref.onClose.subscribe((result) => {
+      if (!result?.isValid) return;
+
+      const index = this.halteForm.controls.halteIndex.value!;
+      const saved = this.persistHalteData(index);
+
+      if (saved) {
+        this.invokeToast('Halte stop data updated successfully.', 'success');
+      }
+    });
   }
 
   canGoPreviousHalte(): boolean {
@@ -213,29 +241,6 @@ export class TripForm {
   setNow(control: 'waktuKedatangan' | 'waktuKeberangkatan'): void {
     this.halteForm.controls[control].setValue(new Date());
     this.halteForm.controls[control].markAsTouched();
-  }
-
-  updateHalte(): void {
-    if (this.halteForm.invalid || !this.trip) {
-      this.halteForm.markAllAsTouched();
-      return;
-    }
-
-    this.ref = this.dynamicDialogServices.confirmModal('Update this halte stop data?');
-    if (!this.ref) return;
-
-    this.ref.onClose.subscribe((result) => {
-      if (!result?.isValid) return;
-
-      const value = this.halteForm.getRawValue();
-      const index = value.halteIndex!;
-      const updated = this.tripService.updateHalte(this.trip!.id, index, value);
-
-      if (updated) {
-        this.trip = updated;
-        this.invokeToast('Halte stop data updated succesfuly.', 'success');
-      }
-    });
   }
 
   deleteHalteData(index: number): void {
@@ -281,6 +286,62 @@ export class TripForm {
       this.invokeToast('Trip deleted succesfuly.', 'success');
       this.router.navigate(['/trip']);
     });
+  }
+
+  private confirmAndPersist(index: number, afterSaved: () => void): void {
+    const value = this.halteForm.getRawValue();
+
+    if (!value.waktuKedatangan) {
+      afterSaved();
+      return;
+    }
+
+    this.ref = this.dynamicDialogServices.confirmModal(
+      `Save changes to "${HALTE_NAMES[index]}" before moving on?`,
+    );
+    if (!this.ref) {
+      afterSaved();
+      return;
+    }
+
+    this.ref.onClose.subscribe((result) => {
+      if (result?.isValid) {
+        const saved = this.persistHalteData(index);
+        if (saved) {
+          this.invokeToast('Halte stop data saved.', 'success');
+        }
+      }
+
+      afterSaved();
+    });
+  }
+
+  private persistHalteData(index: number): boolean {
+    if (!this.trip) return false;
+
+    const value = this.halteForm.getRawValue();
+
+    if (!value.waktuKedatangan) {
+      return false;
+    }
+
+    if (!value.waktuKeberangkatan) {
+      value.waktuKeberangkatan = new Date();
+    }
+
+    if (this.halteForm.errors?.['timeOrder']) {
+      this.invokeToast('Departure must be after arrival.', 'warn');
+      return false;
+    }
+
+    const updated = this.tripService.updateHalte(this.trip.id, index, value);
+    if (updated) {
+      this.trip = updated;
+      return true;
+    }
+
+    this.invokeToast('Failed to update halte stop data.', 'error');
+    return false;
   }
 
   private computeDwell(

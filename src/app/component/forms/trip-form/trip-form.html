@@ -160,7 +160,7 @@
           <form
             [formGroup]="halteForm"
             (ngSubmit)="updateHalte()"
-            class="flex w-full min-w-0 flex-col gap-6 lg:w-lg lg:shrink-0"
+            class="flex w-full min-w-0 flex-col gap-6 lg:w-xl lg:shrink-0"
           >
             <div>
               <label for="halteIndex" class="mb-2.5 block text-xs font-medium text-gray-400"
@@ -285,6 +285,7 @@
                     <p-inputnumber
                       inputId="penumpangNaik"
                       formControlName="penumpangNaik"
+                      [disabled]="!halteForm.controls.waktuKedatangan.value"
                       [min]="0"
                       [useGrouping]="false"
                       [showButtons]="true"
@@ -306,6 +307,7 @@
                     <p-inputnumber
                       inputId="penumpangTurun"
                       formControlName="penumpangTurun"
+                      [disabled]="!halteForm.controls.waktuKedatangan.value"
                       [min]="0"
                       [useGrouping]="false"
                       [showButtons]="true"
@@ -327,6 +329,7 @@
                     <p-inputnumber
                       inputId="penumpangTidakTerangkut"
                       formControlName="penumpangTidakTerangkut"
+                      [disabled]="!halteForm.controls.waktuKedatangan.value"
                       [min]="0"
                       [useGrouping]="false"
                       [showButtons]="true"
@@ -357,15 +360,25 @@
                   type="button"
                   pButton
                   (click)="cancel()"
-                  class="rounded-md border bg-transparent border-sky-700 px-4 py-1.5 text-sm text-white transition-colors hover:bg-sky-800"
+                  class="rounded-md border bg-transparent border-sky-700 px-2 sm:px-4 py-1.5 text-[0.6rem] sm:text-sm text-white transition-colors hover:bg-sky-800"
                 >
                   Back
                 </button>
+
+                <button
+                  type="button"
+                  pButton
+                  (click)="deleteHalteData(halteForm.controls.halteIndex.value!)"
+                  class="flex items-center border-none gap-2 rounded-md bg-red-800 px-2 sm:px-4 py-2 sm:text-sm text-[0.6rem] text-white transition duration-700 hover:bg-red-600"
+                >
+                  <i class="pi pi-times"></i> Delete Stop
+                </button>
+
                 <button
                   type="submit"
                   pButton
                   [disabled]="halteForm.invalid"
-                  class="flex items-center border-none gap-2 rounded-md bg-purple-800 px-4 py-1.5 text-sm text-white transition duration-700 hover:bg-purple-600 disabled:cursor-not-allowed disabled:opacity-50"
+                  class="flex items-center border-none gap-2 rounded-md bg-purple-800 px-2 sm:px-4 py-2 sm:text-sm text-[0.6rem] text-white transition duration-700 hover:bg-purple-600 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <i class="pi pi-check"></i> Update Stop
                 </button>
