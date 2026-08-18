@@ -281,24 +281,49 @@ export class TripForm {
     });
   }
 
-  dwellLabel(): string | null {
-    const { waktuKedatangan, waktuKeberangkatan } = this.halteForm.getRawValue();
-    if (!waktuKedatangan || !waktuKeberangkatan) return null;
-    const diffMs = new Date(waktuKeberangkatan).getTime() - new Date(waktuKedatangan).getTime();
+  private computeDwell(
+    start: Date | null,
+    end: Date | null,
+  ): { label: string; severity: 'success' | 'warn' | 'danger' } | null {
+    if (!start || !end) return null;
+    const diffMs = end.getTime() - start.getTime();
     if (diffMs <= 0) return null;
     const totalSeconds = Math.floor(diffMs / 1000);
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
-    return minutes === 0 ? `${seconds} s` : `${minutes} m ${seconds} s`;
+    const label = minutes === 0 ? `${seconds} s` : `${minutes} m ${seconds} s`;
+    const severity = minutes <= 3 ? 'success' : minutes <= 6 ? 'warn' : 'danger';
+    return { label, severity };
+  }
+
+  dwellLabel(): string | null {
+    const { waktuKedatangan, waktuKeberangkatan } = this.halteForm.getRawValue();
+    return this.computeDwell(waktuKedatangan, waktuKeberangkatan)?.label ?? null;
   }
 
   dwellSeverity(): 'success' | 'warn' | 'danger' {
     const { waktuKedatangan, waktuKeberangkatan } = this.halteForm.getRawValue();
-    if (!waktuKedatangan || !waktuKeberangkatan) return 'success';
-    const minutes = (waktuKeberangkatan.getTime() - waktuKedatangan.getTime()) / 60000;
-    if (minutes <= 3) return 'success';
-    if (minutes <= 6) return 'warn';
-    return 'danger';
+    return this.computeDwell(waktuKedatangan, waktuKeberangkatan)?.severity ?? 'success';
+  }
+
+  dwellLabelFor(halte: HalteEntry): string | null {
+    return this.computeDwell(halte.waktuKedatangan, halte.waktuKeberangkatan)?.label ?? null;
+  }
+
+  dwellSeverityFor(halte: HalteEntry): 'success' | 'warn' | 'danger' {
+    return (
+      this.computeDwell(halte.waktuKedatangan, halte.waktuKeberangkatan)?.severity ?? 'success'
+    );
+  }
+
+  haltesList(): { index: number; name: string; halte: HalteEntry }[] {
+    if (!this.trip) return [];
+    return this.trip.haltes.map((halte, index) => ({ index, name: HALTE_NAMES[index], halte }));
+  }
+
+  filledHalteCount(): number {
+    if (!this.trip) return 0;
+    return this.trip.haltes.filter((h) => this.isHalteFilled(h)).length;
   }
 
   isHalteFilled(halte: HalteEntry): boolean {
