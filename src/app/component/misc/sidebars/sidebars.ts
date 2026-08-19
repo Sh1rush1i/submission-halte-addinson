@@ -1,4 +1,4 @@
-import { Component, Output, signal, EventEmitter, effect } from '@angular/core';
+import { Component, Output, signal, EventEmitter, effect, Input } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { AvatarModule } from 'primeng/avatar';
 import { SidebarModule } from 'primeng/sidebar';
@@ -23,6 +23,7 @@ interface NavGroup {
   styleUrl: './sidebars.css',
 })
 export class Sidebars {
+  @Input() userName: string = 'Guest | Create new account with name';
   @Output() sidebarState = new EventEmitter<boolean>();
 
   isMobile = signal(false);

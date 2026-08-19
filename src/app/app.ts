@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, Signal, signal } from '@angular/core';
 import { NavigationEnd, RouterOutlet } from '@angular/router';
 import { Sidebars } from './component/misc/sidebars/sidebars';
 import { ButtonModule } from 'primeng/button';
@@ -8,6 +8,7 @@ import { AuthService } from './service/auth.service';
 import { MessageService } from 'primeng/api';
 import { Subscription } from 'rxjs';
 import { ToastModule } from 'primeng/toast';
+import { User } from '@auth0/auth0-angular';
 // import { PrimeNG } from 'primeng/config';
 // import { TranslateService } from '@ngx-translate/core';
 
@@ -23,6 +24,10 @@ export class App {
   private loginSub!: Subscription;
   private authFailedSub!: Subscription;
 
+  username: string = '';
+
+  private currentUser!: Signal<User | null>;
+
   firstSegment() {
     const url = window.location.pathname;
     const segments = url.split('/').filter((segment) => segment.length > 0);
@@ -36,7 +41,9 @@ export class App {
     private router: Router,
     private authService: AuthService,
     private messageService: MessageService,
-  ) {}
+  ) {
+    this.currentUser = this.authService.currentUser;
+  }
 
   viewState = signal('Desktop');
 
@@ -51,6 +58,17 @@ export class App {
   ngOnInit() {
     this.newLogin();
     this.onAuthFailed();
+
+    const user = this.currentUser();
+    if (user?.name) {
+      this.getUserName(user.name);
+    }
+
+    console.log(this.username, this.currentUser());
+  }
+
+  getUserName(name: string) {
+    this.username = name;
   }
 
   newLogin() {

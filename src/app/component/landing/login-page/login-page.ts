@@ -55,6 +55,45 @@ export class LoginPage {
     private router: Router,
   ) {}
 
+  nameValidator = (control: AbstractControl): ValidationErrors | null => {
+    const value = (control.value ?? '').trim();
+
+    if (!value) {
+      return null;
+    }
+
+    const isValidLength = value.length >= 2;
+    const isValidFormat = /^[a-zA-Z\s'-]+$/.test(value);
+
+    if (!isValidLength || !isValidFormat) {
+      return { nameRequirement: true };
+    }
+
+    return null;
+  };
+
+  passwordRequirementsValidator = (control: AbstractControl): ValidationErrors | null => {
+    const value = control.value ?? '';
+
+    const rules = [
+      { id: 'minLength', test: (v: string) => v.length >= 12 },
+      { id: 'uppercase', test: (v: string) => /[A-Z]/.test(v) },
+      { id: 'lowercase', test: (v: string) => /[a-z]/.test(v) },
+      { id: 'number', test: (v: string) => /[0-9]/.test(v) },
+      { id: 'symbol', test: (v: string) => /[^a-zA-Z0-9]/.test(v) },
+    ];
+
+    const failed = rules.filter((r) => !r.test(value)).map((r) => r.id);
+
+    return failed.length ? { passwordRequirements: failed } : null;
+  };
+
+  private matchPasswords(group: AbstractControl): ValidationErrors | null {
+    const pass = group.get('password')?.value;
+    const confirm = group.get('confirmPassword')?.value;
+    return pass === confirm ? null : { passwordMismatch: true };
+  }
+
   login = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(8)]],
@@ -84,45 +123,6 @@ export class LoginPage {
       test: (v: string) => /[^a-zA-Z0-9]/.test(v),
     },
   ];
-
-  nameValidator(control: AbstractControl): ValidationErrors | null {
-    const value = (control.value ?? '').trim();
-
-    if (!value) {
-      return null;
-    }
-
-    const isValidLength = value.length >= 2;
-    const isValidFormat = /^[a-zA-Z\s'-]+$/.test(value);
-
-    if (!isValidLength || !isValidFormat) {
-      return { nameRequirement: true };
-    }
-
-    return null;
-  }
-
-  passwordRequirementsValidator(control: AbstractControl): ValidationErrors | null {
-    const value = control.value ?? '';
-
-    const rules = [
-      { id: 'minLength', test: (v: string) => v.length >= 12 },
-      { id: 'uppercase', test: (v: string) => /[A-Z]/.test(v) },
-      { id: 'lowercase', test: (v: string) => /[a-z]/.test(v) },
-      { id: 'number', test: (v: string) => /[0-9]/.test(v) },
-      { id: 'symbol', test: (v: string) => /[^a-zA-Z0-9]/.test(v) },
-    ];
-
-    const failed = rules.filter((r) => !r.test(value)).map((r) => r.id);
-
-    return failed.length ? { passwordRequirements: failed } : null;
-  }
-
-  private matchPasswords(group: AbstractControl): ValidationErrors | null {
-    const pass = group.get('password')?.value;
-    const confirm = group.get('confirmPassword')?.value;
-    return pass === confirm ? null : { passwordMismatch: true };
-  }
 
   get email() {
     return this.login.controls.email;
@@ -176,6 +176,8 @@ export class LoginPage {
           localStorage.setItem('access_token', response.access_token);
           localStorage.setItem('id_token', response.id_token);
 
+          this.authService.setUserFromToken(response.id_token);
+
           this.authService.triggerLoginSuccess();
           this.router.navigate(['/dashboard']);
         },
@@ -197,9 +199,9 @@ export class LoginPage {
     }
 
     this.loading = true;
-    const { email, password } = this.register.value;
+    const { name, email, password } = this.register.value;
 
-    this.authService.register(email ?? '', password ?? '').subscribe({
+    this.authService.register(name ?? '', email ?? '', password ?? '').subscribe({
       next: (response: any) => {
         this.loading = false;
 
