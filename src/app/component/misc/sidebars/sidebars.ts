@@ -68,6 +68,7 @@ export class Sidebars {
   }
 
   ngOnInit() {
+    this.sidebarOpen.set(false);
     this.getDataNumber();
   }
 
