@@ -164,8 +164,8 @@ export class TripPage {
   tabButtonClass(mode: ViewMode): string {
     const base = 'flex items-center gap-2 rounded-md px-3 py-1.5 text-sm transition-colors';
     return this.viewMode() === mode
-      ? `${base} bg-gray-500/10 text-white shadow-sm`
-      : `${base} text-gray-600/50 hover:bg-gray-600/10 hover:text-gray-200`;
+      ? `${base} bg-gray-400/20 text-white shadow-sm`
+      : `${base} text-gray-600/50 hover:bg-gray-500/5 hover:text-gray-200`;
   }
 
   routeTo(base: string, id?: string | number) {
