@@ -171,94 +171,99 @@
             'opacity-0 translate-y-4 pointer-events-none z-0': viewMode() !== 'card',
           }"
         >
-          @if (!hasData()) {
-            <div
-              class="flex h-full flex-col items-center justify-center rounded-2xl border border-dashed border-gray-300 text-center"
-            >
-              <i class="pi pi-inbox text-4xl text-gray-300"></i>
-              <h2 class="mt-4 text-base font-semibold text-gray-200">
-                There is no departure data yet
-              </h2>
-              <p class="mt-1 max-w-sm text-sm text-gray-500">
-                Stop departure entry will appear here. Start by adding the first entry.
-              </p>
-              <button
-                pButton
-                class="mt-6 py-2 px-3 border-0 rounded-md text-white bg-sky-800 hover:bg-sky-600 transition-colors"
-                (click)="routeTo('/trip', 'new')"
+          @if (viewMode() === 'card') {
+            @if (!hasData()) {
+              <div
+                class="flex h-full flex-col items-center justify-center rounded-2xl border border-dashed border-gray-300 text-center"
               >
-                <i class="pi pi-plus"></i> Add New Trip Data
-              </button>
-            </div>
-          } @else {
-            <div class="grid grid-cols-1 gap-5 p-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              @for (record of records(); track trackById($index, record)) {
-                <div
-                  class="flex cursor-pointer flex-col rounded-md border border-gray-600/50 bg-gray-500/10 p-5 transition duration-250 ease-in-out hover:scale-101 hover:border-white/50 hover:bg-gray-500/15 hover:shadow-[0_0_15px_rgba(168,85,247,0.15)]"
-                  (click)="openItem(record.id)"
+                <i class="pi pi-inbox text-4xl text-gray-300"></i>
+                <h2 class="mt-4 text-base font-semibold text-gray-200">
+                  There is no departure data yet
+                </h2>
+                <p class="mt-1 max-w-sm text-sm text-gray-500">
+                  Stop departure entry will appear here. Start by adding the first entry.
+                </p>
+                <button
+                  pButton
+                  class="mt-6 py-2 px-3 border-0 rounded-md text-white bg-sky-800 hover:bg-sky-600 transition-colors"
+                  (click)="routeTo('/trip', 'new')"
                 >
-                  <!-- Header: Trip code + Date -->
-                  <div class="flex items-start justify-between">
-                    <div class="flex flex-col">
-                      <span class="text-[10px] uppercase tracking-wider text-gray-500"
-                        >Trip Code</span
-                      >
-                      <span class="font-mono text-sm font-bold text-gray-200">
-                        {{ record.kodeTrip }}
-                      </span>
-                    </div>
-                    <span
-                      class="text-xs font-medium text-sky-300 bg-sky-900/30 px-2 py-1 rounded-md"
-                    >
-                      {{ record.hariTanggal | date: 'dd MMM yy' }}
-                    </span>
-                  </div>
-
-                  <!-- Body: Surveyor & Vehicle Details -->
+                  <i class="pi pi-plus"></i> Add New Trip Data
+                </button>
+              </div>
+            } @else {
+              <div class="grid grid-cols-1 gap-5 p-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                @for (record of records(); track trackById($index, record)) {
                   <div
-                    class="mt-5 flex flex-col gap-2.5 border-t border-gray-700/50 pt-4 text-sm text-gray-300"
+                    class="flex cursor-pointer flex-col rounded-md border border-gray-600/50 bg-gray-500/5 p-5 transition duration-250 ease-in-out animate-[fadeInUp_0.4s_ease-out_both] hover:scale-101 hover:border-white/50 hover:bg-gray-500/10 hover:shadow-[0_0_15px_rgba(168,85,247,0.15)]"
+                    [style.animation-delay.ms]="$index * 130"
+                    (click)="openItem(record.id)"
                   >
-                    <div class="flex items-center justify-between">
-                      <span class="flex items-center gap-2 text-gray-500">
-                        <i class="pi pi-user text-xs"></i> Surveyor
-                      </span>
+                    <!-- Header: Trip code + Date -->
+                    <div class="flex items-start justify-between">
+                      <div class="flex flex-col">
+                        <span class="text-[10px] uppercase tracking-wider text-gray-500 font-mono"
+                          >Trip Code</span
+                        >
+                        <span class="font-mono text-sm font-bold text-gray-200">
+                          {{ record.kodeTrip }}
+                        </span>
+                      </div>
                       <span
-                        class="font-medium text-white truncate max-w-30"
-                        [title]="record.namaSurveyor"
+                        class="text-xs font-medium text-sky-300 bg-sky-900/30 px-2 py-1 rounded-md"
                       >
-                        {{ record.namaSurveyor }}
+                        {{ record.hariTanggal | date: 'dd MMM yy' }}
                       </span>
                     </div>
-                    <div class="flex items-center justify-between">
-                      <span class="flex items-center gap-2 text-gray-500">
-                        <i class="pi pi-car text-xs"></i> Vehicle No
-                      </span>
-                      <span class="font-medium text-white">
-                        {{ record.nomorKendaraan }}
-                      </span>
-                    </div>
-                  </div>
 
-                  <!-- Footer: Halte Progress -->
-                  <div class="mt-auto pt-5">
-                    <div class="flex items-center justify-between mb-1.5">
-                      <span class="text-xs font-medium text-gray-400">Stops Progress</span>
-                      <span class="text-xs font-bold" [ngClass]="getTextColorClass(record)">
-                        {{ getFilledCount(record) }}
-                        <span class="text-gray-500 font-normal">/ {{ record.haltes.length }}</span>
-                      </span>
+                    <!-- Body: Surveyor & Vehicle Details -->
+                    <div
+                      class="mt-5 flex flex-col gap-2.5 border-t border-gray-700/50 pt-4 text-sm text-gray-300"
+                    >
+                      <div class="flex items-center justify-between">
+                        <span class="flex items-center gap-2 text-gray-500">
+                          <i class="pi pi-user text-xs text-purple-300"></i> Surveyor
+                        </span>
+                        <span
+                          class="font-medium text-white truncate max-w-30"
+                          [title]="record.namaSurveyor"
+                        >
+                          {{ record.namaSurveyor }}
+                        </span>
+                      </div>
+                      <div class="flex items-center justify-between">
+                        <span class="flex items-center gap-2 text-gray-500">
+                          <i class="pi pi-car text-xs text-amber-300"></i> Vehicle No
+                        </span>
+                        <span class="font-medium text-white">
+                          {{ record.nomorKendaraan }}
+                        </span>
+                      </div>
                     </div>
-                    <div class="w-full bg-gray-800 rounded-full h-1.5 overflow-hidden">
-                      <div
-                        class="h-1.5 rounded-full transition-all duration-500 ease-out"
-                        [ngClass]="getProgressBarClass(record)"
-                        [style.width.%]="getProgressPercent(record)"
-                      ></div>
+
+                    <!-- Footer: Halte Progress -->
+                    <div class="mt-auto pt-5">
+                      <div class="flex items-center justify-between mb-1.5">
+                        <span class="text-xs font-medium text-gray-400">Stops Progress</span>
+                        <span class="text-xs font-bold" [ngClass]="getTextColorClass(record)">
+                          {{ getFilledCount(record) }}
+                          <span class="text-gray-500 font-normal"
+                            >/ {{ record.haltes.length }}</span
+                          >
+                        </span>
+                      </div>
+                      <div class="w-full bg-gray-800 rounded-full h-1.5 overflow-hidden">
+                        <div
+                          class="h-1.5 rounded-full transition-all duration-500 ease-out"
+                          [ngClass]="getProgressBarClass(record)"
+                          [style.width.%]="getProgressPercent(record)"
+                        ></div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              }
-            </div>
+                }
+              </div>
+            }
           }
         </div>
       </div>
