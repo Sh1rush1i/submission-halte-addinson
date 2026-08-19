@@ -208,6 +208,7 @@ export class TripPage {
   getTextColorClass(record: TripRecord): string {
     const percent = this.getProgressPercent(record);
     if (percent === 100) return 'text-emerald-400';
+    if (percent > 0 && percent < 30) return 'text-red-500';
     if (percent > 0) return 'text-amber-400';
     return 'text-gray-500';
   }
