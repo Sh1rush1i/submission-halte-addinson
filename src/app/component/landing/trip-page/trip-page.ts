@@ -215,7 +215,8 @@ export class TripPage {
   getProgressBarClass(record: TripRecord): string {
     const percent = this.getProgressPercent(record);
     if (percent === 100) return 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]';
-    if (percent > 0) return 'bg-amber-500';
+    if (percent > 0 && percent < 30) return 'bg-red-500';
+    if (percent >= 30) return 'bg-amber-500';
     return 'bg-gray-600';
   }
 
