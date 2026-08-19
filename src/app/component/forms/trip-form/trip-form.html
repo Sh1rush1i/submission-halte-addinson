@@ -136,7 +136,7 @@
       <p class="mt-8 text-sm text-red-400">Trip not found.</p>
     } @else {
       <div class="mt-8 md:pb-6 pb-8 lg:pb-6 flex flex-col gap-6">
-        <div class="rounded-md border border-gray-500/50 bg-gray-500/10 p-6">
+        <div class="rounded-md border border-gray-500/50 bg-gray-500/5 p-6">
           <h2 class="text-sm font-semibold text-gray-200">Trip Info</h2>
           <div class="mt-4 grid grid-cols-1 gap-4 text-sm sm:grid-cols-3">
             <div>
@@ -172,7 +172,7 @@
                   pButton
                   (click)="previousHalte()"
                   [disabled]="!canGoPreviousHalte()"
-                  class="flex shrink-0 items-center bg-transparent rounded-md border border-gray-700 px-3 py-2 text-gray-300 transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-40"
+                  class="flex shrink-0 items-center bg-transparent rounded-md border border-gray-700 px-3 py-2 text-sky-400 transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   <i class="pi pi-chevron-left"></i>
                 </button>
@@ -192,7 +192,7 @@
                   pButton
                   (click)="nextHalte()"
                   [disabled]="!canGoNextHalte()"
-                  class="flex shrink-0 items-center bg-transparent rounded-md border border-gray-700 px-3 py-2 text-gray-300 transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-40"
+                  class="flex shrink-0 items-center bg-transparent rounded-md border border-gray-700 px-3 py-2 text-sky-400 transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   <i class="pi pi-chevron-right"></i>
                 </button>
@@ -203,188 +203,198 @@
             </div>
 
             @if (halteForm.controls.halteIndex.value !== null) {
-              <div>
-                <label for="waktuKedatangan" class="mb-2.5 block text-xs font-medium text-gray-400">
-                  <i class="pi pi-pause-circle me-2 text-red-500"></i>Stop Time
-                </label>
-                <div class="flex gap-2">
-                  <p-datepicker
-                    fluid="true"
-                    inputId="waktuKedatangan"
-                    formControlName="waktuKedatangan"
-                    appendTo="body"
-                    [showTime]="true"
-                    [showSeconds]="true"
-                    hourFormat="24"
-                    dateFormat="yy-mm-dd"
-                    placeholder="Enter arrival time"
-                    [style]="{ width: '100%' }"
-                    [inputStyle]="{ width: '100%' }"
-                  />
-                  <button
-                    type="button"
-                    pButton
-                    (click)="setNow('waktuKedatangan')"
-                    class="flex shrink-0 items-center gap-1.5 bg-transparent rounded-md border border-gray-700 px-3 py-2 text-xs text-gray-300 transition-colors hover:bg-gray-800"
+              <div class="flex flex-col gap-6 animate-[fadeInUp_0.4s_ease-out]">
+                <div>
+                  <label
+                    for="waktuKedatangan"
+                    class="mb-2.5 block text-xs font-medium text-gray-400"
                   >
-                    <i class="pi pi-clock text-sky-300"></i>
-                    <span class="hidden sm:inline">Now</span>
-                  </button>
+                    <i class="pi pi-pause-circle me-2 text-red-500"></i>Stop Time
+                  </label>
+                  <div class="flex gap-2">
+                    <p-datepicker
+                      fluid="true"
+                      inputId="waktuKedatangan"
+                      formControlName="waktuKedatangan"
+                      appendTo="body"
+                      [showTime]="true"
+                      [showSeconds]="true"
+                      hourFormat="24"
+                      dateFormat="yy-mm-dd"
+                      placeholder="Enter arrival time"
+                      [style]="{ width: '100%' }"
+                      [inputStyle]="{ width: '100%' }"
+                    />
+                    <button
+                      type="button"
+                      pButton
+                      (click)="setNow('waktuKedatangan')"
+                      class="flex shrink-0 items-center gap-1.5 bg-transparent rounded-md border border-gray-700 px-3 py-2 text-xs text-gray-300 transition-colors hover:bg-gray-800"
+                    >
+                      <i class="pi pi-clock text-sky-400"></i>
+                      <span class="hidden sm:inline">Now</span>
+                    </button>
+                  </div>
                 </div>
-              </div>
 
-              <div>
-                <label
-                  for="waktuKeberangkatan"
-                  class="mb-2.5 block text-xs font-medium text-gray-400"
-                >
-                  <i class="pi pi-play-circle me-2 text-green-500"></i>On Road Again
-                  <span class="ml-1 font-normal normal-case text-gray-600">(Optional)</span>
-                </label>
-                <div class="flex gap-2">
-                  <p-datepicker
-                    inputId="waktuKeberangkatan"
-                    formControlName="waktuKeberangkatan"
-                    appendTo="body"
-                    [showTime]="true"
-                    [showSeconds]="true"
-                    hourFormat="24"
-                    dateFormat="yy-mm-dd"
-                    placeholder="Enter time when vehicle starts moving again"
-                    [style]="{ width: '100%' }"
-                    [inputStyle]="{ width: '100%' }"
-                  />
-                  <button
-                    type="button"
-                    pButton
-                    (click)="setNow('waktuKeberangkatan')"
-                    class="flex shrink-0 items-center gap-1.5 bg-transparent rounded-md border border-gray-700 px-3 py-2 text-xs text-gray-300 transition-colors hover:bg-gray-800"
+                <div>
+                  <label
+                    for="waktuKeberangkatan"
+                    class="mb-2.5 block text-xs font-medium text-gray-400"
                   >
-                    <i class="pi pi-clock text-sky-300"></i>
-                    <span class="hidden sm:inline">Now</span>
-                  </button>
+                    <i class="pi pi-play-circle me-2 text-green-500"></i>On Road Again
+                    <span class="ml-1 font-normal normal-case text-gray-600">(Optional)</span>
+                  </label>
+                  <div class="flex gap-2">
+                    <p-datepicker
+                      inputId="waktuKeberangkatan"
+                      formControlName="waktuKeberangkatan"
+                      appendTo="body"
+                      [showTime]="true"
+                      [showSeconds]="true"
+                      hourFormat="24"
+                      dateFormat="yy-mm-dd"
+                      placeholder="Enter time when vehicle starts moving again"
+                      [style]="{ width: '100%' }"
+                      [inputStyle]="{ width: '100%' }"
+                    />
+                    <button
+                      type="button"
+                      pButton
+                      (click)="setNow('waktuKeberangkatan')"
+                      class="flex shrink-0 items-center gap-1.5 bg-transparent rounded-md border border-gray-700 px-3 py-2 text-xs text-gray-300 transition-colors hover:bg-gray-800"
+                    >
+                      <i class="pi pi-clock text-sky-400"></i>
+                      <span class="hidden sm:inline">Now</span>
+                    </button>
+                  </div>
+                  @if (
+                    halteForm.errors?.['timeOrder'] && halteForm.controls.waktuKeberangkatan.touched
+                  ) {
+                    <p class="mt-1 text-xs text-red-400">Departure must be after arrival.</p>
+                  }
                 </div>
-                @if (
-                  halteForm.errors?.['timeOrder'] && halteForm.controls.waktuKeberangkatan.touched
-                ) {
-                  <p class="mt-1 text-xs text-red-400">Departure must be after arrival.</p>
-                }
-              </div>
 
-              <div class="rounded-md border border-gray-500/50 bg-gray-500/10 p-6">
-                <h2 class="text-sm font-semibold text-gray-200">
-                  <i class="pi pi-users text-purple-500 me-2"></i> Total Passengers
-                </h2>
+                <div class="rounded-md border border-gray-500/50 bg-gray-500/5 p-6">
+                  <h2 class="text-sm font-semibold text-gray-200">
+                    <i class="pi pi-users text-purple-500 me-2"></i> Total Passengers
+                  </h2>
 
-                <div class="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-3">
-                  <div>
-                    <label
-                      for="penumpangNaik"
-                      class="mb-2.5 flex items-center gap-1.5 text-xs font-medium text-gray-400"
-                    >
-                      <i class="pi pi-arrow-up-right text-emerald-500"></i>Board
-                    </label>
-                    <p-inputnumber
-                      inputId="penumpangNaik"
-                      formControlName="penumpangNaik"
-                      [disabled]="!halteForm.controls.waktuKedatangan.value"
-                      [min]="0"
-                      [useGrouping]="false"
-                      [showButtons]="true"
-                      buttonLayout="horizontal"
-                      incrementButtonIcon="pi pi-plus"
-                      decrementButtonIcon="pi pi-minus"
-                      [style]="{ width: '100%' }"
-                      [inputStyle]="{ width: '100%', 'text-align': 'center' }"
-                    />
-                  </div>
+                  <div class="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-3">
+                    <div>
+                      <label
+                        for="penumpangNaik"
+                        class="mb-2.5 flex items-center gap-1.5 text-xs font-medium text-gray-400"
+                      >
+                        <i class="pi pi-arrow-up-right text-emerald-500"></i>Board
+                      </label>
+                      <p-inputnumber
+                        inputId="penumpangNaik"
+                        formControlName="penumpangNaik"
+                        [disabled]="!halteForm.controls.waktuKedatangan.value"
+                        [min]="0"
+                        [useGrouping]="false"
+                        [showButtons]="true"
+                        buttonLayout="horizontal"
+                        incrementButtonIcon="pi pi-plus"
+                        decrementButtonIcon="pi pi-minus"
+                        [style]="{ width: '100%' }"
+                        [inputStyle]="{ width: '100%', 'text-align': 'center' }"
+                      />
+                    </div>
 
-                  <div>
-                    <label
-                      for="penumpangTurun"
-                      class="mb-2.5 flex items-center gap-1.5 text-xs font-medium text-gray-400"
-                    >
-                      <i class="pi pi-arrow-down-left text-sky-500"></i>Disembark
-                    </label>
-                    <p-inputnumber
-                      inputId="penumpangTurun"
-                      formControlName="penumpangTurun"
-                      [disabled]="!halteForm.controls.waktuKedatangan.value"
-                      [min]="0"
-                      [useGrouping]="false"
-                      [showButtons]="true"
-                      buttonLayout="horizontal"
-                      incrementButtonIcon="pi pi-plus"
-                      decrementButtonIcon="pi pi-minus"
-                      [style]="{ width: '100%' }"
-                      [inputStyle]="{ width: '100%', 'text-align': 'center' }"
-                    />
-                  </div>
+                    <div>
+                      <label
+                        for="penumpangTurun"
+                        class="mb-2.5 flex items-center gap-1.5 text-xs font-medium text-gray-400"
+                      >
+                        <i class="pi pi-arrow-down-left text-sky-500"></i>Disembark
+                      </label>
+                      <p-inputnumber
+                        inputId="penumpangTurun"
+                        formControlName="penumpangTurun"
+                        [disabled]="!halteForm.controls.waktuKedatangan.value"
+                        [min]="0"
+                        [useGrouping]="false"
+                        [showButtons]="true"
+                        buttonLayout="horizontal"
+                        incrementButtonIcon="pi pi-plus"
+                        decrementButtonIcon="pi pi-minus"
+                        [style]="{ width: '100%' }"
+                        [inputStyle]="{ width: '100%', 'text-align': 'center' }"
+                      />
+                    </div>
 
-                  <div>
-                    <label
-                      for="penumpangTidakTerangkut"
-                      class="mb-2.5 flex items-center gap-1.5 text-xs font-medium text-gray-400"
-                    >
-                      <i class="pi pi-exclamation-triangle text-amber-500"></i>Not Transported
-                    </label>
-                    <p-inputnumber
-                      inputId="penumpangTidakTerangkut"
-                      formControlName="penumpangTidakTerangkut"
-                      [disabled]="!halteForm.controls.waktuKedatangan.value"
-                      [min]="0"
-                      [useGrouping]="false"
-                      [showButtons]="true"
-                      buttonLayout="horizontal"
-                      incrementButtonIcon="pi pi-plus"
-                      decrementButtonIcon="pi pi-minus"
-                      [style]="{ width: '100%' }"
-                      [inputStyle]="{ width: '100%', 'text-align': 'center' }"
-                    />
+                    <div>
+                      <label
+                        for="penumpangTidakTerangkut"
+                        class="mb-2.5 flex items-center gap-1.5 text-xs font-medium text-gray-400"
+                      >
+                        <i class="pi pi-exclamation-triangle text-amber-500"></i>Not Transported
+                      </label>
+                      <p-inputnumber
+                        inputId="penumpangTidakTerangkut"
+                        formControlName="penumpangTidakTerangkut"
+                        [disabled]="!halteForm.controls.waktuKedatangan.value"
+                        [min]="0"
+                        [useGrouping]="false"
+                        [showButtons]="true"
+                        buttonLayout="horizontal"
+                        incrementButtonIcon="pi pi-plus"
+                        decrementButtonIcon="pi pi-minus"
+                        [style]="{ width: '100%' }"
+                        [inputStyle]="{ width: '100%', 'text-align': 'center' }"
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              @if (dwellLabel(); as label) {
                 <div
-                  class="flex items-center justify-between rounded-md border border-gray-500/50 bg-gray-500/10 px-5 py-3"
+                  class="flex items-center justify-between rounded-md border border-gray-500/50 bg-gray-500/5 px-5 overflow-hidden transition-all duration-300 ease-out"
+                  [ngClass]="
+                    dwellLabel()
+                      ? 'opacity-100 max-h-20 py-3'
+                      : 'opacity-0 max-h-0 py-0 border-transparent pointer-events-none'
+                  "
                 >
                   <div class="flex flex-row gap-2 justify-center align-center">
                     <i class="pi pi-clock text-red-400 py-1"></i>
                     <span class="text-sm text-white">Stop duration</span>
                   </div>
-                  <p-tag class="p-1" [value]="label" [severity]="dwellSeverity()" />
+                  @if (dwellLabel(); as label) {
+                    <p-tag class="p-1" [value]="label" [severity]="dwellSeverity()" />
+                  }
                 </div>
-              }
 
-              <div class="flex items-center justify-end gap-3">
-                <button
-                  type="button"
-                  pButton
-                  (click)="cancel()"
-                  class="rounded-md border bg-transparent border-sky-700 px-2 sm:px-4 py-1.5 text-[0.6rem] sm:text-sm text-white transition-colors hover:bg-sky-800"
-                >
-                  Back
-                </button>
+                <div class="flex items-center justify-end gap-3">
+                  <button
+                    type="button"
+                    pButton
+                    (click)="cancel()"
+                    class="rounded-md border bg-transparent border-sky-700 px-2 sm:px-4 py-1.5 text-[0.6rem] sm:text-sm text-white transition-colors hover:bg-sky-800"
+                  >
+                    Back
+                  </button>
 
-                <button
-                  type="button"
-                  pButton
-                  (click)="deleteHalteData(halteForm.controls.halteIndex.value!)"
-                  [disabled]="!halteForm.controls.waktuKedatangan.value"
-                  class="flex items-center border-none gap-2 rounded-md bg-red-800 px-2 sm:px-4 py-2 sm:text-sm text-[0.6rem] text-white transition duration-700 hover:bg-red-600"
-                >
-                  <i class="pi pi-times"></i> Delete Stop
-                </button>
+                  <button
+                    type="button"
+                    pButton
+                    (click)="deleteHalteData(halteForm.controls.halteIndex.value!)"
+                    [disabled]="!halteForm.controls.waktuKedatangan.value"
+                    class="flex items-center border-none gap-2 rounded-md bg-red-800 px-2 sm:px-4 py-2 sm:text-sm text-[0.6rem] text-white transition duration-700 hover:bg-red-600"
+                  >
+                    <i class="pi pi-times"></i> Delete Stop
+                  </button>
 
-                <button
-                  type="submit"
-                  pButton
-                  [disabled]="halteForm.invalid"
-                  class="flex items-center border-none gap-2 rounded-md bg-purple-800 px-2 sm:px-4 py-2 sm:text-sm text-[0.6rem] text-white transition duration-700 hover:bg-purple-600 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <i class="pi pi-check"></i> Update Stop
-                </button>
+                  <button
+                    type="submit"
+                    pButton
+                    [disabled]="halteForm.invalid"
+                    class="flex items-center border-none gap-2 rounded-md bg-purple-800 px-2 sm:px-4 py-2 sm:text-sm text-[0.6rem] text-white transition duration-700 hover:bg-purple-600 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <i class="pi pi-check"></i> Update Stop
+                  </button>
+                </div>
               </div>
             }
           </form>
@@ -403,14 +413,16 @@
             <div
               class="styled-scrollbar max-h-125 overflow-y-auto overscroll-contain rounded-md pr-1 scrollbar-gutter-stable"
             >
-              <div class="grid grid-cols-1 gap-4 @sm:grid-cols-2 @xl:grid-cols-3">
+              <div class="grid grid-cols-1 gap-4 @sm:grid-cols-2 @3xl:grid-cols-3">
                 @for (item of haltesList(); track item.index) {
                   <div
-                    class="flex flex-col rounded-md border p-4 transition-colors"
-                    [class.border-purple-500]="halteForm.controls.halteIndex.value === item.index"
-                    [class.bg-purple-500/5]="halteForm.controls.halteIndex.value === item.index"
-                    [class.border-gray-500/50]="halteForm.controls.halteIndex.value !== item.index"
-                    [class.bg-gray-500/10]="halteForm.controls.halteIndex.value !== item.index"
+                    class="flex flex-col rounded-md border p-4 transition-colors animate-[fadeInUp_0.4s_ease-out_both]"
+                    [style.animation-delay.ms]="item.index * 20"
+                    [ngClass]="
+                      halteForm.controls.halteIndex.value === item.index
+                        ? 'border-purple-500 bg-purple-500/5 hover:border-purple-600 hover:bg-purple-500/10'
+                        : 'border-gray-500/50 bg-gray-400/5 hover:border-gray-600/50 hover:bg-gray-400/10'
+                    "
                     (click)="editHalte(item.index)"
                   >
                     <div class="flex items-start justify-between gap-2">
@@ -425,7 +437,7 @@
                           type="button"
                           pButton
                           (click)="editHalte(item.index)"
-                          class="flex items-center bg-transparent rounded-md border border-gray-700 p-1.5 text-gray-300 transition-colors hover:bg-gray-800"
+                          class="flex items-center bg-transparent rounded-md border border-purple-700 p-1.5 text-purple-300 transition-colors hover:bg-purple-800/40"
                         >
                           <i class="pi pi-pencil text-xs"></i>
                         </button>
@@ -443,7 +455,7 @@
                     </div>
 
                     @if (isHalteFilled(item.halte)) {
-                      <div class="mt-3 space-y-1.5 text-xs">
+                      <div class="mt-3 space-y-1.5 text-xs animate-[fadeIn_0.3s_ease-out]">
                         <div class="flex items-center justify-between">
                           <span class="flex items-center gap-1.5 text-gray-500"
                             ><i class="pi pi-pause-circle text-red-500"></i>Stop</span
@@ -467,7 +479,7 @@
                       </div>
 
                       <div
-                        class="mt-3 grid grid-cols-3 gap-2 border-t border-gray-700/50 pt-3 text-center"
+                        class="mt-3 grid grid-cols-3 gap-2 border-t border-gray-700/50 pt-3 text-center animate-[fadeIn_0.3s_ease-out]"
                       >
                         <div>
                           <p class="text-sm font-bold text-emerald-400">
@@ -490,7 +502,7 @@
                       </div>
 
                       @if (dwellLabelFor(item.halte); as label) {
-                        <div class="mt-3 flex justify-end">
+                        <div class="mt-3 flex justify-end animate-[fadeIn_0.3s_ease-out]">
                           <p-tag [value]="label" [severity]="dwellSeverityFor(item.halte)" />
                         </div>
                       }
