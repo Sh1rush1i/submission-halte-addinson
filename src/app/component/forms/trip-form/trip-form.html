@@ -6,8 +6,8 @@
       <div>
         <p class="text-xs font-semibold uppercase tracking-widest text-gray-400">Operational</p>
         <h1 class="mt-1 text-2xl font-bold tracking-tight text-gray-100 sm:text-3xl">
-          Trip Data
-          <span class="text-green-300">{{ isNew() ? 'Form' : (trip?.kodeTrip ?? tripId) }}</span>
+          Trip
+          <span class="text-green-300">{{ isNew() ? 'Form' : 'Data' }}</span>
         </h1>
         <p class="mt-1 text-sm text-gray-500">
           Stop times, the number of passengers boarding &amp; alighting, and travel time back at
@@ -137,20 +137,26 @@
     } @else {
       <div class="mt-8 md:pb-6 pb-8 lg:pb-6 flex flex-col gap-6">
         <div class="rounded-md border border-gray-500/50 bg-gray-500/5 p-6">
-          <h2 class="text-sm font-semibold text-gray-200">Trip Info</h2>
+          <div class="flex flex-col gap-0">
+            <p class="text-gray-500 text-xs">TRIP INFO</p>
+            <h2 class="text-lg font-bold text-sky-200 font-mono uppercase">
+              {{ trip?.kodeTrip }} <span class="text-white">|</span> {{ tripId }}
+            </h2>
+          </div>
+
           <div class="mt-4 grid grid-cols-1 gap-4 text-sm sm:grid-cols-3">
             <div>
-              <p class="text-xs text-gray-500">Surveyor</p>
+              <p class="text-xs text-gray-500 uppercase font-mono">Surveyor</p>
               <p class="text-gray-200">{{ trip.namaSurveyor || '—' }}</p>
             </div>
             <div>
-              <p class="text-xs text-gray-500">Day / Date</p>
+              <p class="text-xs text-gray-500 uppercase font-mono">Day / Date</p>
               <p class="text-gray-200">
                 {{ trip.hariTanggal ? (trip.hariTanggal | date: 'yyyy-MM-dd') : '—' }}
               </p>
             </div>
             <div>
-              <p class="text-xs text-gray-500">Vehicle Number</p>
+              <p class="text-xs text-gray-500 uppercase font-mono">Vehicle Number</p>
               <p class="text-gray-200">{{ trip.nomorKendaraan || '—' }}</p>
             </div>
           </div>
