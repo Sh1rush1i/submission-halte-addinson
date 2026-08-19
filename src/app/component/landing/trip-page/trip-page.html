@@ -1,0 +1,255 @@
+<div class="styled-scrollbar h-full min-w-0 overflow-y-auto">
+  <div class="mx-auto flex h-full min-w-0 flex-col px-4 py-4 sm:px-6 sm:py-8 lg:px-8">
+    <div
+      class="flex flex-col gap-5 pb-6 border-b border-b-gray-500 sm:flex-row sm:items-end sm:justify-between"
+    >
+      <div>
+        <p class="text-xs font-semibold uppercase tracking-widest text-gray-400">Operational</p>
+        <h1 class="mt-1 text-2xl font-bold tracking-tight text-gray-100 sm:text-3xl">
+          Trip Data Overview
+        </h1>
+        <p class="mt-1 text-sm text-gray-500">
+          Manage surveyor trips, vehicles, and track halte data collection progress.
+        </p>
+      </div>
+
+      <div class="flex items-center justify-between gap-4 sm:justify-end">
+        <div
+          role="group"
+          aria-label="Ubah tampilan"
+          class="flex items-center gap-1 rounded-lg border border-surface-700 bg-surface-900/60 p-2.5 lg:p-1"
+        >
+          <button
+            type="button"
+            (click)="setView('table')"
+            [attr.aria-pressed]="viewMode() === 'table'"
+            [class]="tabButtonClass('table')"
+          >
+            <i class="pi pi-table"></i>
+            <span class="hidden font-medium sm:inline">Table</span>
+          </button>
+
+          <button
+            type="button"
+            (click)="setView('card')"
+            [attr.aria-pressed]="viewMode() === 'card'"
+            [class]="tabButtonClass('card')"
+          >
+            <i class="pi pi-th-large"></i>
+            <span class="hidden font-medium sm:inline">Card</span>
+          </button>
+        </div>
+
+        <button
+          pButton
+          class="bg-sky-800 hover:bg-sky-600 border-none rounded-md py-2.5 px-4 transition duration-700 flex items-center gap-2 text-white"
+          label="Add"
+          (click)="routeTo('/trip', 'new')"
+        >
+          <i class="pi pi-plus"></i> New Trip
+        </button>
+      </div>
+    </div>
+
+    @if (isLoading) {
+      <app-full-page-loading></app-full-page-loading>
+    } @else {
+      <!-- Table view -->
+      @if (viewMode() === 'table') {
+        <div
+          class="styled-scrollbar mt-6 flex flex-1 min-h-0 flex-col overflow-x-auto rounded-md border border-surface-700/50"
+        >
+          <p-table
+            [value]="records()"
+            stripedRows
+            [paginator]="true"
+            [rows]="10"
+            [scrollable]="true"
+            [rowsPerPageOptions]="[5, 10, 20]"
+            scrollHeight="flex"
+            dataKey="id"
+            styleClass="w-full table-fixed min-w-[56rem] "
+          >
+            <ng-template #header>
+              <tr>
+                @for (col of columnsField; track col.field) {
+                  <th
+                    class="transition duration-250 ease-in-out hover:scale-105 text-ms py-3"
+                    [ngClass]="col.widthClass + (col.align === 'center' ? ' text-center' : '')"
+                    [style.minWidth]="col.minWidth"
+                  >
+                    {{ col.header }}
+                  </th>
+                }
+              </tr>
+            </ng-template>
+
+            <ng-template #body let-record let-rowIndex="rowIndex">
+              <tr class="transition duration-250 ease-in-out hover:scale-103 py-1.5">
+                @for (col of columnsField; track col.field) {
+                  <td
+                    [ngClass]="[
+                      col.align === 'center' ? 'tabular-nums text-center' : '',
+                      col.type !== 'action' && col.type !== 'progress' && col.type !== 'index'
+                        ? 'transition duration-250 ease-in-out hover:scale-110'
+                        : '',
+                    ]"
+                  >
+                    @switch (col.type) {
+                      @case ('index') {
+                        <span class="text-gray-400">{{ rowIndex + 1 }}</span>
+                      }
+                      @case ('text') {
+                        <span class="text-sm font-medium" [ngClass]="col.rowClass">{{
+                          record[col.field]
+                        }}</span>
+                      }
+                      @case ('date') {
+                        <span class="text-sm text-gray-300">
+                          <i class="pi pi-calendar me-2 text-green-200"></i>
+                          {{ record[col.field] | date: 'dd MMM yyyy' }}
+                        </span>
+                      }
+                      @case ('progress') {
+                        <span
+                          class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold"
+                          [ngClass]="getHalteStatusClass(record)"
+                        >
+                          <i class="pi pi-map-marker"></i>
+                          {{ getFilledCount(record) }} / {{ record.haltes.length }}
+                        </span>
+                      }
+                      @case ('action') {
+                        <a
+                          href="javascript:void(0)"
+                          pTooltip="Open Trip Data"
+                          tooltipPosition="top"
+                          class="text-purple-300 transition hover:text-purple-100 hover:scale-110 inline-block"
+                          (click)="openItem(record.id)"
+                        >
+                          <i class="pi pi-external-link"></i>
+                        </a>
+                      }
+                    }
+                  </td>
+                }
+              </tr>
+            </ng-template>
+            <ng-template #emptymessage>
+              <tr>
+                <td colspan="9" class="p-0">
+                  <div
+                    class="flex flex-col items-center justify-center w-full min-h-[65vh] text-center bg-transparent"
+                  >
+                    <i
+                      class="pi pi-info-circle text-red-400 text-3xl mb-2 transition duration-250 ease-in-out hover:scale-105"
+                    ></i>
+                    <span
+                      class="text-gray-300 text-lg font-medium transition duration-250 ease-in-out hover:scale-105"
+                    >
+                      No data available
+                    </span>
+                    <p class="mt-1 max-w-sm text-sm text-gray-500">
+                      Stop departure entry will appear here. Start by adding the first entry.
+                    </p>
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+      }
+
+      <!-- Card view  -->
+      @else if (viewMode() === 'card') {
+        @if (!hasData()) {
+          <div
+            class="mt-6 flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-300 text-center h-screen"
+          >
+            <i class="pi pi-inbox text-4xl text-gray-300"></i>
+            <h2 class="mt-4 text-base font-semibold text-gray-200">
+              There is no departure data yet
+            </h2>
+            <p class="mt-1 max-w-sm text-sm text-gray-500">
+              Stop departure entry will appear here. Start by adding the first entry.
+            </p>
+            <button
+              pButton
+              class="mt-6 py-2 px-3 border-0 rounded-md text-white bg-sky-800 hover:bg-sky-600 transition-colors"
+              (click)="routeTo('/trip', 'new')"
+            >
+              <i class="pi pi-plus"></i> Add New Trip Data
+            </button>
+          </div>
+        } @else {
+          <div class="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            @for (record of records(); track trackById($index, record)) {
+              <div
+                class="flex cursor-pointer flex-col rounded-md border border-gray-600/50 bg-gray-500/10 p-5 transition duration-250 ease-in-out hover:scale-101 hover:border-white/50 hover:bg-gray-500/15 hover:shadow-[0_0_15px_rgba(168,85,247,0.15)]"
+                (click)="openItem(record.id)"
+              >
+                <!-- Header: Trip code + Date -->
+                <div class="flex items-start justify-between">
+                  <div class="flex flex-col">
+                    <span class="text-[10px] uppercase tracking-wider text-gray-500"
+                      >Trip Code</span
+                    >
+                    <span class="font-mono text-sm font-bold text-gray-200">
+                      {{ record.kodeTrip }}
+                    </span>
+                  </div>
+                  <span class="text-xs font-medium text-sky-300 bg-sky-900/30 px-2 py-1 rounded-md">
+                    {{ record.hariTanggal | date: 'dd MMM yy' }}
+                  </span>
+                </div>
+
+                <!-- Body: Surveyor & Vehicle Details -->
+                <div
+                  class="mt-5 flex flex-col gap-2.5 border-t border-gray-700/50 pt-4 text-sm text-gray-300"
+                >
+                  <div class="flex items-center justify-between">
+                    <span class="flex items-center gap-2 text-gray-500">
+                      <i class="pi pi-user text-xs"></i> Surveyor
+                    </span>
+                    <span
+                      class="font-medium text-white truncate max-w-30"
+                      [title]="record.namaSurveyor"
+                    >
+                      {{ record.namaSurveyor }}
+                    </span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span class="flex items-center gap-2 text-gray-500">
+                      <i class="pi pi-car text-xs"></i> Vehicle No
+                    </span>
+                    <span class="font-medium text-white">
+                      {{ record.nomorKendaraan }}
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Footer: Halte Progress -->
+                <div class="mt-auto pt-5">
+                  <div class="flex items-center justify-between mb-1.5">
+                    <span class="text-xs font-medium text-gray-400">Stops Progress</span>
+                    <span class="text-xs font-bold" [ngClass]="getTextColorClass(record)">
+                      {{ getFilledCount(record) }}
+                      <span class="text-gray-500 font-normal">/ {{ record.haltes.length }}</span>
+                    </span>
+                  </div>
+                  <div class="w-full bg-gray-800 rounded-full h-1.5 overflow-hidden">
+                    <div
+                      class="h-1.5 rounded-full transition-all duration-500 ease-out"
+                      [ngClass]="getProgressBarClass(record)"
+                      [style.width.%]="getProgressPercent(record)"
+                    ></div>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      }
+    }
+  </div>
+</div>
