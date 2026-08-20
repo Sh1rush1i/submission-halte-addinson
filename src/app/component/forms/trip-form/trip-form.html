@@ -58,108 +58,131 @@
     @if (isLoading) {
       <app-full-page-loading></app-full-page-loading>
     } @else if (isNew()) {
-      <form
-        [formGroup]="tripForm"
-        (ngSubmit)="createTrip()"
-        class="mt-8 md:pb-6 pb-8 lg:pb-0 flex flex-col gap-6"
+      <div
+        class="relative mt-8 md:pb-6 pb-8 lg:pb-0"
+        (dragover)="onDragOver($event)"
+        (dragenter)="onDragEnter($event)"
+        (dragleave)="onDragLeave($event)"
+        (drop)="onDrop($event)"
       >
-        <p class="text-sm text-gray-400">
-          Create the trip first. Once saved, you'll be able to pick each stop from a dropdown and
-          record its data.
-        </p>
+        <form [formGroup]="tripForm" (ngSubmit)="createTrip()" class="flex flex-col gap-6">
+          <p class="text-sm text-gray-400">
+            Create the trip first. Once saved, you'll be able to pick each stop from a dropdown and
+            record its data. Or <span class="text-sky-400 font-semibold">drag & drop</span> an
+            exported <span class="text-green-400 font-semibold">CSV/Excel file</span> here to import
+            a trip directly.
+          </p>
 
-        <div>
-          <label for="kodeTrip" class="mb-2.5 block text-xs font-medium text-gray-400"
-            >Trip Code</label
-          >
-          <input
-            id="kodeTrip"
-            type="text"
-            pInputText
-            formControlName="kodeTrip"
-            placeholder="Enter trip code identifier"
-            class="w-full"
-          />
-          @if (tripForm.controls.kodeTrip.invalid && tripForm.controls.kodeTrip.touched) {
-            <p class="mt-1 text-xs text-red-400">Trip code must be filled.</p>
-          }
-        </div>
-
-        <div class="grid grid-cols-1 gap-5 sm:grid-cols-3">
           <div>
-            <label for="namaSurveyor" class="mb-2.5 block text-xs font-medium text-gray-400"
-              >Surveyor Name</label
+            <label for="kodeTrip" class="mb-2.5 block text-xs font-medium text-gray-400"
+              >Trip Code</label
             >
             <input
-              id="namaSurveyor"
+              id="kodeTrip"
               type="text"
               pInputText
-              formControlName="namaSurveyor"
-              placeholder="Enter surveyor name"
+              formControlName="kodeTrip"
+              placeholder="Enter trip code identifier"
               class="w-full"
             />
-            @if (tripForm.controls.namaSurveyor.invalid && tripForm.controls.namaSurveyor.touched) {
-              <p class="mt-1 text-xs text-red-400">Surveyor name must be filled.</p>
+            @if (tripForm.controls.kodeTrip.invalid && tripForm.controls.kodeTrip.touched) {
+              <p class="mt-1 font-bold text-xs text-red-400">Trip code must be filled.</p>
             }
           </div>
 
-          <div>
-            <label for="hariTanggal" class="mb-2.5 block text-xs font-medium text-gray-400"
-              >Day / Date</label
+          <div class="grid grid-cols-1 gap-5 sm:grid-cols-3">
+            <div>
+              <label for="namaSurveyor" class="mb-2.5 block text-xs font-medium text-gray-400"
+                >Surveyor Name</label
+              >
+              <input
+                id="namaSurveyor"
+                type="text"
+                pInputText
+                formControlName="namaSurveyor"
+                placeholder="Enter surveyor name"
+                class="w-full"
+              />
+              @if (
+                tripForm.controls.namaSurveyor.invalid && tripForm.controls.namaSurveyor.touched
+              ) {
+                <p class="mt-1 text-xs text-red-400">Surveyor name must be filled.</p>
+              }
+            </div>
+
+            <div>
+              <label for="hariTanggal" class="mb-2.5 block text-xs font-medium text-gray-400"
+                >Day / Date</label
+              >
+              <p-datepicker
+                inputId="hariTanggal"
+                formControlName="hariTanggal"
+                appendTo="body"
+                dateFormat="yy-mm-dd"
+                placeholder="Select the survey date"
+                [style]="{ width: '100%' }"
+                [inputStyle]="{ width: '100%' }"
+              />
+              @if (tripForm.controls.hariTanggal.invalid && tripForm.controls.hariTanggal.touched) {
+                <p class="mt-1 text-xs text-red-400">Date must be filled.</p>
+              }
+            </div>
+
+            <div>
+              <label for="nomorKendaraan" class="mb-2.5 block text-xs font-medium text-gray-400"
+                >Vehicle Number</label
+              >
+              <input
+                id="nomorKendaraan"
+                type="text"
+                pInputText
+                formControlName="nomorKendaraan"
+                placeholder="Enter vehicle number"
+                class="w-full"
+              />
+              @if (
+                tripForm.controls.nomorKendaraan.invalid && tripForm.controls.nomorKendaraan.touched
+              ) {
+                <p class="mt-1 text-xs text-red-400">Vehicle number must be filled.</p>
+              }
+            </div>
+          </div>
+
+          <div class="flex items-center justify-end gap-3">
+            <button
+              type="button"
+              pButton
+              (click)="cancel()"
+              class="rounded-md border bg-transparent border-sky-700 px-4 py-1.5 text-sm text-white transition-colors hover:bg-sky-800"
             >
-            <p-datepicker
-              inputId="hariTanggal"
-              formControlName="hariTanggal"
-              appendTo="body"
-              dateFormat="yy-mm-dd"
-              placeholder="Select the survey date"
-              [style]="{ width: '100%' }"
-              [inputStyle]="{ width: '100%' }"
-            />
-            @if (tripForm.controls.hariTanggal.invalid && tripForm.controls.hariTanggal.touched) {
-              <p class="mt-1 text-xs text-red-400">Date must be filled.</p>
-            }
-          </div>
-
-          <div>
-            <label for="nomorKendaraan" class="mb-2.5 block text-xs font-medium text-gray-400"
-              >Vehicle Number</label
+              Back
+            </button>
+            <button
+              type="submit"
+              pButton
+              [disabled]="tripForm.invalid"
+              class="flex items-center border-none gap-2 rounded-md bg-sky-800 px-4 py-1.5 text-sm text-white transition duration-700 hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-50"
             >
-            <input
-              id="nomorKendaraan"
-              type="text"
-              pInputText
-              formControlName="nomorKendaraan"
-              placeholder="Enter vehicle number"
-              class="w-full"
-            />
-            @if (
-              tripForm.controls.nomorKendaraan.invalid && tripForm.controls.nomorKendaraan.touched
-            ) {
-              <p class="mt-1 text-xs text-red-400">Vehicle number must be filled.</p>
-            }
+              <i class="pi pi-check"></i> Save Trip
+            </button>
           </div>
-        </div>
+        </form>
 
-        <div class="flex items-center justify-end gap-3">
-          <button
-            type="button"
-            pButton
-            (click)="cancel()"
-            class="rounded-md border bg-transparent border-sky-700 px-4 py-1.5 text-sm text-white transition-colors hover:bg-sky-800"
-          >
-            Back
-          </button>
-          <button
-            type="submit"
-            pButton
-            [disabled]="tripForm.invalid"
-            class="flex items-center border-none gap-2 rounded-md bg-sky-800 px-4 py-1.5 text-sm text-white transition duration-700 hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <i class="pi pi-check"></i> Save Trip
-          </button>
+        <div
+          class="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 rounded-md border-2 border-dashed border-sky-400 bg-gray-950/90 backdrop-blur-sm transition-all duration-200 ease-out"
+          [ngClass]="
+            isDraggingFile() ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+          "
+        >
+          <i class="pi pi-cloud-upload text-4xl text-sky-400"></i>
+          <p class="text-sm font-medium text-gray-200">
+            Drop CSV or Excel file to import this trip
+          </p>
+          <p class="text-xs text-gray-500">
+            Accepts a single-trip export from this app (.csv, .xlsx)
+          </p>
         </div>
-      </form>
+      </div>
     } @else if (!trip) {
       <p class="mt-8 text-sm text-red-400">Trip not found.</p>
     } @else {
@@ -194,13 +217,24 @@
           <form
             [formGroup]="halteForm"
             (ngSubmit)="updateHalte()"
-            class="flex w-full min-w-0 flex-col gap-6 lg:w-xl lg:shrink-0"
+            class="flex w-full min-w-0 flex-col gap-3 lg:w-xl lg:shrink-0"
           >
-            <div>
+            <div class="flex items-center justify-between">
+              <h2 class="text-sm font-semibold text-gray-200">
+                <i class="pi pi-file-o text-amber-400 me-2"></i>Form
+              </h2>
+              @if (trip) {
+                <span class="text-xs text-gray-500"
+                  >{{ filledHalteCount() }} / {{ trip.haltes.length }} filled</span
+                >
+              }
+            </div>
+
+            <div class="bg-gray-500/5 border border-gray-600 rounded-md p-6">
               <label for="halteIndex" class="mb-2.5 block text-xs font-medium text-gray-400"
                 >Halte</label
               >
-              <div class="flex items-center gap-2">
+              <div class="sm:flex items-center grid grid-cols-1 gap-2">
                 <button
                   type="button"
                   pButton
@@ -208,7 +242,7 @@
                   [disabled]="!canGoPreviousHalte()"
                   class="flex shrink-0 items-center bg-transparent rounded-md border border-gray-700 px-3 py-2 text-sky-400 transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  <i class="pi pi-chevron-left"></i>
+                  <i class="pi pi-chevron-left hidden sm:inline"></i>
                 </button>
                 <p-select
                   inputId="halteIndex"
@@ -228,7 +262,7 @@
                   [disabled]="!canGoNextHalte()"
                   class="flex shrink-0 items-center bg-transparent rounded-md border border-gray-700 px-3 py-2 text-sky-400 transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  <i class="pi pi-chevron-right"></i>
+                  <i class="pi pi-chevron-right hidden sm:inline"></i>
                 </button>
               </div>
               @if (halteForm.controls.halteIndex.invalid && halteForm.controls.halteIndex.touched) {
@@ -237,76 +271,81 @@
             </div>
 
             @if (halteForm.controls.halteIndex.value !== null) {
-              <div class="flex flex-col gap-6 animate-[fadeInUp_0.4s_ease-out]">
-                <div>
-                  <label
-                    for="waktuKedatangan"
-                    class="mb-2.5 block text-xs font-medium text-gray-400"
-                  >
-                    <i class="pi pi-pause-circle me-2 text-red-500"></i>Stop Time
-                  </label>
-                  <div class="flex gap-2">
-                    <p-datepicker
-                      fluid="true"
-                      inputId="waktuKedatangan"
-                      formControlName="waktuKedatangan"
-                      appendTo="body"
-                      [showTime]="true"
-                      [showSeconds]="true"
-                      hourFormat="24"
-                      dateFormat="yy-mm-dd"
-                      placeholder="Enter arrival time"
-                      [style]="{ width: '100%' }"
-                      [inputStyle]="{ width: '100%' }"
-                    />
-                    <button
-                      type="button"
-                      pButton
-                      (click)="setNow('waktuKedatangan')"
-                      class="flex shrink-0 items-center gap-1.5 bg-transparent rounded-md border border-gray-700 px-3 py-2 text-xs text-gray-300 transition-colors hover:bg-gray-800"
+              <div class="flex flex-col gap-4 animate-[fadeInUp_0.4s_ease-out]">
+                <div
+                  class="flex flex-col border rounded-md border-gray-500/50 bg-gray-500/5 p-6 gap-4"
+                >
+                  <div>
+                    <label
+                      for="waktuKedatangan"
+                      class="mb-2.5 block text-xs font-medium text-gray-400"
                     >
-                      <i class="pi pi-clock text-sky-400"></i>
-                      <span class="hidden sm:inline">Now</span>
-                    </button>
+                      <i class="pi pi-pause-circle me-2 text-red-500"></i>Stop Time
+                    </label>
+                    <div class="flex gap-2">
+                      <p-datepicker
+                        fluid="true"
+                        inputId="waktuKedatangan"
+                        formControlName="waktuKedatangan"
+                        appendTo="body"
+                        [showTime]="true"
+                        [showSeconds]="true"
+                        hourFormat="24"
+                        dateFormat="yy-mm-dd"
+                        placeholder="Enter arrival time"
+                        [style]="{ width: '100%' }"
+                        [inputStyle]="{ width: '100%' }"
+                      />
+                      <button
+                        type="button"
+                        pButton
+                        (click)="setNow('waktuKedatangan')"
+                        class="flex shrink-0 items-center gap-1.5 bg-transparent rounded-md border border-gray-700 px-3 py-2 text-xs text-gray-300 transition-colors hover:bg-gray-800"
+                      >
+                        <i class="pi pi-clock text-sky-400"></i>
+                        <span class="hidden sm:inline">Now</span>
+                      </button>
+                    </div>
                   </div>
-                </div>
 
-                <div>
-                  <label
-                    for="waktuKeberangkatan"
-                    class="mb-2.5 block text-xs font-medium text-gray-400"
-                  >
-                    <i class="pi pi-play-circle me-2 text-green-500"></i>On Road Again
-                    <span class="ml-1 font-normal normal-case text-gray-600">(Optional)</span>
-                  </label>
-                  <div class="flex gap-2">
-                    <p-datepicker
-                      inputId="waktuKeberangkatan"
-                      formControlName="waktuKeberangkatan"
-                      appendTo="body"
-                      [showTime]="true"
-                      [showSeconds]="true"
-                      hourFormat="24"
-                      dateFormat="yy-mm-dd"
-                      placeholder="Enter time when vehicle starts moving again"
-                      [style]="{ width: '100%' }"
-                      [inputStyle]="{ width: '100%' }"
-                    />
-                    <button
-                      type="button"
-                      pButton
-                      (click)="setNow('waktuKeberangkatan')"
-                      class="flex shrink-0 items-center gap-1.5 bg-transparent rounded-md border border-gray-700 px-3 py-2 text-xs text-gray-300 transition-colors hover:bg-gray-800"
+                  <div>
+                    <label
+                      for="waktuKeberangkatan"
+                      class="mb-2.5 block text-xs font-medium text-gray-400"
                     >
-                      <i class="pi pi-clock text-sky-400"></i>
-                      <span class="hidden sm:inline">Now</span>
-                    </button>
+                      <i class="pi pi-play-circle me-2 text-green-500"></i>On Road Again
+                      <span class="ml-1 font-normal normal-case text-gray-600">(Optional)</span>
+                    </label>
+                    <div class="flex gap-2">
+                      <p-datepicker
+                        inputId="waktuKeberangkatan"
+                        formControlName="waktuKeberangkatan"
+                        appendTo="body"
+                        [showTime]="true"
+                        [showSeconds]="true"
+                        hourFormat="24"
+                        dateFormat="yy-mm-dd"
+                        placeholder="Enter time when vehicle starts moving again"
+                        [style]="{ width: '100%' }"
+                        [inputStyle]="{ width: '100%' }"
+                      />
+                      <button
+                        type="button"
+                        pButton
+                        (click)="setNow('waktuKeberangkatan')"
+                        class="flex shrink-0 items-center gap-1.5 bg-transparent rounded-md border border-gray-700 px-3 py-2 text-xs text-gray-300 transition-colors hover:bg-gray-800"
+                      >
+                        <i class="pi pi-clock text-sky-400"></i>
+                        <span class="hidden sm:inline">Now</span>
+                      </button>
+                    </div>
+                    @if (
+                      halteForm.errors?.['timeOrder'] &&
+                      halteForm.controls.waktuKeberangkatan.touched
+                    ) {
+                      <p class="mt-1 text-xs text-red-400">Departure must be after arrival.</p>
+                    }
                   </div>
-                  @if (
-                    halteForm.errors?.['timeOrder'] && halteForm.controls.waktuKeberangkatan.touched
-                  ) {
-                    <p class="mt-1 text-xs text-red-400">Departure must be after arrival.</p>
-                  }
                 </div>
 
                 <div class="rounded-md border border-gray-500/50 bg-gray-500/5 p-6">
@@ -405,7 +444,7 @@
                     type="button"
                     pButton
                     (click)="cancel()"
-                    class="rounded-md border bg-transparent border-sky-700 px-2 sm:px-4 py-1.5 text-[0.6rem] sm:text-sm text-white transition-colors hover:bg-sky-800"
+                    class="rounded-md border bg-transparent border-sky-700 px-2 sm:px-4 py-1.5 text-[0.8rem] sm:text-sm text-white transition-colors hover:bg-sky-800"
                   >
                     Back
                   </button>
@@ -415,7 +454,7 @@
                     pButton
                     (click)="deleteHalteData(halteForm.controls.halteIndex.value!)"
                     [disabled]="!halteForm.controls.waktuKedatangan.value"
-                    class="flex items-center border-none gap-2 rounded-md bg-red-800 px-2 sm:px-4 py-2 sm:text-sm text-[0.6rem] text-white transition duration-700 hover:bg-red-600"
+                    class="flex items-center border-none gap-2 rounded-md bg-red-800 px-2 sm:px-4 py-2 sm:text-sm text-[0.8rem] text-white transition duration-700 hover:bg-red-600"
                   >
                     <i class="pi pi-times"></i> Delete Stop
                   </button>
@@ -424,7 +463,7 @@
                     type="submit"
                     pButton
                     [disabled]="halteForm.invalid"
-                    class="flex items-center border-none gap-2 rounded-md bg-purple-800 px-2 sm:px-4 py-2 sm:text-sm text-[0.6rem] text-white transition duration-700 hover:bg-purple-600 disabled:cursor-not-allowed disabled:opacity-50"
+                    class="flex items-center border-none gap-2 rounded-md bg-purple-800 px-2 sm:px-4 py-2 sm:text-sm text-[0.8rem] text-white transition duration-700 hover:bg-purple-600 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <i class="pi pi-check"></i> Update Stop
                   </button>
@@ -445,7 +484,7 @@
             </div>
 
             <div
-              class="styled-scrollbar max-h-125 overflow-y-auto overscroll-contain rounded-md pr-1 scrollbar-gutter-stable"
+              class="styled-scrollbar max-h-148 overflow-y-auto overscroll-contain rounded-md scrollbar-gutter-stable"
             >
               <div class="grid grid-cols-1 gap-4 @sm:grid-cols-2 @3xl:grid-cols-3">
                 @for (item of haltesList(); track item.index) {

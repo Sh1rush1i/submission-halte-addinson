@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, inject } from '@angular/core';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   AbstractControl,
@@ -24,6 +24,7 @@ import { DynamicDialogServices } from '../../../service/dynamic-dialog.service';
 import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
 import * as XLSX from 'xlsx';
 import { ExportService } from '../../../service/export.service';
+import { ImportService } from '../../../service/import.service';
 
 function timeOrderValidator(group: AbstractControl): ValidationErrors | null {
   const datang = group.get('waktuKedatangan')?.value;
@@ -93,6 +94,7 @@ export class TripForm {
     private messageService: MessageService,
     private tripService: TripService,
     private dynamicDialogServices: DynamicDialogServices,
+    private importService: ImportService,
     private exportService: ExportService,
   ) {}
 
@@ -141,6 +143,96 @@ export class TripForm {
     });
   }
 
+  readonly isDraggingFile = signal(false);
+  private dragDepth = 0;
+
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+  }
+
+  onDragEnter(event: DragEvent): void {
+    event.preventDefault();
+    this.dragDepth++;
+    this.isDraggingFile.set(true);
+  }
+
+  onDragLeave(event: DragEvent): void {
+    event.preventDefault();
+    this.dragDepth--;
+    if (this.dragDepth <= 0) {
+      this.dragDepth = 0;
+      this.isDraggingFile.set(false);
+    }
+  }
+
+  async onDrop(event: DragEvent): Promise<void> {
+    event.preventDefault();
+    this.dragDepth = 0;
+    this.isDraggingFile.set(false);
+
+    const file = event.dataTransfer?.files?.[0];
+    if (!file) return;
+
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    if (ext !== 'csv' && ext !== 'xlsx' && ext !== 'xls') {
+      this.invokeToast('Please drop a .csv or .xlsx file.', 'warn');
+      return;
+    }
+
+    try {
+      const parsed = await this.importService.parseFile(file);
+
+      if (parsed.length === 0) {
+        this.invokeToast('No trip data found in this file.', 'warn');
+        return;
+      }
+
+      if (parsed.length > 1) {
+        this.invokeToast(
+          `This file contains ${parsed.length} trips. Only the first trip will be imported here — use the trip list page to import multiple trips at once.`,
+          'warn',
+        );
+      }
+
+      this.importTripFromFile(parsed[0]);
+    } catch (err) {
+      console.error(err);
+      this.invokeToast(
+        err instanceof Error ? err.message : 'Failed to read the dropped file.',
+        'error',
+      );
+    }
+  }
+
+  private importTripFromFile(imported: TripRecord): void {
+    this.openConfirmModal(
+      `Import trip "${imported.kodeTrip || 'Untitled'}" from file? This will create a new trip filled with the imported data.`,
+      () => {
+        const newTrip = this.tripService.createTrip({
+          kodeTrip: imported.kodeTrip,
+          namaSurveyor: imported.namaSurveyor,
+          hariTanggal: imported.hariTanggal,
+          nomorKendaraan: imported.nomorKendaraan,
+        });
+
+        imported.haltes.forEach((halte, index) => {
+          if (!halte.waktuKedatangan && !halte.waktuKeberangkatan) return;
+
+          this.tripService.updateHalte(newTrip.id, index, {
+            waktuKedatangan: halte.waktuKedatangan,
+            waktuKeberangkatan: halte.waktuKeberangkatan,
+            penumpangNaik: halte.penumpangNaik ?? 0,
+            penumpangTurun: halte.penumpangTurun ?? 0,
+            penumpangTidakTerangkut: halte.penumpangTidakTerangkut ?? 0,
+          });
+        });
+
+        this.invokeToast('Trip imported successfully.', 'success');
+        this.router.navigate(['/trip', newTrip.id]);
+      },
+    );
+  }
+
   exportCsv(): void {
     if (!this.trip) {
       this.invokeToast('No trip data to export.', 'warn');
@@ -163,7 +255,7 @@ export class TripForm {
       this.exportService.exportTripExcel(this.trip!);
       this.invokeToast('Excel exported successfully.', 'success');
     });
-  } 
+  }
 
   private loadTrip(): void {
     const found = this.tripService.getTrip(this.tripId!);
