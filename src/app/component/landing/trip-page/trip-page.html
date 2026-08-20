@@ -13,7 +13,7 @@
         </p>
       </div>
 
-      <div class="flex items-center justify-between gap-4 sm:justify-end">
+      <div class="flex items-center justify-between gap-2.5 sm:justify-end">
         <div
           role="group"
           aria-label="Ubah tampilan"
@@ -42,27 +42,29 @@
 
         <button
           pButton
-          class="bg-green-800 hover:bg-green-600 border-none rounded-md py-2.5 px-4 transition duration-700 flex items-center gap-2 text-white"
+          class="bg-green-800 hover:bg-green-600 border-none rounded-md sm:py-2.5 py-3.5 sm:px-4 px-5 transition duration-700 flex items-center gap-2 text-white"
           (click)="exportCsv()"
         >
-          <i class="pi pi-file-o"></i> Export CSV
+          <i class="pi pi-file-o"></i>
+          <span class="hidden font-medium sm:inline"> Export CSV</span>
         </button>
 
         <button
           pButton
-          class="bg-green-800 hover:bg-green-600 border-none rounded-md py-2.5 px-4 transition duration-700 flex items-center gap-2 text-white"
+          class="bg-green-800 hover:bg-green-600 border-none rounded-md sm:py-2.5 py-3.5 sm:px-4 px-5 transition duration-700 flex items-center gap-2 text-white"
           (click)="exportExcel()"
         >
-          <i class="pi pi-file-excel"></i> Export Excel
+          <i class="pi pi-file-excel"></i
+          ><span class="hidden font-medium sm:inline"> Export Excel</span>
         </button>
 
         <button
           pButton
-          class="bg-sky-800 hover:bg-sky-600 border-none rounded-md py-2.5 px-4 transition duration-700 flex items-center gap-2 text-white"
+          class="bg-sky-800 hover:bg-sky-600 border-none rounded-md sm:py-2.5 py-3.5 sm:px-4 px-5 transition duration-700 flex items-center gap-2 text-white"
           label="Add"
           (click)="routeTo('/trip', 'new')"
         >
-          <i class="pi pi-plus"></i> New Trip
+          <i class="pi pi-plus"></i><span class="hidden font-medium sm:inline"> New Trip</span>
         </button>
       </div>
     </div>
