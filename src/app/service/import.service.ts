@@ -8,6 +8,51 @@ type Row = (string | number)[];
   providedIn: 'root',
 })
 export class ImportService {
+  async parseSingleTripFile(file: File): Promise<TripRecord> {
+    const ext = file.name.split('.').pop()?.toLowerCase();
+
+    if (ext === 'csv') {
+      const text = await file.text();
+      const rows = this.parseCsvRows(text);
+
+      const isMultiTripFormat = rows.some((r) => r.length === 1 && r[0] === 'Halte Detail');
+      if (isMultiTripFormat) {
+        throw new Error(
+          'This file is a multi-trip export (contains the full trips list), not a single trip. Please use the trip list page to import it instead.',
+        );
+      }
+
+      const trips = this.parseSingleTripRows(rows);
+      return trips[0];
+    }
+
+    if (ext === 'xlsx' || ext === 'xls') {
+      const buffer = await file.arrayBuffer();
+      const workbook = XLSX.read(buffer, { type: 'array' });
+
+      if (workbook.SheetNames.includes('Halte Detail')) {
+        throw new Error(
+          'This file is a multi-trip export (contains the full trips list), not a single trip. Please use the trip list page to import it instead.',
+        );
+      }
+
+      if (!workbook.SheetNames.includes('Halte Data')) {
+        throw new Error('Recognized sheet ("Halte Data") not found in this file.');
+      }
+
+      const rows = XLSX.utils.sheet_to_json(workbook.Sheets['Halte Data'], {
+        header: 1,
+        raw: false,
+        defval: '',
+      }) as Row[];
+
+      const trips = this.parseSingleTripRows(rows);
+      return trips[0];
+    }
+
+    throw new Error('Unsupported file type. Please upload a .csv or .xlsx file.');
+  }
+
   async parseFile(file: File): Promise<TripRecord[]> {
     const ext = file.name.split('.').pop()?.toLowerCase();
 

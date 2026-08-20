@@ -198,21 +198,8 @@ export class TripForm {
     }
 
     try {
-      const parsed = await this.importService.parseFile(file);
-
-      if (parsed.length === 0) {
-        this.invokeToast('No trip data found in this file.', 'warn');
-        return;
-      }
-
-      if (parsed.length > 1) {
-        this.invokeToast(
-          `This file contains ${parsed.length} trips. Only the first trip will be imported here — use the trip list page to import multiple trips at once.`,
-          'warn',
-        );
-      }
-
-      this.importTripFromFile(parsed[0]);
+      const imported = await this.importService.parseSingleTripFile(file);
+      this.importTripFromFile(imported);
     } catch (err) {
       console.error(err);
       this.invokeToast(
@@ -223,8 +210,31 @@ export class TripForm {
   }
 
   private importTripFromFile(imported: TripRecord): void {
+    const missingFields: string[] = [];
+    if (!imported.kodeTrip?.trim()) missingFields.push('Trip Code');
+    if (!imported.namaSurveyor?.trim()) missingFields.push('Surveyor');
+    if (!imported.nomorKendaraan?.trim()) missingFields.push('Vehicle Number');
+    if (!imported.hariTanggal || isNaN(new Date(imported.hariTanggal).getTime())) {
+      missingFields.push('Date');
+    }
+
+    if (missingFields.length > 0) {
+      this.invokeToast(
+        `Cannot import: missing or invalid ${missingFields.join(', ')} in the file.`,
+        'error',
+      );
+      return;
+    }
+
+    if (imported.haltes.length !== HALTE_NAMES.length) {
+      this.invokeToast(
+        `Warning: this file has ${imported.haltes.length} stops, but this trip expects ${HALTE_NAMES.length}. Data may be misaligned.`,
+        'warn',
+      );
+    }
+
     this.openConfirmModal(
-      `Import trip "${imported.kodeTrip || 'Untitled'}" from file? This will create a new trip filled with the imported data.`,
+      `Import trip "${imported.kodeTrip}" from file? This will create a new trip filled with the imported data.`,
       () => {
         const newTrip = this.tripService.createTrip({
           kodeTrip: imported.kodeTrip,
@@ -233,19 +243,52 @@ export class TripForm {
           nomorKendaraan: imported.nomorKendaraan,
         });
 
+        let importedCount = 0;
+        let skippedCount = 0;
+        let failedCount = 0;
+
         imported.haltes.forEach((halte, index) => {
           if (!halte.waktuKedatangan && !halte.waktuKeberangkatan) return;
 
-          this.tripService.updateHalte(newTrip.id, index, {
-            waktuKedatangan: halte.waktuKedatangan,
-            waktuKeberangkatan: halte.waktuKeberangkatan,
+          if (index >= HALTE_NAMES.length) {
+            skippedCount++;
+            return;
+          }
+
+          const kedatangan = halte.waktuKedatangan ? new Date(halte.waktuKedatangan) : null;
+          const keberangkatan = halte.waktuKeberangkatan
+            ? new Date(halte.waktuKeberangkatan)
+            : null;
+
+          if (kedatangan && keberangkatan && keberangkatan <= kedatangan) {
+            skippedCount++;
+            return;
+          }
+
+          const updated = this.tripService.updateHalte(newTrip.id, index, {
+            waktuKedatangan: kedatangan,
+            waktuKeberangkatan: keberangkatan,
             penumpangNaik: halte.penumpangNaik ?? 0,
             penumpangTurun: halte.penumpangTurun ?? 0,
             penumpangTidakTerangkut: halte.penumpangTidakTerangkut ?? 0,
           });
+
+          if (updated) {
+            importedCount++;
+          } else {
+            failedCount++;
+          }
         });
 
-        this.invokeToast('Trip imported successfully.', 'success');
+        if (failedCount > 0 || skippedCount > 0) {
+          this.invokeToast(
+            `Trip imported with ${importedCount} stop(s) filled. ${skippedCount + failedCount} stop(s) were skipped due to invalid or misaligned data.`,
+            'warn',
+          );
+        } else {
+          this.invokeToast(`Trip imported successfully with ${importedCount} stop(s).`, 'success');
+        }
+
         this.router.navigate(['/trip', newTrip.id]);
       },
     );

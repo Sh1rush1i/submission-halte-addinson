@@ -186,17 +186,29 @@ export class TripPage {
     }
 
     try {
-      const imported = await this.importService.parseFile(file);
+      const parsed = await this.importService.parseFile(file);
 
-      if (imported.length === 0) {
+      if (parsed.length === 0) {
         this.invokeToast('No trip data found in this file.', 'warn');
         return;
       }
 
-      this.openConfirmModal(
-        `Import ${imported.length} trip${imported.length > 1 ? 's' : ''} from "${file.name}"?`,
-        () => this.saveImportedTrips(imported),
-      );
+      const { valid, invalid } = this.validateImportedTrips(parsed);
+
+      if (valid.length === 0) {
+        this.invokeToast(
+          `None of the ${parsed.length} trip(s) in this file could be imported — all had missing or invalid data.`,
+          'error',
+        );
+        return;
+      }
+
+      const message =
+        invalid.length > 0
+          ? `Import ${valid.length} valid trip(s) from "${file.name}"? ${invalid.length} trip(s) will be skipped due to missing/invalid data.`
+          : `Import ${valid.length} trip${valid.length > 1 ? 's' : ''} from "${file.name}"?`;
+
+      this.openConfirmModal(message, () => this.saveImportedTrips(valid, invalid));
     } catch (err) {
       console.error(err);
       this.invokeToast(
@@ -206,17 +218,80 @@ export class TripPage {
     }
   }
 
-  private saveImportedTrips(imported: TripRecord[]): void {
+  private validateImportedTrips(trips: TripRecord[]): {
+    valid: TripRecord[];
+    invalid: { trip: TripRecord; reason: string }[];
+  } {
+    const existingIds = new Set(this.records().map((r) => r.id));
+    const existingCodes = new Set(this.records().map((r) => r.kodeTrip.trim().toLowerCase()));
+
+    const valid: TripRecord[] = [];
+    const invalid: { trip: TripRecord; reason: string }[] = [];
+
+    trips.forEach((trip, i) => {
+      const missing: string[] = [];
+      if (!trip.kodeTrip?.trim()) missing.push('Trip Code');
+      if (!trip.namaSurveyor?.trim()) missing.push('Surveyor');
+      if (!trip.nomorKendaraan?.trim()) missing.push('Vehicle Number');
+      if (!trip.hariTanggal || isNaN(new Date(trip.hariTanggal).getTime())) {
+        missing.push('Date');
+      }
+
+      if (missing.length > 0) {
+        invalid.push({ trip, reason: `Missing ${missing.join(', ')}` });
+        return;
+      }
+
+      // Clean up halte-level data: drop any halte with an invalid time order.
+      const cleanedHaltes = trip.haltes.map((halte) => {
+        const kedatangan = halte.waktuKedatangan ? new Date(halte.waktuKedatangan) : null;
+        const keberangkatan = halte.waktuKeberangkatan ? new Date(halte.waktuKeberangkatan) : null;
+
+        if (kedatangan && keberangkatan && keberangkatan <= kedatangan) {
+          return { ...halte, waktuKeberangkatan: null };
+        }
+        return halte;
+      });
+
+      // Avoid id collisions with existing records (or with earlier trips in this same batch).
+      let id = trip.id;
+      while (existingIds.has(id)) {
+        id = id + 1;
+      }
+      existingIds.add(id);
+
+      if (existingCodes.has(trip.kodeTrip.trim().toLowerCase())) {
+        this.invokeToast(`Note: Trip Code "${trip.kodeTrip}" already exists in your data.`, 'warn');
+      }
+      existingCodes.add(trip.kodeTrip.trim().toLowerCase());
+
+      valid.push({ ...trip, id, haltes: cleanedHaltes });
+    });
+
+    return { valid, invalid };
+  }
+
+  private saveImportedTrips(
+    valid: TripRecord[],
+    invalid: { trip: TripRecord; reason: string }[] = [],
+  ): void {
     const current = this.records();
-    const merged = [...current, ...imported];
+    const merged = [...current, ...valid];
 
     localStorage.setItem('tripRecords', JSON.stringify(merged));
     this.records.set(merged);
 
-    this.invokeToast(
-      `${imported.length} trip${imported.length > 1 ? 's' : ''} imported successfully.`,
-      'success',
-    );
+    if (invalid.length > 0) {
+      this.invokeToast(
+        `${valid.length} trip(s) imported. ${invalid.length} trip(s) skipped: ${invalid.map((i) => i.reason).join('; ')}`,
+        'warn',
+      );
+    } else {
+      this.invokeToast(
+        `${valid.length} trip${valid.length > 1 ? 's' : ''} imported successfully.`,
+        'success',
+      );
+    }
   }
 
   exportCsv(): void {
