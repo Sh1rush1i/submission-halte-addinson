@@ -185,10 +185,13 @@ export class TripPage {
       return;
     }
 
+    this.isLoading = true;
+
     try {
       const parsed = await this.importService.parseFile(file);
 
       if (parsed.length === 0) {
+        this.isLoading = false;
         this.invokeToast('No trip data found in this file.', 'warn');
         return;
       }
@@ -196,12 +199,15 @@ export class TripPage {
       const { valid, invalid } = this.validateImportedTrips(parsed);
 
       if (valid.length === 0) {
+        this.isLoading = false;
         this.invokeToast(
-          `None of the ${parsed.length} trip(s) in this file could be imported — all had missing or invalid data.`,
+          `None of the ${parsed.length} trip(s) in this file could be imported. All had missing or invalid data.`,
           'error',
         );
         return;
       }
+
+      this.isLoading = false;
 
       const message =
         invalid.length > 0
@@ -210,6 +216,7 @@ export class TripPage {
 
       this.openConfirmModal(message, () => this.saveImportedTrips(valid, invalid));
     } catch (err) {
+      this.isLoading = false;
       console.error(err);
       this.invokeToast(
         err instanceof Error ? err.message : 'Failed to read the dropped file.',
@@ -228,7 +235,7 @@ export class TripPage {
     const valid: TripRecord[] = [];
     const invalid: { trip: TripRecord; reason: string }[] = [];
 
-    trips.forEach((trip, i) => {
+    trips.forEach((trip) => {
       const missing: string[] = [];
       if (!trip.kodeTrip?.trim()) missing.push('Trip Code');
       if (!trip.namaSurveyor?.trim()) missing.push('Surveyor');
@@ -239,6 +246,16 @@ export class TripPage {
 
       if (missing.length > 0) {
         invalid.push({ trip, reason: `Missing ${missing.join(', ')}` });
+        return;
+      }
+
+      if (existingIds.has(trip.id)) {
+        invalid.push({ trip, reason: `ID ${trip.id} already exists` });
+        return;
+      }
+
+      if (existingCodes.has(trip.kodeTrip.trim().toLowerCase())) {
+        invalid.push({ trip, reason: `Trip Code "${trip.kodeTrip}" already exists` });
         return;
       }
 
@@ -253,19 +270,10 @@ export class TripPage {
         return halte;
       });
 
-      // Avoid id collisions with existing records (or with earlier trips in this same batch).
-      let id = trip.id;
-      while (existingIds.has(id)) {
-        id = id + 1;
-      }
-      existingIds.add(id);
-
-      if (existingCodes.has(trip.kodeTrip.trim().toLowerCase())) {
-        this.invokeToast(`Note: Trip Code "${trip.kodeTrip}" already exists in your data.`, 'warn');
-      }
+      existingIds.add(trip.id);
       existingCodes.add(trip.kodeTrip.trim().toLowerCase());
 
-      valid.push({ ...trip, id, haltes: cleanedHaltes });
+      valid.push({ ...trip, haltes: cleanedHaltes });
     });
 
     return { valid, invalid };

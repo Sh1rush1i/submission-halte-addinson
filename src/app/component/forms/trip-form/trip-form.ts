@@ -197,10 +197,14 @@ export class TripForm {
       return;
     }
 
+    this.isLoading = true;
+
     try {
       const imported = await this.importService.parseSingleTripFile(file);
+      this.isLoading = false;
       this.importTripFromFile(imported);
     } catch (err) {
+      this.isLoading = false;
       console.error(err);
       this.invokeToast(
         err instanceof Error ? err.message : 'Failed to read the selected file.',
@@ -228,9 +232,15 @@ export class TripForm {
 
     if (imported.haltes.length !== HALTE_NAMES.length) {
       this.invokeToast(
-        `Warning: this file has ${imported.haltes.length} stops, but this trip expects ${HALTE_NAMES.length}. Data may be misaligned.`,
-        'warn',
+        `Cannot import: this file has ${imported.haltes.length} stops, but this trip expects ${HALTE_NAMES.length}. The data would be misaligned.`,
+        'error',
       );
+      return;
+    }
+
+    if (this.kodeTripExists(imported.kodeTrip)) {
+      this.invokeToast(`Cannot import: Trip Code "${imported.kodeTrip}" already exists.`, 'error');
+      return;
     }
 
     this.openConfirmModal(
@@ -249,11 +259,6 @@ export class TripForm {
 
         imported.haltes.forEach((halte, index) => {
           if (!halte.waktuKedatangan && !halte.waktuKeberangkatan) return;
-
-          if (index >= HALTE_NAMES.length) {
-            skippedCount++;
-            return;
-          }
 
           const kedatangan = halte.waktuKedatangan ? new Date(halte.waktuKedatangan) : null;
           const keberangkatan = halte.waktuKeberangkatan
@@ -282,7 +287,7 @@ export class TripForm {
 
         if (failedCount > 0 || skippedCount > 0) {
           this.invokeToast(
-            `Trip imported with ${importedCount} stop(s) filled. ${skippedCount + failedCount} stop(s) were skipped due to invalid or misaligned data.`,
+            `Trip imported with ${importedCount} stop(s) filled. ${skippedCount + failedCount} stop(s) were skipped due to invalid data.`,
             'warn',
           );
         } else {
@@ -292,6 +297,19 @@ export class TripForm {
         this.router.navigate(['/trip', newTrip.id]);
       },
     );
+  }
+
+  private kodeTripExists(kodeTrip: string): boolean {
+    const stored = localStorage.getItem('tripRecords');
+    if (!stored) return false;
+
+    try {
+      const records: { kodeTrip: string }[] = JSON.parse(stored);
+      const target = kodeTrip.trim().toLowerCase();
+      return records.some((r) => r.kodeTrip?.trim().toLowerCase() === target);
+    } catch {
+      return false;
+    }
   }
 
   exportCsv(): void {
