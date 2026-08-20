@@ -28,6 +28,7 @@ import { ImportService } from '../../../service/import.service';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { AuthService } from '../../../service/auth.service';
+import { TooltipModule } from 'primeng/tooltip';
 
 function timeOrderValidator(group: AbstractControl): ValidationErrors | null {
   const datang = group.get('waktuKedatangan')?.value;
@@ -54,6 +55,7 @@ const LAST_HALTE_INDEX = HALTE_NAMES.length - 1;
     ToastModule,
     IconFieldModule,
     InputIconModule,
+    TooltipModule,
   ],
   templateUrl: './trip-form.html',
   styleUrl: './trip-form.css',

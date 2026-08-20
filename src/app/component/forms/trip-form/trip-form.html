@@ -128,6 +128,8 @@
                 pInputText
                 formControlName="kodeTrip"
                 placeholder="Enter trip code identifier"
+                pTooltip="Enter trip code identifier"
+                tooltipPosition="top"
                 class="w-full"
               />
             </p-iconfield>
@@ -149,6 +151,8 @@
                   pInputText
                   formControlName="namaSurveyor"
                   placeholder="Enter surveyor name"
+                  pTooltip="Enter surveyor Name"
+                  tooltipPosition="bottom"
                   class="w-full"
                 />
               </p-iconfield>
@@ -169,6 +173,8 @@
                 appendTo="body"
                 dateFormat="yy-mm-dd"
                 placeholder="Select the survey date"
+                pTooltip="Select the survey date"
+                tooltipPosition="bottom"
                 [style]="{ width: '100%' }"
                 [inputStyle]="{ width: '100%' }"
                 showIcon
@@ -191,6 +197,8 @@
                   pInputText
                   formControlName="nomorKendaraan"
                   placeholder="Enter vehicle number"
+                  pTooltip="Enter vehicle number"
+                  tooltipPosition="bottom"
                   class="w-full"
                 />
               </p-iconfield>
@@ -279,6 +287,8 @@
                   pButton
                   (click)="previousHalte()"
                   [disabled]="!canGoPreviousHalte()"
+                  pTooltip="Previous halte"
+                  tooltipPosition="top"
                   class="flex shrink-0 items-center bg-transparent rounded-md border border-gray-700 px-3 py-2 text-sky-400 transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   <i class="pi pi-chevron-left hidden sm:inline"></i>
@@ -290,6 +300,8 @@
                   optionLabel="label"
                   optionValue="value"
                   placeholder="Select a stop"
+                  pTooltip="Select a stop"
+                  tooltipPosition="top"
                   [style]="{ width: '100%' }"
                   class="flex-1"
                   appendTo="body"
@@ -300,6 +312,8 @@
                   (click)="nextHalte()"
                   [disabled]="!canGoNextHalte()"
                   class="flex shrink-0 items-center bg-transparent rounded-md border border-gray-700 px-3 py-2 text-sky-400 transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-40"
+                  pTooltip="Next halte"
+                  tooltipPosition="top"
                 >
                   <i class="pi pi-chevron-right hidden sm:inline"></i>
                 </button>
@@ -332,6 +346,8 @@
                         hourFormat="24"
                         dateFormat="yy-mm-dd"
                         placeholder="Enter arrival time"
+                        tooltipPosition="top"
+                        pTooltip="Enter arrival time"
                         [style]="{ width: '100%' }"
                         [inputStyle]="{ width: '100%' }"
                       />
@@ -339,6 +355,8 @@
                         type="button"
                         pButton
                         (click)="setNow('waktuKedatangan')"
+                        pTooltip="Set time to now"
+                        tooltipPosition="top"
                         class="flex shrink-0 items-center gap-1.5 bg-transparent rounded-md border border-gray-700 px-3 py-2 text-xs text-gray-300 transition-colors hover:bg-gray-800"
                       >
                         <i class="pi pi-clock text-sky-400"></i>
@@ -365,6 +383,8 @@
                         hourFormat="24"
                         dateFormat="yy-mm-dd"
                         placeholder="Enter time when vehicle starts moving again"
+                        pTooltip="Enter time when vehicle starts moving again"
+                        tooltipPosition="top"
                         [style]="{ width: '100%' }"
                         [inputStyle]="{ width: '100%' }"
                       />
@@ -372,6 +392,8 @@
                         type="button"
                         pButton
                         (click)="setNow('waktuKeberangkatan')"
+                        pTooltip="Set time to now"
+                        tooltipPosition="top"
                         class="flex shrink-0 items-center gap-1.5 bg-transparent rounded-md border border-gray-700 px-3 py-2 text-xs text-gray-300 transition-colors hover:bg-gray-800"
                       >
                         <i class="pi pi-clock text-sky-400"></i>
@@ -410,6 +432,7 @@
                         buttonLayout="horizontal"
                         incrementButtonIcon="pi pi-plus"
                         decrementButtonIcon="pi pi-minus"
+                        pTooltip="Enter departure passanger"
                         [style]="{ width: '100%' }"
                         [inputStyle]="{ width: '100%', 'text-align': 'center' }"
                       />
@@ -430,6 +453,7 @@
                         [useGrouping]="false"
                         [showButtons]="true"
                         buttonLayout="horizontal"
+                        pTooltip="Enter disembark passanger"
                         incrementButtonIcon="pi pi-plus"
                         decrementButtonIcon="pi pi-minus"
                         [style]="{ width: '100%' }"
@@ -451,6 +475,7 @@
                         [min]="0"
                         [useGrouping]="false"
                         [showButtons]="true"
+                        pTooltip="Enter not transported passanger"
                         buttonLayout="horizontal"
                         incrementButtonIcon="pi pi-plus"
                         decrementButtonIcon="pi pi-minus"
@@ -550,6 +575,8 @@
                           pButton
                           (click)="editHalte(item.index)"
                           class="flex items-center bg-transparent rounded-md border border-purple-700 p-1.5 text-purple-300 transition-colors hover:bg-purple-800/40"
+                          pTooltip="Edit halte stop data"
+                          tooltipPosition="top"
                         >
                           <i class="pi pi-pencil text-xs"></i>
                         </button>
@@ -559,6 +586,8 @@
                             pButton
                             (click)="deleteHalteData(item.index)"
                             class="flex items-center bg-transparent rounded-md border border-red-800 p-1.5 text-red-300 transition-colors hover:bg-red-900/40"
+                            pTooltip="Delete halte stop data"
+                            tooltipPosition="top"
                           >
                             <i class="pi pi-trash text-xs"></i>
                           </button>
@@ -615,7 +644,12 @@
 
                       @if (dwellLabelFor(item.halte); as label) {
                         <div class="mt-3 flex justify-end animate-[fadeIn_0.3s_ease-out]">
-                          <p-tag [value]="label" [severity]="dwellSeverityFor(item.halte)" />
+                          <p-tag
+                            [value]="label"
+                            [severity]="dwellSeverityFor(item.halte)"
+                            pTooltip="Stop time duration"
+                            tooltipPosition="top"
+                          />
                         </div>
                       }
                     } @else {
