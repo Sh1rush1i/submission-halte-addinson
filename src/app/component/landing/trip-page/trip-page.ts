@@ -9,25 +9,12 @@ import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 
 import { FullPageLoading } from '../../misc/full-page-loading/full-page-loading';
-
-// Align interfaces with the TripRecord structure
-export interface HalteEntry {
-  namaHalte: string;
-  waktuKedatangan: Date | string | null;
-  waktuKeberangkatan: Date | string | null;
-  penumpangNaik: number | null;
-  penumpangTurun: number | null;
-  penumpangTidakTerangkut: number | null;
-}
-
-export interface TripRecord {
-  id: number;
-  kodeTrip: string;
-  namaSurveyor: string;
-  hariTanggal: Date;
-  nomorKendaraan: string;
-  haltes: HalteEntry[];
-}
+import { ExportService } from '../../../service/export.service';
+import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
+import { DynamicDialogServices } from '../../../service/dynamic-dialog.service';
+import { MessageService } from 'primeng/api';
+import { ToastModule } from 'primeng/toast';
+import { HalteEntry, TripRecord } from '../../../service/trip.service';
 
 type ViewMode = 'table' | 'card';
 
@@ -54,15 +41,18 @@ interface ColumnDef {
     TagModule,
     FullPageLoading,
     TooltipModule,
+    ToastModule,
   ],
   templateUrl: './trip-page.html',
   styleUrl: './trip-page.css',
-  providers: [DatePipe],
+  providers: [DatePipe, DialogService, MessageService],
 })
 export class TripPage {
   readonly viewMode = signal<ViewMode>('table');
 
   readonly records = signal<TripRecord[]>([]);
+
+  ref: DynamicDialogRef | undefined | null;
 
   columnsField: ColumnDef[] = [
     {
@@ -131,12 +121,54 @@ export class TripPage {
   isLoading: boolean = true;
 
   constructor(
-    private datePipe: DatePipe,
     private router: Router,
+    private messageService: MessageService,
+    private exportService: ExportService,
+    private dynamicDialogServices: DynamicDialogServices,
   ) {}
+
+  private openConfirmModal(message: string, onConfirm: () => void, onClose?: () => void): void {
+    this.ref = this.dynamicDialogServices.confirmModal(message);
+
+    if (!this.ref) {
+      onClose?.();
+      return;
+    }
+
+    this.ref.onClose.subscribe((result) => {
+      if (result?.isValid) {
+        onConfirm();
+      }
+      onClose?.();
+    });
+  }
 
   ngOnInit() {
     this.getData();
+  }
+
+  exportCsv(): void {
+    if (!this.hasData()) {
+      this.invokeToast('No trips data to export.', 'warn');
+      return;
+    }
+
+    this.openConfirmModal('Export this trips data to CSV?', () => {
+      this.exportService.exportTripsCsv(this.records());
+      this.invokeToast('CSV exported successfully.', 'success');
+    });
+  }
+
+  exportExcel(): void {
+    if (!this.hasData()) {
+      this.invokeToast('No trips data to export.', 'warn');
+      return;
+    }
+
+    this.openConfirmModal('Export this trips data to Excel?', () => {
+      this.exportService.exportTripsExcel(this.records());
+      this.invokeToast('Excel exported successfully.', 'success');
+    });
   }
 
   getData() {
@@ -148,6 +180,7 @@ export class TripPage {
           hariTanggal: new Date(rec.hariTanggal),
         }));
         this.records.set(parsed);
+        // console.log(this.records());
       } catch (err) {
         console.error('Error parsing localStorage data:', err);
       }
@@ -263,5 +296,13 @@ export class TripPage {
         haltes: generateMockHaltes(54, 0), // Not started
       },
     ]);
+  }
+
+  invokeToast(message: string, severity: 'success' | 'info' | 'warn' | 'error') {
+    this.messageService.add({
+      severity: severity,
+      summary: 'Notification',
+      detail: message,
+    });
   }
 }

@@ -15,16 +15,44 @@
         </p>
       </div>
 
-      @if (!isNew() && trip) {
+      <div class="xl:flex xl:flex-row grid grid-cols-1 md:grid-cols-2 gap-2">
         <button
           type="button"
           pButton
-          (click)="deleteTrip()"
-          class="flex shrink-0 items-center gap-1.5 bg-transparent rounded-md border border-red-800 px-4 py-1.5 text-sm text-red-300 transition-colors hover:bg-red-900/40"
+          (click)="cancel()"
+          class="flex shrink-0 items-center gap-1.5 rounded-sm bg-transparent border border-sky-500/50 px-4 py-1.5 xl:text-sm md:text-xs text-sm text-white transition-colors hover:bg-sky-700/40"
         >
-          <i class="pi pi-trash"></i> Delete Trip
+          <i class="pi pi-times"></i> Back
         </button>
-      }
+        @if (!isNew() && trip) {
+          <button
+            type="button"
+            pButton
+            (click)="exportCsv()"
+            class="flex shrink-0 items-center gap-1.5 rounded-sm border-0 bg-green-500/50 px-4 py-1.5 xl:text-sm md:text-xs text-sm text-white transition-colors hover:bg-green-700/50"
+          >
+            <i class="pi pi-file-o"></i> Export CSV
+          </button>
+
+          <button
+            type="button"
+            pButton
+            (click)="exportExcel()"
+            class="flex shrink-0 items-center gap-1.5 rounded-sm border-0 bg-green-500/50 px-4 py-1.5 xl:text-sm md:text-xs text-sm text-white transition-colors hover:bg-green-700/50"
+          >
+            <i class="pi pi-file-excel"></i> Export Excel
+          </button>
+
+          <button
+            type="button"
+            pButton
+            (click)="deleteTrip()"
+            class="flex shrink-0 items-center gap-1.5 rounded-sm border-0 bg-red-500/50 px-4 py-1.5 xl:text-sm md:text-xs text-sm text-white transition-colors hover:bg-red-700/50"
+          >
+            <i class="pi pi-trash"></i> Delete Trip
+          </button>
+        }
+      </div>
     </div>
 
     @if (isLoading) {

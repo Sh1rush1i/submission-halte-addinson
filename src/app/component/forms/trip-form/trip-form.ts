@@ -22,6 +22,8 @@ import { MessageService } from 'primeng/api';
 import { TripService, HALTE_NAMES, HalteEntry, TripRecord } from '../../../service/trip.service';
 import { DynamicDialogServices } from '../../../service/dynamic-dialog.service';
 import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
+import * as XLSX from 'xlsx';
+import { ExportService } from '../../../service/export.service';
 
 function timeOrderValidator(group: AbstractControl): ValidationErrors | null {
   const datang = group.get('waktuKedatangan')?.value;
@@ -91,6 +93,7 @@ export class TripForm {
     private messageService: MessageService,
     private tripService: TripService,
     private dynamicDialogServices: DynamicDialogServices,
+    private exportService: ExportService,
   ) {}
 
   ngOnInit(): void {
@@ -110,8 +113,6 @@ export class TripForm {
       } else {
         this.isLoading = true;
         this.loadTrip();
-        // const raw = localStorage.getItem('tripRecords');
-        // console.log(raw ? JSON.parse(raw) : []);
       }
     });
 
@@ -123,6 +124,46 @@ export class TripForm {
   isNew(): boolean {
     return !this.tripId || this.tripId === 'new';
   }
+
+  private openConfirmModal(message: string, onConfirm: () => void, onClose?: () => void): void {
+    this.ref = this.dynamicDialogServices.confirmModal(message);
+
+    if (!this.ref) {
+      onClose?.();
+      return;
+    }
+
+    this.ref.onClose.subscribe((result) => {
+      if (result?.isValid) {
+        onConfirm();
+      }
+      onClose?.();
+    });
+  }
+
+  exportCsv(): void {
+    if (!this.trip) {
+      this.invokeToast('No trip data to export.', 'warn');
+      return;
+    }
+
+    this.openConfirmModal('Export this trip data to CSV?', () => {
+      this.exportService.exportTripCsv(this.trip!);
+      this.invokeToast('CSV exported successfully.', 'success');
+    });
+  }
+
+  exportExcel(): void {
+    if (!this.trip) {
+      this.invokeToast('No trip data to export.', 'warn');
+      return;
+    }
+
+    this.openConfirmModal('Export this trip data to Excel?', () => {
+      this.exportService.exportTripExcel(this.trip!);
+      this.invokeToast('Excel exported successfully.', 'success');
+    });
+  } 
 
   private loadTrip(): void {
     const found = this.tripService.getTrip(this.tripId!);
@@ -138,6 +179,7 @@ export class TripForm {
       hariTanggal: found.hariTanggal,
       nomorKendaraan: found.nomorKendaraan,
     });
+
     this.isLoading = false;
   }
 
@@ -147,12 +189,7 @@ export class TripForm {
       return;
     }
 
-    this.ref = this.dynamicDialogServices.confirmModal('Save this new trip data?');
-    if (!this.ref) return;
-
-    this.ref.onClose.subscribe((result) => {
-      if (!result?.isValid) return;
-
+    this.openConfirmModal('Save this new trip data?', () => {
       const value = this.tripForm.getRawValue();
       const newTrip = this.tripService.createTrip(value);
 
@@ -213,12 +250,7 @@ export class TripForm {
       return;
     }
 
-    this.ref = this.dynamicDialogServices.confirmModal('Update this halte stop data?');
-    if (!this.ref) return;
-
-    this.ref.onClose.subscribe((result) => {
-      if (!result?.isValid) return;
-
+    this.openConfirmModal('Update this halte stop data?', () => {
       const index = this.halteForm.controls.halteIndex.value!;
       const saved = this.persistHalteData(index);
 
@@ -246,14 +278,7 @@ export class TripForm {
   deleteHalteData(index: number): void {
     if (!this.trip) return;
 
-    this.ref = this.dynamicDialogServices.confirmModal(
-      `Delete halte stop data for "${HALTE_NAMES[index]}"?`,
-    );
-    if (!this.ref) return;
-
-    this.ref.onClose.subscribe((result) => {
-      if (!result?.isValid) return;
-
+    this.openConfirmModal(`Delete halte stop data for "${HALTE_NAMES[index]}"?`, () => {
       const updated = this.tripService.deleteHalteData(this.trip!.id, index);
       if (updated) {
         this.trip = updated;
@@ -274,51 +299,34 @@ export class TripForm {
   deleteTrip(): void {
     if (!this.trip) return;
 
-    this.ref = this.dynamicDialogServices.confirmModal(
+    this.openConfirmModal(
       `Delete trip "${this.trip.kodeTrip}" including its halte stop data? This action will have consequences.`,
+      () => {
+        this.tripService.deleteTrip(this.trip!.id);
+        this.invokeToast('Trip deleted succesfuly.', 'success');
+        this.router.navigate(['/trip']);
+      },
     );
-    if (!this.ref) return;
-
-    this.ref.onClose.subscribe((result) => {
-      if (!result?.isValid) return;
-
-      this.tripService.deleteTrip(this.trip!.id);
-      this.invokeToast('Trip deleted succesfuly.', 'success');
-      this.router.navigate(['/trip']);
-    });
   }
 
   private confirmAndPersist(index: number, afterSaved: () => void): void {
     const value = this.halteForm.getRawValue();
 
-    if (!value.waktuKedatangan) {
+    if (!value.waktuKedatangan || !this.isHalteDataChanged(index)) {
       afterSaved();
       return;
     }
 
-    if (!this.isHalteDataChanged(index)) {
-      afterSaved();
-      return;
-    }
-
-    this.ref = this.dynamicDialogServices.confirmModal(
+    this.openConfirmModal(
       `Save changes to "${HALTE_NAMES[index]}" before moving on?`,
-    );
-    if (!this.ref) {
-      afterSaved();
-      return;
-    }
-
-    this.ref.onClose.subscribe((result) => {
-      if (result?.isValid) {
+      () => {
         const saved = this.persistHalteData(index);
         if (saved) {
           this.invokeToast('Halte stop data saved.', 'success');
         }
-      }
-
-      afterSaved();
-    });
+      },
+      () => afterSaved(),
+    );
   }
 
   private isHalteDataChanged(index: number): boolean {
@@ -363,7 +371,6 @@ export class TripForm {
 
     this.trip = updated;
 
-    // Sinkronkan form dengan data final yang tersimpan (termasuk auto-fill waktu keberangkatan).
     const savedHalte = updated.haltes[index];
     this.halteForm.patchValue(
       {
