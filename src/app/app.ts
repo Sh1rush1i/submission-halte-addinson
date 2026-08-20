@@ -64,7 +64,7 @@ export class App {
       this.getUserName(user.name);
     }
 
-    console.log(this.username, this.currentUser());
+    // console.log(this.username, this.currentUser());
   }
 
   getUserName(name: string) {

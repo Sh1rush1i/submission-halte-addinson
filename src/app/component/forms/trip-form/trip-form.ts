@@ -27,6 +27,7 @@ import { ExportService } from '../../../service/export.service';
 import { ImportService } from '../../../service/import.service';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
+import { AuthService } from '../../../service/auth.service';
 
 function timeOrderValidator(group: AbstractControl): ValidationErrors | null {
   const datang = group.get('waktuKedatangan')?.value;
@@ -100,6 +101,7 @@ export class TripForm {
     private dynamicDialogServices: DynamicDialogServices,
     private importService: ImportService,
     private exportService: ExportService,
+    private authService: AuthService,
   ) {}
 
   ngOnInit(): void {
@@ -115,6 +117,11 @@ export class TripForm {
 
       if (this.isNew()) {
         this.tripForm.reset();
+        this.tripForm.patchValue({
+          namaSurveyor: this.authService.currentUser()?.name ?? '',
+          hariTanggal: new Date(),
+        });
+
         this.isLoading = false;
       } else {
         this.isLoading = true;
