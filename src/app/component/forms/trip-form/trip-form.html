@@ -51,6 +51,15 @@
           >
             <i class="pi pi-trash"></i> Delete Trip
           </button>
+
+          <button
+            type="button"
+            pButton
+            (click)="routeTo('trip', 'new')"
+            class="flex shrink-0 items-center gap-1.5 rounded-sm border-0 bg-sky-500/50 px-4 py-1.5 xl:text-sm md:text-xs text-sm text-white transition-colors hover:bg-sky-700/50"
+          >
+            <i class="pi pi-plus"></i> New Trip
+          </button>
         }
       </div>
     </div>
@@ -59,32 +68,69 @@
       <app-full-page-loading></app-full-page-loading>
     } @else if (isNew()) {
       <div
-        class="relative mt-8 md:pb-6 pb-8 lg:pb-0"
-        (dragover)="onDragOver($event)"
-        (dragenter)="onDragEnter($event)"
-        (dragleave)="onDragLeave($event)"
-        (drop)="onDrop($event)"
+        class="mt-8 md:pb-6 pb-8 lg:pb-0 flex flex-col gap-6 flex-1 min-h-0 lg:grid lg:grid-cols-2 lg:items-stretch"
       >
-        <form [formGroup]="tripForm" (ngSubmit)="createTrip()" class="flex flex-col gap-6">
+        <label
+          for="tripImportFile"
+          class="relative flex min-h-72 flex-1 cursor-pointer flex-col items-center justify-center gap-3 rounded-md border-2 border-dashed border-gray-600 bg-gray-500/5 p-8 text-center transition-colors duration-200 hover:border-gray-500 hover:bg-gray-500/10 lg:min-h-0"
+          [ngClass]="isDraggingFile() ? 'border-sky-400 bg-sky-500/5' : ''"
+          (dragover)="onDragOver($event)"
+          (dragenter)="onDragEnter($event)"
+          (dragleave)="onDragLeave($event)"
+          (drop)="onDrop($event)"
+        >
+          <input
+            id="tripImportFile"
+            type="file"
+            accept=".csv,.xlsx"
+            class="hidden"
+            (change)="onFileSelected($event)"
+          />
+
+          <i
+            class="pi pi-cloud-upload text-4xl transition-colors duration-200"
+            [ngClass]="isDraggingFile() ? 'text-sky-400' : 'text-gray-500'"
+          ></i>
+          <div>
+            <p class="text-sm font-medium text-gray-200">
+              <span class="text-emerald-400 font-semibold">Drag & drop</span>, or
+              <span class="text-amber-400 font-semibold underline">click to browse</span>
+            </p>
+            <p class="mt-1 text-xs text-gray-500">
+              Accepts a single-trip export from this app
+              <span class="text-green-100">(.csv, .xlsx)</span>. Imports the trip and all its filled
+              halte data automatically.
+            </p>
+          </div>
+
+          <div
+            class="pointer-events-none absolute inset-0 rounded-md bg-sky-500/5 transition-opacity duration-200"
+            [ngClass]="isDraggingFile() ? 'opacity-100' : 'opacity-0'"
+          ></div>
+        </label>
+
+        <!-- Right: Manual form -->
+        <form [formGroup]="tripForm" (ngSubmit)="createTrip()" class="flex flex-col gap-6 pb-6">
           <p class="text-sm text-gray-400">
             Create the trip first. Once saved, you'll be able to pick each stop from a dropdown and
-            record its data. Or <span class="text-sky-400 font-semibold">drag & drop</span> an
-            exported <span class="text-green-400 font-semibold">CSV/Excel file</span> here to import
-            a trip directly.
+            record its data.
           </p>
 
           <div>
             <label for="kodeTrip" class="mb-2.5 block text-xs font-medium text-gray-400"
               >Trip Code</label
             >
-            <input
-              id="kodeTrip"
-              type="text"
-              pInputText
-              formControlName="kodeTrip"
-              placeholder="Enter trip code identifier"
-              class="w-full"
-            />
+            <p-iconfield>
+              <p-inputicon class="pi pi-hashtag" />
+              <input
+                id="kodeTrip"
+                type="text"
+                pInputText
+                formControlName="kodeTrip"
+                placeholder="Enter trip code identifier"
+                class="w-full"
+              />
+            </p-iconfield>
             @if (tripForm.controls.kodeTrip.invalid && tripForm.controls.kodeTrip.touched) {
               <p class="mt-1 font-bold text-xs text-red-400">Trip code must be filled.</p>
             }
@@ -95,14 +141,17 @@
               <label for="namaSurveyor" class="mb-2.5 block text-xs font-medium text-gray-400"
                 >Surveyor Name</label
               >
-              <input
-                id="namaSurveyor"
-                type="text"
-                pInputText
-                formControlName="namaSurveyor"
-                placeholder="Enter surveyor name"
-                class="w-full"
-              />
+              <p-iconfield>
+                <p-inputicon class="pi pi-user" />
+                <input
+                  id="namaSurveyor"
+                  type="text"
+                  pInputText
+                  formControlName="namaSurveyor"
+                  placeholder="Enter surveyor name"
+                  class="w-full"
+                />
+              </p-iconfield>
               @if (
                 tripForm.controls.namaSurveyor.invalid && tripForm.controls.namaSurveyor.touched
               ) {
@@ -122,6 +171,8 @@
                 placeholder="Select the survey date"
                 [style]="{ width: '100%' }"
                 [inputStyle]="{ width: '100%' }"
+                showIcon
+                iconDisplay="input"
               />
               @if (tripForm.controls.hariTanggal.invalid && tripForm.controls.hariTanggal.touched) {
                 <p class="mt-1 text-xs text-red-400">Date must be filled.</p>
@@ -132,14 +183,17 @@
               <label for="nomorKendaraan" class="mb-2.5 block text-xs font-medium text-gray-400"
                 >Vehicle Number</label
               >
-              <input
-                id="nomorKendaraan"
-                type="text"
-                pInputText
-                formControlName="nomorKendaraan"
-                placeholder="Enter vehicle number"
-                class="w-full"
-              />
+              <p-iconfield>
+                <p-inputicon class="pi pi-car" />
+                <input
+                  id="nomorKendaraan"
+                  type="text"
+                  pInputText
+                  formControlName="nomorKendaraan"
+                  placeholder="Enter vehicle number"
+                  class="w-full"
+                />
+              </p-iconfield>
               @if (
                 tripForm.controls.nomorKendaraan.invalid && tripForm.controls.nomorKendaraan.touched
               ) {
@@ -155,7 +209,7 @@
               (click)="cancel()"
               class="rounded-md border bg-transparent border-sky-700 px-4 py-1.5 text-sm text-white transition-colors hover:bg-sky-800"
             >
-              Back
+              <i class="pi pi-times"></i> Back
             </button>
             <button
               type="submit"
@@ -167,21 +221,6 @@
             </button>
           </div>
         </form>
-
-        <div
-          class="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 rounded-md border-2 border-dashed border-sky-400 bg-gray-950/90 backdrop-blur-sm transition-all duration-200 ease-out"
-          [ngClass]="
-            isDraggingFile() ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-          "
-        >
-          <i class="pi pi-cloud-upload text-4xl text-sky-400"></i>
-          <p class="text-sm font-medium text-gray-200">
-            Drop CSV or Excel file to import this trip
-          </p>
-          <p class="text-xs text-gray-500">
-            Accepts a single-trip export from this app (.csv, .xlsx)
-          </p>
-        </div>
       </div>
     } @else if (!trip) {
       <p class="mt-8 text-sm text-red-400">Trip not found.</p>
@@ -446,7 +485,7 @@
                     (click)="cancel()"
                     class="rounded-md border bg-transparent border-sky-700 px-2 sm:px-4 py-1.5 text-[0.8rem] sm:text-sm text-white transition-colors hover:bg-sky-800"
                   >
-                    Back
+                    <i class="pi pi-times"></i> Back
                   </button>
 
                   <button

@@ -25,6 +25,8 @@ import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
 import * as XLSX from 'xlsx';
 import { ExportService } from '../../../service/export.service';
 import { ImportService } from '../../../service/import.service';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
 
 function timeOrderValidator(group: AbstractControl): ValidationErrors | null {
   const datang = group.get('waktuKedatangan')?.value;
@@ -49,6 +51,8 @@ const LAST_HALTE_INDEX = HALTE_NAMES.length - 1;
     TableModule,
     FullPageLoading,
     ToastModule,
+    IconFieldModule,
+    InputIconModule,
   ],
   templateUrl: './trip-form.html',
   styleUrl: './trip-form.css',
@@ -173,9 +177,23 @@ export class TripForm {
     const file = event.dataTransfer?.files?.[0];
     if (!file) return;
 
+    await this.handleImportFile(file);
+  }
+
+  async onFileSelected(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    await this.handleImportFile(file);
+
+    input.value = '';
+  }
+
+  private async handleImportFile(file: File): Promise<void> {
     const ext = file.name.split('.').pop()?.toLowerCase();
-    if (ext !== 'csv' && ext !== 'xlsx' && ext !== 'xls') {
-      this.invokeToast('Please drop a .csv or .xlsx file.', 'warn');
+    if (ext !== 'csv' && ext !== 'xlsx') {
+      this.invokeToast('Please select a .csv or .xlsx file.', 'warn');
       return;
     }
 
@@ -198,7 +216,7 @@ export class TripForm {
     } catch (err) {
       console.error(err);
       this.invokeToast(
-        err instanceof Error ? err.message : 'Failed to read the dropped file.',
+        err instanceof Error ? err.message : 'Failed to read the selected file.',
         'error',
       );
     }
@@ -529,6 +547,16 @@ export class TripForm {
 
   cancel(): void {
     this.router.navigate(['/trip']);
+  }
+
+  routeTo(base: string, id?: string | number) {
+    const path = base.startsWith('/') ? base : `/${base}`;
+
+    if (id) {
+      this.router.navigate([path, id]);
+    } else {
+      this.router.navigate([path]);
+    }
   }
 
   invokeToast(message: string, severity: 'success' | 'info' | 'warn' | 'error') {
