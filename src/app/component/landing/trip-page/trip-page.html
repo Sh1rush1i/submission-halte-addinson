@@ -72,7 +72,13 @@
     @if (isLoading) {
       <app-full-page-loading></app-full-page-loading>
     } @else {
-      <div class="relative mt-6 flex-1 min-h-0">
+      <div
+        class="relative mt-6 flex-1 min-h-0"
+        (dragover)="onDragOver($event)"
+        (dragenter)="onDragEnter($event)"
+        (dragleave)="onDragLeave($event)"
+        (drop)="onDrop($event)"
+      >
         <!-- Table view -->
         <div
           class="styled-scrollbar absolute inset-0 flex flex-col overflow-x-auto rounded-md border border-gray-600/50 transition-all duration-500 ease-out"
@@ -283,6 +289,16 @@
               </div>
             }
           }
+        </div>
+        <div
+          class="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 rounded-md border-2 border-dashed border-sky-400 bg-gray-950/90 backdrop-blur-sm transition-all duration-200 ease-out"
+          [ngClass]="
+            isDraggingFile() ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+          "
+        >
+          <i class="pi pi-cloud-upload text-4xl text-sky-400"></i>
+          <p class="text-sm font-medium text-gray-200">Drop CSV or Excel file to import</p>
+          <p class="text-xs text-gray-500">Accepts files exported from this app (.csv, .xlsx)</p>
         </div>
       </div>
     }

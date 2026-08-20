@@ -15,6 +15,7 @@ import { DynamicDialogServices } from '../../../service/dynamic-dialog.service';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { HalteEntry, TripRecord } from '../../../service/trip.service';
+import { ImportService } from '../../../service/import.service';
 
 type ViewMode = 'table' | 'card';
 
@@ -123,6 +124,7 @@ export class TripPage {
   constructor(
     private router: Router,
     private messageService: MessageService,
+    private importService: ImportService,
     private exportService: ExportService,
     private dynamicDialogServices: DynamicDialogServices,
   ) {}
@@ -145,6 +147,76 @@ export class TripPage {
 
   ngOnInit() {
     this.getData();
+  }
+
+  readonly isDraggingFile = signal(false);
+  private dragDepth = 0;
+
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+  }
+
+  onDragEnter(event: DragEvent): void {
+    event.preventDefault();
+    this.dragDepth++;
+    this.isDraggingFile.set(true);
+  }
+
+  onDragLeave(event: DragEvent): void {
+    event.preventDefault();
+    this.dragDepth--;
+    if (this.dragDepth <= 0) {
+      this.dragDepth = 0;
+      this.isDraggingFile.set(false);
+    }
+  }
+
+  async onDrop(event: DragEvent): Promise<void> {
+    event.preventDefault();
+    this.dragDepth = 0;
+    this.isDraggingFile.set(false);
+
+    const file = event.dataTransfer?.files?.[0];
+    if (!file) return;
+
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    if (ext !== 'csv' && ext !== 'xlsx' && ext !== 'xls') {
+      this.invokeToast('Please drop a .csv or .xlsx file.', 'warn');
+      return;
+    }
+
+    try {
+      const imported = await this.importService.parseFile(file);
+
+      if (imported.length === 0) {
+        this.invokeToast('No trip data found in this file.', 'warn');
+        return;
+      }
+
+      this.openConfirmModal(
+        `Import ${imported.length} trip${imported.length > 1 ? 's' : ''} from "${file.name}"?`,
+        () => this.saveImportedTrips(imported),
+      );
+    } catch (err) {
+      console.error(err);
+      this.invokeToast(
+        err instanceof Error ? err.message : 'Failed to read the dropped file.',
+        'error',
+      );
+    }
+  }
+
+  private saveImportedTrips(imported: TripRecord[]): void {
+    const current = this.records();
+    const merged = [...current, ...imported];
+
+    localStorage.setItem('tripRecords', JSON.stringify(merged));
+    this.records.set(merged);
+
+    this.invokeToast(
+      `${imported.length} trip${imported.length > 1 ? 's' : ''} imported successfully.`,
+      'success',
+    );
   }
 
   exportCsv(): void {
@@ -185,7 +257,7 @@ export class TripPage {
         console.error('Error parsing localStorage data:', err);
       }
     } else {
-      this.injectMockData();
+      // this.injectMockData();
     }
     this.isLoading = false;
   }
