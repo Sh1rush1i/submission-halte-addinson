@@ -554,7 +554,7 @@
                 @for (item of haltesList(); track item.index) {
                   <div
                     class="flex flex-col rounded-md border p-4 transition-colors animate-[fadeInUp_0.4s_ease-out_both]"
-                    [style.animation-delay.ms]="item.index * 20"
+                    [style.animation-delay.ms]="item.index * 120"
                     [ngClass]="
                       halteForm.controls.halteIndex.value === item.index
                         ? 'border-purple-500 bg-purple-500/5 hover:border-purple-600 hover:bg-purple-500/10'
