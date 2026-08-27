@@ -47,9 +47,17 @@
             type="button"
             pButton
             (click)="deleteTrip()"
-            class="flex shrink-0 items-center gap-1.5 rounded-sm border-0 bg-red-500/50 px-4 py-1.5 xl:text-sm md:text-xs text-sm text-white transition-colors hover:bg-red-700/50"
+            [disabled]="isDeletingTrip()"
+            class="flex shrink-0 items-center gap-1.5 rounded-sm border-0 bg-red-500/50 px-4 py-1.5 xl:text-sm md:text-xs text-sm text-white transition-colors hover:bg-red-700/50 disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            <i class="pi pi-trash"></i> Delete Trip
+            @if (deleteTripIcon() === 'loading') {
+              <i class="pi pi-spin pi-spinner"></i>
+            } @else if (deleteTripIcon() === 'done') {
+              <i class="pi pi-check text-green-300"></i>
+            } @else {
+              <i class="pi pi-trash"></i>
+            }
+            Delete Trip
           </button>
 
           <button
@@ -64,7 +72,7 @@
       </div>
     </div>
 
-    @if (isLoading) {
+    @if (isLoading()) {
       <app-full-page-loading></app-full-page-loading>
     } @else if (isNew()) {
       <div
@@ -517,19 +525,33 @@
                     type="button"
                     pButton
                     (click)="deleteHalteData(halteForm.controls.halteIndex.value!)"
-                    [disabled]="!halteForm.controls.waktuKedatangan.value"
-                    class="flex items-center border-none gap-2 rounded-md bg-red-800 px-2 sm:px-4 py-2 sm:text-sm text-[0.8rem] text-white transition duration-700 hover:bg-red-600"
+                    [disabled]="!halteForm.controls.waktuKedatangan.value || isDeletingHalte()"
+                    class="flex items-center border-none gap-2 rounded-md bg-red-800 px-2 sm:px-4 py-2 sm:text-sm text-[0.8rem] text-white transition duration-700 hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    <i class="pi pi-times"></i> Delete Stop
+                    @if (deleteHalteIcon() === 'loading') {
+                      <i class="pi pi-spin pi-spinner"></i>
+                    } @else if (deleteHalteIcon() === 'done') {
+                      <i class="pi pi-check text-green-300"></i>
+                    } @else {
+                      <i class="pi pi-times"></i>
+                    }
+                    Delete Stop
                   </button>
 
                   <button
                     type="submit"
                     pButton
-                    [disabled]="halteForm.invalid"
+                    [disabled]="halteForm.invalid || isSavingHalte()"
                     class="flex items-center border-none gap-2 rounded-md bg-purple-800 px-2 sm:px-4 py-2 sm:text-sm text-[0.8rem] text-white transition duration-700 hover:bg-purple-600 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    <i class="pi pi-check"></i> Update Stop
+                    @if (saveHalteIcon() === 'loading') {
+                      <i class="pi pi-spin pi-spinner"></i>
+                    } @else if (saveHalteIcon() === 'done') {
+                      <i class="pi pi-check text-green-300"></i>
+                    } @else {
+                      <i class="pi pi-check"></i>
+                    }
+                    Update Stop
                   </button>
                 </div>
               </div>

@@ -14,8 +14,9 @@ import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { DynamicDialogServices } from '../../../service/dynamic-dialog.service';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
-import { HalteEntry, TripRecord } from '../../../service/trip.service';
+import { HalteEntry, TripRecord, TripService } from '../../../service/trip.service';
 import { ImportService } from '../../../service/import.service';
+import { finalize } from 'rxjs';
 
 type ViewMode = 'table' | 'card';
 
@@ -119,7 +120,7 @@ export class TripPage {
   ];
 
   readonly hasData = computed(() => this.records().length > 0);
-  isLoading: boolean = true;
+  readonly isLoading = signal(true);
 
   constructor(
     private router: Router,
@@ -127,6 +128,7 @@ export class TripPage {
     private importService: ImportService,
     private exportService: ExportService,
     private dynamicDialogServices: DynamicDialogServices,
+    private tripService: TripService,
   ) {}
 
   private openConfirmModal(message: string, onConfirm: () => void, onClose?: () => void): void {
@@ -185,13 +187,14 @@ export class TripPage {
       return;
     }
 
-    this.isLoading = true;
+    this.isLoading.set(true);
 
     try {
       const parsed = await this.importService.parseFile(file);
 
       if (parsed.length === 0) {
-        this.isLoading = false;
+        this.isLoading.set(false);
+
         this.invokeToast('No trip data found in this file.', 'warn');
         return;
       }
@@ -199,7 +202,8 @@ export class TripPage {
       const { valid, invalid } = this.validateImportedTrips(parsed);
 
       if (valid.length === 0) {
-        this.isLoading = false;
+        this.isLoading.set(false);
+
         this.invokeToast(
           `None of the ${parsed.length} trip(s) in this file could be imported. All had missing or invalid data.`,
           'error',
@@ -207,7 +211,7 @@ export class TripPage {
         return;
       }
 
-      this.isLoading = false;
+      this.isLoading.set(false);
 
       const message =
         invalid.length > 0
@@ -216,7 +220,8 @@ export class TripPage {
 
       this.openConfirmModal(message, () => this.saveImportedTrips(valid, invalid));
     } catch (err) {
-      this.isLoading = false;
+      this.isLoading.set(false);
+
       console.error(err);
       this.invokeToast(
         err instanceof Error ? err.message : 'Failed to read the dropped file.',
@@ -229,7 +234,6 @@ export class TripPage {
     valid: TripRecord[];
     invalid: { trip: TripRecord; reason: string }[];
   } {
-    const existingIds = new Set(this.records().map((r) => r.id));
     const existingCodes = new Set(this.records().map((r) => r.kodeTrip.trim().toLowerCase()));
 
     const valid: TripRecord[] = [];
@@ -249,11 +253,6 @@ export class TripPage {
         return;
       }
 
-      if (existingIds.has(trip.id)) {
-        invalid.push({ trip, reason: `ID ${trip.id} already exists` });
-        return;
-      }
-
       if (existingCodes.has(trip.kodeTrip.trim().toLowerCase())) {
         invalid.push({ trip, reason: `Trip Code "${trip.kodeTrip}" already exists` });
         return;
@@ -270,7 +269,6 @@ export class TripPage {
         return halte;
       });
 
-      existingIds.add(trip.id);
       existingCodes.add(trip.kodeTrip.trim().toLowerCase());
 
       valid.push({ ...trip, haltes: cleanedHaltes });
@@ -283,23 +281,50 @@ export class TripPage {
     valid: TripRecord[],
     invalid: { trip: TripRecord; reason: string }[] = [],
   ): void {
-    const current = this.records();
-    const merged = [...current, ...valid];
+    this.isLoading.set(true);
 
-    localStorage.setItem('tripRecords', JSON.stringify(merged));
-    this.records.set(merged);
+    const tripsToCreate = valid.map((t) => ({
+      kodeTrip: t.kodeTrip,
+      namaSurveyor: t.namaSurveyor,
+      hariTanggal: t.hariTanggal,
+      nomorKendaraan: t.nomorKendaraan,
+      haltes: t.haltes,
+    }));
 
-    if (invalid.length > 0) {
-      this.invokeToast(
-        `${valid.length} trip(s) imported. ${invalid.length} trip(s) skipped: ${invalid.map((i) => i.reason).join('; ')}`,
-        'warn',
-      );
-    } else {
-      this.invokeToast(
-        `${valid.length} trip${valid.length > 1 ? 's' : ''} imported successfully.`,
-        'success',
-      );
-    }
+    this.tripService
+      .bulkCreateTrips(tripsToCreate)
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: (created) => {
+          const current = this.records();
+          const mapped = (created ?? []).map((t) => ({
+            ...t,
+            hariTanggal: t.hariTanggal ? new Date(t.hariTanggal) : new Date(),
+            haltes: (t.haltes ?? []).map((h) => ({
+              ...h,
+              waktuKedatangan: h?.waktuKedatangan ? new Date(h.waktuKedatangan) : null,
+              waktuKeberangkatan: h?.waktuKeberangkatan ? new Date(h.waktuKeberangkatan) : null,
+            })),
+          }));
+          this.records.set([...mapped, ...current]);
+
+          if (invalid.length > 0) {
+            this.invokeToast(
+              `${valid.length} trip(s) imported. ${invalid.length} trip(s) skipped: ${invalid.map((i) => i.reason).join('; ')}`,
+              'warn',
+            );
+          } else {
+            this.invokeToast(
+              `${valid.length} trip${valid.length > 1 ? 's' : ''} imported successfully.`,
+              'success',
+            );
+          }
+        },
+        error: (err) => {
+          console.error('Bulk import failed:', err);
+          this.invokeToast('Failed to import trips.', 'error');
+        },
+      });
   }
 
   exportCsv(): void {
@@ -326,23 +351,35 @@ export class TripPage {
     });
   }
 
-  getData() {
-    const stored = localStorage.getItem('tripRecords');
-    if (stored) {
-      try {
-        const parsed: TripRecord[] = JSON.parse(stored).map((rec: any) => ({
-          ...rec,
-          hariTanggal: new Date(rec.hariTanggal),
-        }));
-        this.records.set(parsed);
-        // console.log(this.records());
-      } catch (err) {
-        console.error('Error parsing localStorage data:', err);
-      }
-    } else {
-      // this.injectMockData();
-    }
-    this.isLoading = false;
+  getData(): void {
+    this.isLoading.set(true);
+
+    this.tripService
+      .getAllTrips()
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: (trips) => {
+          try {
+            const mapped = (trips ?? []).map((t) => ({
+              ...t,
+              hariTanggal: t.hariTanggal ? new Date(t.hariTanggal) : new Date(),
+              haltes: (t.haltes ?? []).map((h) => ({
+                ...h,
+                waktuKedatangan: h?.waktuKedatangan ? new Date(h.waktuKedatangan) : null,
+                waktuKeberangkatan: h?.waktuKeberangkatan ? new Date(h.waktuKeberangkatan) : null,
+              })),
+            }));
+            this.records.set(mapped);
+          } catch (mapErr) {
+            console.error('Failed while transforming trip data:', mapErr, trips);
+            this.invokeToast('Received malformed trip data.', 'error');
+          }
+        },
+        error: (err) => {
+          console.error('HTTP error loading trips:', err);
+          this.invokeToast('Failed to load trips.', 'error');
+        },
+      });
   }
 
   setView(mode: ViewMode): void {
@@ -411,46 +448,6 @@ export class TripPage {
 
   trackById(_index: number, record: TripRecord): number {
     return record.id;
-  }
-
-  private injectMockData() {
-    const generateMockHaltes = (total: number, filled: number): HalteEntry[] => {
-      return Array.from({ length: total }, (_, i) => ({
-        namaHalte: `Stop ${i + 1}`,
-        waktuKedatangan: i < filled ? new Date() : null,
-        waktuKeberangkatan: i < filled ? new Date() : null,
-        penumpangNaik: i < filled ? 5 : null,
-        penumpangTurun: i < filled ? 3 : null,
-        penumpangTidakTerangkut: 0,
-      }));
-    };
-
-    this.records.set([
-      {
-        id: 1,
-        kodeTrip: 'TRP-001',
-        namaSurveyor: 'Ahmad Rizky',
-        hariTanggal: new Date(),
-        nomorKendaraan: 'L 1234 AB',
-        haltes: generateMockHaltes(54, 54), // 100% complete
-      },
-      {
-        id: 2,
-        kodeTrip: 'TRP-002',
-        namaSurveyor: 'Budi Santoso',
-        hariTanggal: new Date(),
-        nomorKendaraan: 'L 5678 CD',
-        haltes: generateMockHaltes(54, 23), // In progress
-      },
-      {
-        id: 3,
-        kodeTrip: 'TRP-003',
-        namaSurveyor: 'Citra Kirana',
-        hariTanggal: new Date(new Date().setDate(new Date().getDate() - 1)),
-        nomorKendaraan: 'L 9012 EF',
-        haltes: generateMockHaltes(54, 0), // Not started
-      },
-    ]);
   }
 
   invokeToast(message: string, severity: 'success' | 'info' | 'warn' | 'error') {

@@ -1,67 +1,8 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable, catchError, of } from 'rxjs';
 
-/**
- * Fixed list of stops surveyed on every trip (Lampiran A. Formulir Survei On-board).
- * Note "Terminal Purabaya" appears twice on purpose (start and end of the route).
- */
-export const HALTE_NAMES: string[] = [
-  'Terminal Purabaya',
-  'Dukuh Menanggal',
-  'Siwalankerto 1',
-  'Taman Pelangi',
-  'RS Bhayangkara',
-  'UBHARA',
-  'Pusvetma',
-  'Ketintang',
-  'Terminal Joyoboyo',
-  'Museum BI',
-  'RS Darmo',
-  'GOZCO',
-  'Pandegiling A',
-  'Urip Sumoharjo A',
-  'Basra',
-  'Kaliasin',
-  'Embong Malang',
-  'Blauran',
-  'Pirngadi',
-  'Pasar Turi',
-  'Masjid Kemayoran',
-  'Indrapura',
-  'Ikan Kerapu A',
-  'Tanjung Torawitan A',
-  'Barunawati A',
-  'Pelindo Place A',
-  'Tanjung Perak',
-  'Pelindo Place B',
-  'Barunawati B',
-  'Tanjung Torawitan B',
-  'Ikan Kerapu B',
-  'Rajawali',
-  'Jembatan Merah',
-  'Veteran',
-  'Tugu Pahlawan',
-  'Alun-alun Contong',
-  'Siola',
-  'Tunjungan',
-  'Simpang Dukuh',
-  'Gubernur Suryo',
-  'Pangsud',
-  'Sono Kembang',
-  'Urip Sumoharjo B',
-  'Pandegiling B',
-  'Santa Maria',
-  'Darmo',
-  'Marmoyo',
-  'Joyoboyo 2',
-  'RSAL',
-  'Margorejo',
-  'Wonocolo',
-  'UINSA',
-  'Jemur Ngawinan',
-  'Siwalankerto 2',
-  'Kertomenanggal',
-  'Terminal Purabaya',
-];
+export { HALTE_NAMES } from '../../../shared/halte-names';
 
 export interface HalteEntry {
   namaHalte: string;
@@ -76,7 +17,7 @@ export interface TripRecord {
   id: number;
   kodeTrip: string;
   namaSurveyor: string;
-  hariTanggal: Date | null;
+  hariTanggal: Date;
   nomorKendaraan: string;
   haltes: HalteEntry[];
 }
@@ -96,91 +37,84 @@ export interface HalteFormValue {
   penumpangTidakTerangkut: number | null;
 }
 
-function emptyHalte(namaHalte: string): HalteEntry {
-  return {
-    namaHalte,
-    waktuKedatangan: null,
-    waktuKeberangkatan: null,
-    penumpangNaik: null,
-    penumpangTurun: null,
-    penumpangTidakTerangkut: null,
-  };
-}
-
-const STORAGE_KEY = 'tripRecords';
-
 @Injectable({ providedIn: 'root' })
 export class TripService {
-  private readAll(): TripRecord[] {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
+  private http = inject(HttpClient);
+  private base = '/api/trips';
+
+  getAllTrips(): Observable<TripRecord[]> {
+    return this.http.get<TripRecord[]>(this.base);
   }
 
-  private writeAll(records: TripRecord[]): void {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+  getTrip(id: string | number): Observable<TripRecord | null> {
+    return this.http.get<TripRecord>(`${this.base}/${id}`).pipe(catchError(() => of(null)));
   }
 
-  getTrip(id: string): TripRecord | null {
-    const found = this.readAll().find((r) => String(r.id) === id);
-    if (!found) return null;
-
-    found.hariTanggal = found.hariTanggal ? new Date(found.hariTanggal) : null;
-    found.haltes = found.haltes.map((h) => ({
-      ...h,
-      waktuKedatangan: h.waktuKedatangan ? new Date(h.waktuKedatangan) : null,
-      waktuKeberangkatan: h.waktuKeberangkatan ? new Date(h.waktuKeberangkatan) : null,
-    }));
-
-    return found;
+  createTrip(value: {
+    kodeTrip: string;
+    namaSurveyor: string;
+    hariTanggal: Date | null;
+    nomorKendaraan: string;
+  }): Observable<TripRecord> {
+    return this.http.post<TripRecord>(this.base, value);
   }
 
-  createTrip(value: TripFormValue): TripRecord {
-    const newTrip: TripRecord = {
-      id: Date.now(),
-      kodeTrip: value.kodeTrip,
-      namaSurveyor: value.namaSurveyor,
-      hariTanggal: value.hariTanggal,
-      nomorKendaraan: value.nomorKendaraan,
-      haltes: HALTE_NAMES.map((name) => emptyHalte(name)),
-    };
-
-    const list = this.readAll();
-    list.push(newTrip);
-    this.writeAll(list);
-
-    return newTrip;
+  updateTrip(
+    id: number,
+    value: {
+      kodeTrip: string;
+      namaSurveyor: string;
+      hariTanggal: Date | null;
+      nomorKendaraan: string;
+    },
+  ): Observable<TripRecord | null> {
+    return this.http.put<TripRecord>(`${this.base}/${id}`, value).pipe(catchError(() => of(null)));
   }
 
-  updateHalte(tripId: number, index: number, value: HalteFormValue): TripRecord | null {
-    const list = this.readAll();
-    const tripIdx = list.findIndex((r) => r.id === tripId);
-    if (tripIdx === -1) return null;
-
-    list[tripIdx].haltes[index] = {
-      namaHalte: HALTE_NAMES[index],
-      waktuKedatangan: value.waktuKedatangan,
-      waktuKeberangkatan: value.waktuKeberangkatan,
-      penumpangNaik: value.penumpangNaik,
-      penumpangTurun: value.penumpangTurun,
-      penumpangTidakTerangkut: value.penumpangTidakTerangkut,
-    };
-
-    this.writeAll(list);
-    return this.getTrip(String(tripId));
+  /**
+   * Bulk-create multiple trips with their haltes in a single API call.
+   * Used for file import on the trip list page.
+   */
+  bulkCreateTrips(trips: Omit<TripRecord, 'id'>[]): Observable<TripRecord[]> {
+    return this.http.post<TripRecord[]>(`${this.base}/bulk`, trips);
   }
 
-  deleteHalteData(tripId: number, index: number): TripRecord | null {
-    const list = this.readAll();
-    const tripIdx = list.findIndex((r) => r.id === tripId);
-    if (tripIdx === -1) return null;
-
-    list[tripIdx].haltes[index] = emptyHalte(HALTE_NAMES[index]);
-    this.writeAll(list);
-    return this.getTrip(String(tripId));
+  /**
+   * Create a single trip with pre-filled haltes in one API call.
+   * Used for single-trip file import on the trip form page.
+   */
+  createTripWithHaltes(trip: {
+    kodeTrip: string;
+    namaSurveyor: string;
+    hariTanggal: Date | null;
+    nomorKendaraan: string;
+    haltes: HalteEntry[];
+  }): Observable<TripRecord[]> {
+    return this.http.post<TripRecord[]>(`${this.base}/bulk`, [trip]);
   }
 
-  deleteTrip(tripId: number): void {
-    const list = this.readAll().filter((r) => r.id !== tripId);
-    this.writeAll(list);
+  updateHalte(
+    tripId: number,
+    index: number,
+    halte: Partial<HalteEntry>,
+  ): Observable<TripRecord | null> {
+    return this.http
+      .patch<TripRecord>(`${this.base}/${tripId}/halte/${index}`, halte)
+      .pipe(catchError(() => of(null)));
+  }
+
+  deleteHalteData(tripId: number, index: number): Observable<TripRecord | null> {
+    return this.http
+      .delete<TripRecord>(`${this.base}/${tripId}/halte/delete/${index}`)
+      .pipe(catchError(() => of(null)));
+  }
+
+  deleteTrip(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/${id}`).pipe(
+      catchError((err) => {
+        console.error('Failed to delete trip:', err);
+        throw err;
+      }),
+    );
   }
 }

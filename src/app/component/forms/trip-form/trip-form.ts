@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   AbstractControl,
@@ -8,6 +8,7 @@ import {
   ValidationErrors,
   Validators,
 } from '@angular/forms';
+import { finalize } from 'rxjs';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -37,7 +38,24 @@ function timeOrderValidator(group: AbstractControl): ValidationErrors | null {
   return new Date(berangkat) > new Date(datang) ? null : { timeOrder: true };
 }
 
+/** Normalise any date-like value to a proper Date object, or null */
+function toDate(v: Date | string | null | undefined): Date | null {
+  if (!v) return null;
+  const d = v instanceof Date ? v : new Date(v);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+/** Map all halte date fields to Date objects after an API response */
+function normaliseHaltes(haltes: HalteEntry[]): HalteEntry[] {
+  return haltes.map((h) => ({
+    ...h,
+    waktuKedatangan: toDate(h.waktuKedatangan),
+    waktuKeberangkatan: toDate(h.waktuKeberangkatan),
+  }));
+}
+
 const LAST_HALTE_INDEX = HALTE_NAMES.length - 1;
+const ICON_RESET_DELAY_MS = 1800;
 
 @Component({
   selector: 'app-trip-form',
@@ -66,11 +84,49 @@ export class TripForm {
 
   ref: DynamicDialogRef | undefined | null;
 
-  isLoading = true;
-  tripId: string | null = null;
-  trip: TripRecord | null = null;
+  // ── Page-level loading (initial fetch / import) ────────────────────────────
+  readonly isLoading = signal(true);
 
-  readonly halteOptions = HALTE_NAMES.map((name, index) => ({
+  // ── Per-action loading signals (drive button spinner + icon state) ─────────
+  readonly isSavingHalte = signal(false);
+  readonly isDeletingHalte = signal(false);
+  readonly isDeletingTrip = signal(false);
+  readonly isCreatingTrip = signal(false);
+  readonly isImporting = signal(false);
+
+  /** 'idle' | 'loading' | 'done' — for icon swap on each action button */
+  readonly saveHalteIcon = signal<'idle' | 'loading' | 'done'>('idle');
+  readonly deleteHalteIcon = signal<'idle' | 'loading' | 'done'>('idle');
+  readonly deleteTripIcon = signal<'idle' | 'loading' | 'done'>('idle');
+  readonly createTripIcon = signal<'idle' | 'loading' | 'done'>('idle');
+
+  // ── Trip data ───────────────────────────────────────────────────────────────
+  tripId: string | null = null;
+  readonly tripSignal = signal<TripRecord | null>(null);
+
+  /** Computed haltes list — only recalculates when trip data changes */
+  readonly haltesListComputed = computed(() => {
+    const trip = this.tripSignal();
+    if (!trip) return [];
+    return trip.haltes.map((halte, index) => ({ index, name: HALTE_NAMES[index], halte }));
+  });
+
+  /** Computed filled-halte count — only recalculates when trip data changes */
+  readonly filledHalteCountComputed = computed(() => {
+    const trip = this.tripSignal();
+    if (!trip) return 0;
+    return trip.haltes.filter((h) => this.isHalteFilled(h)).length;
+  });
+
+  get trip(): TripRecord | null {
+    return this.tripSignal();
+  }
+
+  set trip(value: TripRecord | null) {
+    this.tripSignal.set(value);
+  }
+
+  readonly halteOptions = HALTE_NAMES.map((name: string, index: number) => ({
     label: `${index + 1}. ${name}`,
     value: index,
   }));
@@ -123,10 +179,8 @@ export class TripForm {
           namaSurveyor: this.authService.currentUser()?.name ?? '',
           hariTanggal: new Date(),
         });
-
-        this.isLoading = false;
+        this.isLoading.set(false);
       } else {
-        this.isLoading = true;
         this.loadTrip();
       }
     });
@@ -134,6 +188,41 @@ export class TripForm {
     this.halteForm.controls.halteIndex.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((index) => this.onHalteSelected(index));
+  }
+
+  // ── Internal helpers ────────────────────────────────────────────────────────
+
+  private flashDone(icon: ReturnType<typeof signal<'idle' | 'loading' | 'done'>>): void {
+    icon.set('done');
+    setTimeout(() => icon.set('idle'), ICON_RESET_DELAY_MS);
+  }
+
+  private loadTrip(): void {
+    this.isLoading.set(true);
+    this.tripService
+      .getTrip(this.tripId!)
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: (found) => {
+          if (!found) {
+            this.invokeToast('No data found', 'error');
+            return;
+          }
+
+          this.trip = { ...found, haltes: normaliseHaltes(found.haltes) };
+
+          this.tripForm.patchValue({
+            kodeTrip: found.kodeTrip,
+            namaSurveyor: found.namaSurveyor,
+            hariTanggal: toDate(found.hariTanggal),
+            nomorKendaraan: found.nomorKendaraan,
+          });
+        },
+        error: (err) => {
+          console.error(err);
+          this.invokeToast('Failed to load trip.', 'error');
+        },
+      });
   }
 
   isNew(): boolean {
@@ -155,6 +244,8 @@ export class TripForm {
       onClose?.();
     });
   }
+
+  // ── Drag-and-drop ───────────────────────────────────────────────────────────
 
   readonly isDraggingFile = signal(false);
   private dragDepth = 0;
@@ -195,7 +286,6 @@ export class TripForm {
     if (!file) return;
 
     await this.handleImportFile(file);
-
     input.value = '';
   }
 
@@ -206,14 +296,14 @@ export class TripForm {
       return;
     }
 
-    this.isLoading = true;
+    this.isLoading.set(true);
 
     try {
       const imported = await this.importService.parseSingleTripFile(file);
-      this.isLoading = false;
+      this.isLoading.set(false);
       this.importTripFromFile(imported);
     } catch (err) {
-      this.isLoading = false;
+      this.isLoading.set(false);
       console.error(err);
       this.invokeToast(
         err instanceof Error ? err.message : 'Failed to read the selected file.',
@@ -222,14 +312,14 @@ export class TripForm {
     }
   }
 
+  // ── IMPORT ──────────────────────────────────────────────────────────────────
+
   private importTripFromFile(imported: TripRecord): void {
     const missingFields: string[] = [];
     if (!imported.kodeTrip?.trim()) missingFields.push('Trip Code');
     if (!imported.namaSurveyor?.trim()) missingFields.push('Surveyor');
     if (!imported.nomorKendaraan?.trim()) missingFields.push('Vehicle Number');
-    if (!imported.hariTanggal || isNaN(new Date(imported.hariTanggal).getTime())) {
-      missingFields.push('Date');
-    }
+    if (!toDate(imported.hariTanggal)) missingFields.push('Date');
 
     if (missingFields.length > 0) {
       this.invokeToast(
@@ -239,87 +329,54 @@ export class TripForm {
       return;
     }
 
-    if (imported.haltes.length !== HALTE_NAMES.length) {
-      this.invokeToast(
-        `Cannot import: this file has ${imported.haltes.length} stops, but this trip expects ${HALTE_NAMES.length}. The data would be misaligned.`,
-        'error',
-      );
-      return;
-    }
+    // Strip haltes with invalid time order before sending to API
+    const cleanedHaltes = imported.haltes.map((halte) => {
+      const kedatangan = toDate(halte.waktuKedatangan);
+      const keberangkatan = toDate(halte.waktuKeberangkatan);
+      if (kedatangan && keberangkatan && keberangkatan <= kedatangan) {
+        return { ...halte, waktuKeberangkatan: null };
+      }
+      return halte;
+    });
 
-    if (this.kodeTripExists(imported.kodeTrip)) {
-      this.invokeToast(`Cannot import: Trip Code "${imported.kodeTrip}" already exists.`, 'error');
-      return;
-    }
+    const filledCount = cleanedHaltes.filter((h) => h.waktuKedatangan).length;
 
     this.openConfirmModal(
-      `Import trip "${imported.kodeTrip}" from file? This will create a new trip filled with the imported data.`,
+      `Import trip "${imported.kodeTrip}" from file? ${filledCount} stop(s) with data will be saved.`,
       () => {
-        const newTrip = this.tripService.createTrip({
-          kodeTrip: imported.kodeTrip,
-          namaSurveyor: imported.namaSurveyor,
-          hariTanggal: imported.hariTanggal,
-          nomorKendaraan: imported.nomorKendaraan,
-        });
+        this.isImporting.set(true);
 
-        let importedCount = 0;
-        let skippedCount = 0;
-        let failedCount = 0;
-
-        imported.haltes.forEach((halte, index) => {
-          if (!halte.waktuKedatangan && !halte.waktuKeberangkatan) return;
-
-          const kedatangan = halte.waktuKedatangan ? new Date(halte.waktuKedatangan) : null;
-          const keberangkatan = halte.waktuKeberangkatan
-            ? new Date(halte.waktuKeberangkatan)
-            : null;
-
-          if (kedatangan && keberangkatan && keberangkatan <= kedatangan) {
-            skippedCount++;
-            return;
-          }
-
-          const updated = this.tripService.updateHalte(newTrip.id, index, {
-            waktuKedatangan: kedatangan,
-            waktuKeberangkatan: keberangkatan,
-            penumpangNaik: halte.penumpangNaik ?? 0,
-            penumpangTurun: halte.penumpangTurun ?? 0,
-            penumpangTidakTerangkut: halte.penumpangTidakTerangkut ?? 0,
+        this.tripService
+          .createTripWithHaltes({
+            kodeTrip: imported.kodeTrip,
+            namaSurveyor: imported.namaSurveyor,
+            hariTanggal: imported.hariTanggal,
+            nomorKendaraan: imported.nomorKendaraan,
+            haltes: cleanedHaltes,
+          })
+          .pipe(finalize(() => this.isImporting.set(false)))
+          .subscribe({
+            next: (results) => {
+              if (results?.length) {
+                this.invokeToast(
+                  `Trip imported successfully with ${filledCount} stop(s).`,
+                  'success',
+                );
+                this.router.navigate(['/trip', results[0].id]);
+              } else {
+                this.invokeToast('Failed to create trip from imported file.', 'error');
+              }
+            },
+            error: (err) => {
+              console.error(err);
+              this.invokeToast('Failed to create trip from imported file.', 'error');
+            },
           });
-
-          if (updated) {
-            importedCount++;
-          } else {
-            failedCount++;
-          }
-        });
-
-        if (failedCount > 0 || skippedCount > 0) {
-          this.invokeToast(
-            `Trip imported with ${importedCount} stop(s) filled. ${skippedCount + failedCount} stop(s) were skipped due to invalid data.`,
-            'warn',
-          );
-        } else {
-          this.invokeToast(`Trip imported successfully with ${importedCount} stop(s).`, 'success');
-        }
-
-        this.router.navigate(['/trip', newTrip.id]);
       },
     );
   }
 
-  private kodeTripExists(kodeTrip: string): boolean {
-    const stored = localStorage.getItem('tripRecords');
-    if (!stored) return false;
-
-    try {
-      const records: { kodeTrip: string }[] = JSON.parse(stored);
-      const target = kodeTrip.trim().toLowerCase();
-      return records.some((r) => r.kodeTrip?.trim().toLowerCase() === target);
-    } catch {
-      return false;
-    }
-  }
+  // ── EXPORT ──────────────────────────────────────────────────────────────────
 
   exportCsv(): void {
     if (!this.trip) {
@@ -345,23 +402,7 @@ export class TripForm {
     });
   }
 
-  private loadTrip(): void {
-    const found = this.tripService.getTrip(this.tripId!);
-    if (!found) {
-      this.isLoading = false;
-      return;
-    }
-
-    this.trip = found;
-    this.tripForm.patchValue({
-      kodeTrip: found.kodeTrip,
-      namaSurveyor: found.namaSurveyor,
-      hariTanggal: found.hariTanggal,
-      nomorKendaraan: found.nomorKendaraan,
-    });
-
-    this.isLoading = false;
-  }
+  // ── CREATE TRIP ─────────────────────────────────────────────────────────────
 
   createTrip(): void {
     if (this.tripForm.invalid) {
@@ -370,14 +411,30 @@ export class TripForm {
     }
 
     this.openConfirmModal('Save this new trip data?', () => {
-      const value = this.tripForm.getRawValue();
-      const newTrip = this.tripService.createTrip(value);
+      this.isCreatingTrip.set(true);
+      this.createTripIcon.set('loading');
 
-      this.invokeToast('Trip succesfully created.', 'success');
-      this.router.navigate(['/trip', newTrip.id]);
-      this.loadTrip();
+      const value = this.tripForm.getRawValue();
+
+      this.tripService
+        .createTrip(value)
+        .pipe(finalize(() => this.isCreatingTrip.set(false)))
+        .subscribe({
+          next: (newTrip) => {
+            this.flashDone(this.createTripIcon);
+            this.invokeToast('Trip successfully created.', 'success');
+            this.router.navigate(['/trip', newTrip.id]);
+          },
+          error: (err) => {
+            console.error(err);
+            this.createTripIcon.set('idle');
+            this.invokeToast('Failed to create trip.', 'error');
+          },
+        });
     });
   }
+
+  // ── HALTE SELECTION & NAVIGATION ────────────────────────────────────────────
 
   onHalteSelected(index: number | null): void {
     if (index === null || !this.trip) return;
@@ -424,22 +481,6 @@ export class TripForm {
     });
   }
 
-  updateHalte(): void {
-    if (this.halteForm.invalid || !this.trip) {
-      this.halteForm.markAllAsTouched();
-      return;
-    }
-
-    this.openConfirmModal('Update this halte stop data?', () => {
-      const index = this.halteForm.controls.halteIndex.value!;
-      const saved = this.persistHalteData(index);
-
-      if (saved) {
-        this.invokeToast('Halte stop data updated successfully.', 'success');
-      }
-    });
-  }
-
   canGoPreviousHalte(): boolean {
     const current = this.halteForm.controls.halteIndex.value;
     return current !== null && current > 0;
@@ -455,26 +496,64 @@ export class TripForm {
     this.halteForm.controls[control].markAsTouched();
   }
 
+  // ── UPDATE HALTE ────────────────────────────────────────────────────────────
+
+  updateHalte(): void {
+    if (this.halteForm.invalid || !this.trip) {
+      this.halteForm.markAllAsTouched();
+      return;
+    }
+
+    this.openConfirmModal('Update this halte stop data?', () => {
+      const index = this.halteForm.controls.halteIndex.value!;
+      this.persistHalteData(index, (saved) => {
+        if (saved) this.invokeToast('Halte stop data updated successfully.', 'success');
+      });
+    });
+  }
+
+  // ── DELETE HALTE ────────────────────────────────────────────────────────────
+
   deleteHalteData(index: number): void {
     if (!this.trip) return;
 
     this.openConfirmModal(`Delete halte stop data for "${HALTE_NAMES[index]}"?`, () => {
-      const updated = this.tripService.deleteHalteData(this.trip!.id, index);
-      if (updated) {
-        this.trip = updated;
-        this.invokeToast('Halte stop data deleted succesfuly', 'success');
-      }
+      this.isDeletingHalte.set(true);
+      this.deleteHalteIcon.set('loading');
 
-      if (this.halteForm.controls.halteIndex.value === index) {
-        this.halteForm.reset({
-          halteIndex: index,
-          penumpangNaik: 0,
-          penumpangTurun: 0,
-          penumpangTidakTerangkut: 0,
+      this.tripService
+        .deleteHalteData(this.trip!.id, index)
+        .pipe(finalize(() => this.isDeletingHalte.set(false)))
+        .subscribe({
+          next: (updated) => {
+            if (updated) {
+              this.trip = { ...updated, haltes: normaliseHaltes(updated.haltes) };
+              this.flashDone(this.deleteHalteIcon);
+              this.invokeToast('Halte stop data deleted successfully.', 'success');
+            } else {
+              this.deleteHalteIcon.set('idle');
+              this.invokeToast('Delete returned no data.', 'warn');
+            }
+
+            if (this.halteForm.controls.halteIndex.value === index) {
+              this.halteForm.reset({
+                halteIndex: index,
+                penumpangNaik: 0,
+                penumpangTurun: 0,
+                penumpangTidakTerangkut: 0,
+              });
+            }
+          },
+          error: (err) => {
+            console.error('Failed to delete halte data:', err);
+            this.deleteHalteIcon.set('idle');
+            this.invokeToast('Failed to delete halte stop data.', 'error');
+          },
         });
-      }
     });
   }
+
+  // ── DELETE TRIP ─────────────────────────────────────────────────────────────
 
   deleteTrip(): void {
     if (!this.trip) return;
@@ -482,31 +561,58 @@ export class TripForm {
     this.openConfirmModal(
       `Delete trip "${this.trip.kodeTrip}" including its halte stop data? This action will have consequences.`,
       () => {
-        this.tripService.deleteTrip(this.trip!.id);
-        this.invokeToast('Trip deleted succesfuly.', 'success');
-        this.router.navigate(['/trip']);
+        this.isDeletingTrip.set(true);
+        this.deleteTripIcon.set('loading');
+
+        this.tripService
+          .deleteTrip(this.trip!.id)
+          .pipe(finalize(() => this.isDeletingTrip.set(false)))
+          .subscribe({
+            next: () => {
+              this.flashDone(this.deleteTripIcon);
+              this.invokeToast('Trip deleted successfully.', 'success');
+              setTimeout(() => this.router.navigate(['/trip']), 600);
+            },
+            error: (err) => {
+              console.error('Failed to delete trip:', err);
+              this.deleteTripIcon.set('idle');
+              this.invokeToast('Failed to delete trip.', 'error');
+            },
+          });
       },
     );
   }
 
+  // ── AUTO-SAVE ON NAV ────────────────────────────────────────────────────────
+
   private confirmAndPersist(index: number, afterSaved: () => void): void {
     const value = this.halteForm.getRawValue();
 
+    // Skip confirm if nothing to save
     if (!value.waktuKedatangan || !this.isHalteDataChanged(index)) {
       afterSaved();
       return;
     }
 
-    this.openConfirmModal(
+    this.ref = this.dynamicDialogServices.confirmModal(
       `Save changes to "${HALTE_NAMES[index]}" before moving on?`,
-      () => {
-        const saved = this.persistHalteData(index);
-        if (saved) {
-          this.invokeToast('Halte stop data saved.', 'success');
-        }
-      },
-      () => afterSaved(),
     );
+
+    if (!this.ref) {
+      afterSaved();
+      return;
+    }
+
+    this.ref.onClose.subscribe((result) => {
+      if (result?.isValid) {
+        this.persistHalteData(index, (saved) => {
+          if (saved) this.invokeToast(`"${HALTE_NAMES[index]}" saved.`, 'success');
+          afterSaved();
+        });
+      } else {
+        afterSaved();
+      }
+    });
   }
 
   private isHalteDataChanged(index: number): boolean {
@@ -514,7 +620,7 @@ export class TripForm {
 
     const stored = this.trip.haltes[index];
     const current = this.halteForm.getRawValue();
-    const toTime = (d: Date | null) => (d ? new Date(d).getTime() : null);
+    const toTime = (d: Date | string | null | undefined) => (d ? new Date(d).getTime() : null);
 
     return (
       toTime(current.waktuKedatangan) !== toTime(stored.waktuKedatangan) ||
@@ -525,53 +631,67 @@ export class TripForm {
     );
   }
 
-  private persistHalteData(index: number): boolean {
-    if (!this.trip) return false;
+  private persistHalteData(index: number, onDone: (success: boolean) => void): void {
+    if (!this.trip) return onDone(false);
 
     const value = this.halteForm.getRawValue();
-
-    if (!value.waktuKedatangan) {
-      return false;
-    }
-
-    if (!value.waktuKeberangkatan) {
-      value.waktuKeberangkatan = new Date();
-    }
+    if (!value.waktuKedatangan) return onDone(false);
 
     if (this.halteForm.errors?.['timeOrder']) {
       this.invokeToast('Departure must be after arrival.', 'warn');
-      return false;
+      return onDone(false);
     }
 
-    const updated = this.tripService.updateHalte(this.trip.id, index, value);
-    if (!updated) {
-      this.invokeToast('Failed to update halte stop data.', 'error');
-      return false;
-    }
+    this.isSavingHalte.set(true);
+    this.saveHalteIcon.set('loading');
 
-    this.trip = updated;
+    this.tripService
+      .updateHalte(this.trip.id, index, value)
+      .pipe(finalize(() => this.isSavingHalte.set(false)))
+      .subscribe({
+        next: (updated) => {
+          if (!updated) {
+            this.saveHalteIcon.set('idle');
+            this.invokeToast('Failed to update halte stop data.', 'error');
+            return onDone(false);
+          }
 
-    const savedHalte = updated.haltes[index];
-    this.halteForm.patchValue(
-      {
-        waktuKedatangan: savedHalte.waktuKedatangan,
-        waktuKeberangkatan: savedHalte.waktuKeberangkatan,
-        penumpangNaik: savedHalte.penumpangNaik ?? 0,
-        penumpangTurun: savedHalte.penumpangTurun ?? 0,
-        penumpangTidakTerangkut: savedHalte.penumpangTidakTerangkut ?? 0,
-      },
-      { emitEvent: false },
-    );
+          this.trip = { ...updated, haltes: normaliseHaltes(updated.haltes) };
 
-    return true;
+          const savedHalte = this.trip.haltes[index];
+          this.halteForm.patchValue(
+            {
+              waktuKedatangan: savedHalte.waktuKedatangan,
+              waktuKeberangkatan: savedHalte.waktuKeberangkatan,
+              penumpangNaik: savedHalte.penumpangNaik ?? 0,
+              penumpangTurun: savedHalte.penumpangTurun ?? 0,
+              penumpangTidakTerangkut: savedHalte.penumpangTidakTerangkut ?? 0,
+            },
+            { emitEvent: false },
+          );
+
+          this.flashDone(this.saveHalteIcon);
+          onDone(true);
+        },
+        error: (err) => {
+          console.error(err);
+          this.saveHalteIcon.set('idle');
+          this.invokeToast('Failed to update halte stop data.', 'error');
+          onDone(false);
+        },
+      });
   }
 
+  // ── DWELL TIME ──────────────────────────────────────────────────────────────
+
   private computeDwell(
-    start: Date | null,
-    end: Date | null,
+    start: Date | string | null,
+    end: Date | string | null,
   ): { label: string; severity: 'success' | 'warn' | 'danger' } | null {
-    if (!start || !end) return null;
-    const diffMs = end.getTime() - start.getTime();
+    const s = toDate(start);
+    const e = toDate(end);
+    if (!s || !e) return null;
+    const diffMs = e.getTime() - s.getTime();
     if (diffMs <= 0) return null;
     const totalSeconds = Math.floor(diffMs / 1000);
     const minutes = Math.floor(totalSeconds / 60);
@@ -601,14 +721,14 @@ export class TripForm {
     );
   }
 
+  // ── Template helpers ────────────────────────────────────────────────────────
+
   haltesList(): { index: number; name: string; halte: HalteEntry }[] {
-    if (!this.trip) return [];
-    return this.trip.haltes.map((halte, index) => ({ index, name: HALTE_NAMES[index], halte }));
+    return this.haltesListComputed();
   }
 
   filledHalteCount(): number {
-    if (!this.trip) return 0;
-    return this.trip.haltes.filter((h) => this.isHalteFilled(h)).length;
+    return this.filledHalteCountComputed();
   }
 
   isHalteFilled(halte: HalteEntry): boolean {
@@ -621,7 +741,6 @@ export class TripForm {
 
   routeTo(base: string, id?: string | number) {
     const path = base.startsWith('/') ? base : `/${base}`;
-
     if (id) {
       this.router.navigate([path, id]);
     } else {
@@ -631,7 +750,7 @@ export class TripForm {
 
   invokeToast(message: string, severity: 'success' | 'info' | 'warn' | 'error') {
     this.messageService.add({
-      severity: severity,
+      severity,
       summary: 'Notification',
       detail: message,
     });
