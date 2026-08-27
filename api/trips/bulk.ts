@@ -73,7 +73,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                   hari_tanggal AS "hariTanggal", nomor_kendaraan AS "nomorKendaraan", haltes
       `;
 
-      results.push({ ...rows[0], haltes: ensureHaltesArray(rows[0].haltes) });
+      results.push({ ...rows[0], haltes: ensureHaltesArray(rows[0]['haltes']) });
     }
 
     return res.status(201).json(results);

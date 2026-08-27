@@ -3,7 +3,11 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 function ensureHaltesArray(haltes: unknown): unknown[] {
   if (typeof haltes === 'string') {
-    try { return JSON.parse(haltes); } catch { return []; }
+    try {
+      return JSON.parse(haltes);
+    } catch {
+      return [];
+    }
   }
   return Array.isArray(haltes) ? haltes : [];
 }
@@ -25,7 +29,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       `;
       if (!rows.length) return res.status(404).json({ error: 'Trip not found' });
 
-      const trip = { ...rows[0], haltes: ensureHaltesArray(rows[0].haltes) };
+      const trip = { ...rows[0], haltes: ensureHaltesArray(rows[0]['haltes']) };
       return res.status(200).json(trip);
     }
 
@@ -49,7 +53,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       if (!rows.length) return res.status(404).json({ error: 'Trip not found' });
 
-      const updated = { ...rows[0], haltes: ensureHaltesArray(rows[0].haltes) };
+      const updated = { ...rows[0], haltes: ensureHaltesArray(rows[0]['haltes']) };
       return res.status(200).json(updated);
     }
 

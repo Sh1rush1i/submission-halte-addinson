@@ -22,7 +22,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         FROM trips ORDER BY id DESC
       `;
 
-      const parsed = rows.map((r) => ({ ...r, haltes: ensureHaltesArray(r.haltes) }));
+      const parsed = rows.map((r) => ({ ...r, haltes: ensureHaltesArray(r['haltes']) }));
       return res.status(200).json(parsed);
     }
 
@@ -50,7 +50,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                   hari_tanggal AS "hariTanggal", nomor_kendaraan AS "nomorKendaraan", haltes
       `;
 
-      const created = { ...rows[0], haltes: ensureHaltesArray(rows[0].haltes) };
+      const created = { ...rows[0], haltes: ensureHaltesArray(rows[0]['haltes']) };
       return res.status(201).json(created);
     }
 
