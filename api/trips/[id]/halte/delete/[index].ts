@@ -1,6 +1,12 @@
 import { sql } from '@vercel/postgres';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
+process.env.POSTGRES_URL =
+  process.env.POSTGRES_URL ||
+  process.env.DATABASE_URL ||
+  process.env.POSTGRES_PRISMA_URL ||
+  process.env.POSTGRES_URL_NON_POOLING;
+
 function ensureHaltesArray(haltes: unknown): unknown[] {
   if (typeof haltes === 'string') {
     try {
