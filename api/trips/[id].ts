@@ -1,11 +1,22 @@
-import { sql } from '@vercel/postgres';
+import { createPool } from '@vercel/postgres';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-process.env.POSTGRES_URL =
-  process.env.POSTGRES_URL ||
-  process.env.DATABASE_URL ||
-  process.env.POSTGRES_PRISMA_URL ||
-  process.env.POSTGRES_URL_NON_POOLING;
+function getDb() {
+  const connectionString =
+    process.env['POSTGRES_URL'] ||
+    process.env['DATABASE_URL'] ||
+    process.env['POSTGRES_PRISMA_URL'] ||
+    process.env['POSTGRES_URL_NON_POOLING'] ||
+    process.env['DATABASE_URL_UNPOOLED'];
+
+  if (!connectionString) {
+    throw new Error(
+      'Missing database connection string. Please set POSTGRES_URL or DATABASE_URL in Vercel Dashboard (Project Settings > Environment Variables).',
+    );
+  }
+
+  return createPool({ connectionString });
+}
 
 function ensureHaltesArray(haltes: unknown): unknown[] {
   if (typeof haltes === 'string') {
@@ -27,8 +38,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
+    const db = getDb();
+
     if (req.method === 'GET') {
-      const { rows } = await sql`
+      const { rows } = await db.sql`
         SELECT id, kode_trip AS "kodeTrip", nama_surveyor AS "namaSurveyor",
                hari_tanggal AS "hariTanggal", nomor_kendaraan AS "nomorKendaraan", haltes
         FROM trips WHERE id = ${tripId}
@@ -46,7 +59,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(400).json({ error: 'Missing required fields' });
       }
 
-      const { rows } = await sql`
+      const { rows } = await db.sql`
         UPDATE trips
         SET kode_trip = ${kodeTrip.trim()},
             nama_surveyor = ${namaSurveyor.trim()},
@@ -64,7 +77,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (req.method === 'DELETE') {
-      await sql`DELETE FROM trips WHERE id = ${tripId}`;
+      await db.sql`DELETE FROM trips WHERE id = ${tripId}`;
       return res.status(204).end();
     }
 
