@@ -1,1 +1,17 @@
-<p>info-dialog-modal works!</p>
+<p class="text-white mb-4">
+  {{ message }}
+</p>
+
+<div class="mt-4">
+  <hr class="border-gray-200 mb-4" />
+  <div class="flex justify-end space-x-2">
+    <button
+      pButton
+      (click)="closeDialog()"
+      type="button"
+      class="p-button-outlined p-button-success"
+    >
+      Confirm
+    </button>
+  </div>
+</div>

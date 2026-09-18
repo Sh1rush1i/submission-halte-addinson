@@ -245,6 +245,12 @@ export class TripForm {
     });
   }
 
+  infoModal() {
+    this.ref = this.dynamicDialogServices.infoModal(
+      'Please fill departure time first before entering passenger data.',
+    );
+  }
+
   // ── Drag-and-drop ───────────────────────────────────────────────────────────
 
   readonly isDraggingFile = signal(false);

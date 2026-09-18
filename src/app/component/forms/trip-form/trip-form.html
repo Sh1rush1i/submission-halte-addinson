@@ -423,13 +423,14 @@
                   </h2>
 
                   <div class="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-3">
-                    <div>
+                    <div class="relative">
                       <label
                         for="penumpangNaik"
                         class="mb-2.5 flex items-center gap-1.5 text-xs font-medium text-gray-400"
                       >
                         <i class="pi pi-arrow-up-right text-emerald-500"></i>Board
                       </label>
+
                       <p-inputnumber
                         inputId="penumpangNaik"
                         formControlName="penumpangNaik"
@@ -444,9 +445,16 @@
                         [style]="{ width: '100%' }"
                         [inputStyle]="{ width: '100%', 'text-align': 'center' }"
                       />
+
+                      @if (!halteForm.controls.waktuKedatangan.value) {
+                        <div
+                          class="absolute inset-0 top-6.5 cursor-not-allowed"
+                          (click)="infoModal()"
+                        ></div>
+                      }
                     </div>
 
-                    <div>
+                    <div class="relative">
                       <label
                         for="penumpangTurun"
                         class="mb-2.5 flex items-center gap-1.5 text-xs font-medium text-gray-400"
@@ -467,9 +475,16 @@
                         [style]="{ width: '100%' }"
                         [inputStyle]="{ width: '100%', 'text-align': 'center' }"
                       />
+
+                      @if (!halteForm.controls.waktuKedatangan.value) {
+                        <div
+                          class="absolute inset-0 top-6.5 cursor-not-allowed"
+                          (click)="infoModal()"
+                        ></div>
+                      }
                     </div>
 
-                    <div>
+                    <div class="relative">
                       <label
                         for="penumpangTidakTerangkut"
                         class="mb-2.5 flex items-center gap-1.5 text-xs font-medium text-gray-400"
@@ -490,6 +505,12 @@
                         [style]="{ width: '100%' }"
                         [inputStyle]="{ width: '100%', 'text-align': 'center' }"
                       />
+                      @if (!halteForm.controls.waktuKedatangan.value) {
+                        <div
+                          class="absolute inset-0 top-6.5 cursor-not-allowed"
+                          (click)="infoModal()"
+                        ></div>
+                      }
                     </div>
                   </div>
                 </div>
