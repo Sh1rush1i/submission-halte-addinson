@@ -1,7 +1,7 @@
 @reference "tailwindcss";
 
 .stat-card {
-  @apply flex items-center gap-4  border border-white/5 bg-white/[0.035] p-5 transition-all hover:bg-gray-900/5 hover:border-white/10;
+  @apply flex items-center gap-4  border border-white/5 bg-white/[0.035] p-5 transition-all  hover:border-white/10;
 }
 
 .stat-icon {
@@ -10,7 +10,7 @@
 
 /* Generic content card */
 .card {
-  @apply border border-white/5 bg-white/[0.035] hover:bg-gray-900/5  p-6;
+  @apply border border-white/5 bg-white/[0.035] p-6;
 }
 
 /* Vehicle rank badge */
