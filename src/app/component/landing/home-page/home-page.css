@@ -1,0 +1,19 @@
+@reference "tailwindcss";
+
+.stat-card {
+  @apply flex items-center gap-4  border border-white/5 bg-white/[0.035] p-5 transition-all hover:bg-white/45 hover:border-white/10;
+}
+
+.stat-icon {
+  @apply flex h-11 w-11 shrink-0 items-center justify-center;
+}
+
+/* Generic content card */
+.card {
+  @apply border border-white/5 bg-white/[0.035] hover:bg-white/45  p-6;
+}
+
+/* Vehicle rank badge */
+.vehicle-badge {
+  @apply flex h-9 w-9 shrink-0 items-center justify-center  text-xs font-bold;
+}

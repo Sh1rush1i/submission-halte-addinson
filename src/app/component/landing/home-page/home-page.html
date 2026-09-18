@@ -1,1 +1,228 @@
-<p>home-page works!</p>
+<p-toast />
+
+<!-- Full-page loading -->
+@if (isLoading()) {
+  <app-full-page-loading />
+}
+
+<div class="min-h-screen bg-[#0d0f14] text-white px-4 py-8 sm:px-8">
+  <!-- ── Header ────────────────────────────────────────────────────────────── -->
+  <div class="mb-8 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <p class="text-sm text-gray-500">{{ greeting() }},</p>
+      <h1 class="text-2xl font-bold tracking-tight text-white">{{ userName() }}</h1>
+      <p class="mt-0.5 text-xs text-gray-500">
+        Bus Stop Survey Summary ·
+        <span class="text-gray-400">{{ today | date: 'EEEE, d MMMM y' : '' : 'id' }}</span>
+      </p>
+    </div>
+
+    <div class="flex gap-2 mt-3 sm:mt-0">
+      <button
+        pButton
+        class="bg-green-800 hover:bg-green-600 border-none rounded-md sm:py-2.5 py-3.5 sm:px-4 px-5 transition duration-700 flex items-center gap-2 text-white"
+        (click)="navigateTo('/trip')"
+      >
+        <i class="pi pi-block-quote"></i> See All Trips
+      </button>
+      <button
+        pButton
+        class="bg-sky-800 hover:bg-sky-600 border-none rounded-md sm:py-2.5 py-3.5 sm:px-4 px-5 transition duration-700 flex items-center gap-2 text-white"
+        (click)="navigateTo('/trip/new')"
+      >
+        <i class="pi pi-plus"></i>New Trip
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Stat Cards ────────────────────────────────────────────────────────── -->
+  <div class="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+    <!-- Total Trips -->
+    <div class="stat-card rounded-sm group">
+      <div class="stat-icon rounded-sm bg-sky-500/10 text-sky-400">
+        <i class="pi pi-map text-xl"></i>
+      </div>
+      <div>
+        @if (isLoading()) {
+          <p-skeleton width="3rem" height="1.75rem" styleClass="mb-1 rounded-sm" />
+        } @else {
+          <p class="text-3xl font-bold text-white">{{ totalTrips() }}</p>
+        }
+        <p class="text-xs text-gray-500 mt-0.5">Trips Total</p>
+      </div>
+    </div>
+
+    <!-- Completed -->
+    <div class="stat-card rounded-sm group">
+      <div class="stat-icon rounded-sm bg-emerald-500/10 text-emerald-400">
+        <i class="pi pi-check-circle text-xl"></i>
+      </div>
+      <div>
+        @if (isLoading()) {
+          <p-skeleton width="3rem" height="1.75rem" styleClass="mb-1 rounded-sm" />
+        } @else {
+          <p class="text-3xl font-bold text-white">{{ completedTrips() }}</p>
+        }
+        <p class="text-xs text-gray-500 mt-0.5">Finished</p>
+      </div>
+    </div>
+
+    <!-- In Progress -->
+    <div class="stat-card rounded-sm group">
+      <div class="stat-icon rounded-sm bg-amber-500/10 text-amber-400">
+        <i class="pi pi-clock text-xl"></i>
+      </div>
+      <div>
+        @if (isLoading()) {
+          <p-skeleton width="3rem" height="1.75rem" styleClass="mb-1 rounded-sm" />
+        } @else {
+          <p class="text-3xl font-bold text-white">{{ inProgressTrips() }}</p>
+        }
+        <p class="text-xs text-gray-500 mt-0.5">On Process</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Main Content Grid ─────────────────────────────────────────────────── -->
+  <div class="card rounded-sm">
+    <div class="mb-4 flex items-center justify-between">
+      <div>
+        <h2 class="text-sm font-semibold text-white">Surveyor's Arrival Time</h2>
+        <p class="text-xs text-gray-500 mt-0.5">Surveyor's travel time per stop, by hour</p>
+      </div>
+      <i class="pi pi-chart-line text-emerald-600"></i>
+    </div>
+
+    <!-- Wrapper Scroll Horizontal -->
+    <div class="w-full overflow-x-auto pb-2 custom-scrollbar">
+      <div
+        class="relative h-96 lg:min-w-full transition-all"
+        [class.min-w-[1200px]]="!isLoading() && trips().length > 0"
+        [class.w-full]="isLoading() || trips().length === 0"
+      >
+        <canvas
+          #barCanvas
+          class="w-full h-full"
+          [class.invisible]="isLoading() || trips().length === 0"
+        ></canvas>
+
+        @if (isLoading()) {
+          <div class="absolute inset-0 flex items-end gap-3 px-2">
+            @for (w of [40, 70, 55, 90, 65, 45, 60, 80, 50, 75]; track $index) {
+              <p-skeleton
+                [width]="'100%'"
+                [height]="w + 'px'"
+                styleClass="flex-1 rounded-sm opacity-40"
+              />
+            }
+          </div>
+        } @else if (trips().length === 0) {
+          <!-- Empty State View: Menggunakan kondisi data utama kosong -->
+          <div
+            class="absolute inset-0 w-full left-0 flex flex-col items-center justify-center border border-dashed border-gray-700/60 bg-gray-900/5 rounded-md"
+          >
+            <div
+              class="w-14 h-14 rounded-full bg-gray-800/80 flex items-center justify-center mb-3"
+            >
+              <i class="pi pi-chart-line text-2xl text-emerald-500"></i>
+            </div>
+            <p class="text-sm font-medium text-red-300">No Chart Data</p>
+            <p class="text-xs text-gray-500 mt-1 max-w-62.5 text-center leading-relaxed">
+              There is no trips data available yet.
+            </p>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Recent Trips Table ──────────────────────────────────────────────────── -->
+  <div class="card rounded-sm mt-6">
+    <div class="mb-4 flex items-center justify-between">
+      <div>
+        <h2 class="text-sm font-semibold text-white">Newest Trips</h2>
+        <p class="text-xs text-gray-500 mt-0.5">5 trips with the latest date</p>
+      </div>
+
+      <i class="pi pi-inbox text-sky-600"></i>
+    </div>
+
+    @if (isLoading()) {
+      @for (_ of [1, 2, 3, 4, 5]; track $index) {
+        <div class="flex items-center gap-4 py-3 border-b border-white/5">
+          <p-skeleton width="6rem" height="0.7rem" styleClass="rounded-sm" />
+          <p-skeleton width="8rem" height="0.7rem" styleClass="rounded-sm" />
+          <p-skeleton width="5rem" height="0.7rem" styleClass="rounded-sm" />
+          <p-skeleton width="5rem" height="0.7rem" styleClass="rounded-sm" />
+          <p-skeleton width="4rem" height="0.7rem" styleClass="rounded-sm" />
+        </div>
+      }
+    } @else if (recentTrips().length === 0) {
+      <div
+        class="flex flex-col items-center justify-center border border-dashed border-gray-700/60 bg-gray-900/5 rounded-md py-10"
+      >
+        <div class="w-14 h-14 rounded-full bg-gray-800/80 flex items-center justify-center mb-3">
+          <i class="pi pi-inbox text-2xl text-sky-500"></i>
+        </div>
+        <p class="text-sm font-medium text-red-300">No Trip Data</p>
+        <p class="text-xs text-gray-500 mt-1 max-w-62.5 text-center leading-relaxed">
+          There is no trips data available yet.
+        </p>
+      </div>
+    } @else {
+      <div class="overflow-x-auto -mx-6">
+        <p-table
+          [value]="recentTrips()"
+          dataKey="id"
+          styleClass="w-full text-sm"
+          [tableStyle]="{ 'min-width': '50rem' }"
+        >
+          <ng-template #header>
+            <tr class="text-xs text-gray-500 uppercase border-b border-white/5">
+              <th class="text-left px-6 py-2.5">Trip Code</th>
+              <th class="text-left px-4 py-2.5">Surveyor</th>
+              <th class="text-left px-4 py-2.5">Date</th>
+              <th class="text-left px-4 py-2.5">Vehicle</th>
+              <th class="text-left px-4 py-2.5">Progress</th>
+              <th class="text-left px-4 py-2.5">Status</th>
+              <th class="w-10 px-4 py-2.5"></th>
+            </tr>
+          </ng-template>
+          <ng-template #body let-trip>
+            @let pct = getProgress(trip);
+            @let status = getStatusLabel(pct);
+            <tr
+              class="border-t border-white/5 hover:bg-white/3 transition-colors cursor-pointer"
+              (click)="navigateTo('/trip/' + trip.id)"
+            >
+              <td class="px-6 py-3 font-mono text-sky-400 font-medium">{{ trip.kodeTrip }}</td>
+              <td class="px-4 py-3 text-amber-300">{{ trip.namaSurveyor }}</td>
+              <td class="px-4 py-3 text-gray-400">{{ trip.hariTanggal | date: 'd MMM y' }}</td>
+              <td class="px-4 py-3 text-gray-300 font-mono text-xs">{{ trip.nomorKendaraan }}</td>
+              <td class="px-4 py-3">
+                <div class="flex items-center gap-2">
+                  <div class="w-20 h-1.5 rounded-full bg-gray-700 overflow-hidden">
+                    <div
+                      class="h-full rounded-full"
+                      [class]="getProgressBarClass(pct)"
+                      [style.width.%]="pct"
+                    ></div>
+                  </div>
+                  <span class="text-xs text-gray-400 font-mono">{{ pct }}%</span>
+                </div>
+              </td>
+              <td class="px-4 py-3">
+                <span class="px-2 py-0.5 rounded-sm text-xs" [class]="status.cls">
+                  {{ status.text }}
+                </span>
+              </td>
+              <td class="px-4 py-3 text-right">
+                <i class="pi pi-chevron-right text-gray-600 text-xs"></i>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    }
+  </div>
+</div>

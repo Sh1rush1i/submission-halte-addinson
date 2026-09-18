@@ -1,4 +1,4 @@
-import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
+import { ApplicationConfig, LOCALE_ID, provideBrowserGlobalErrorListeners } from '@angular/core';
 import {
   provideRouter,
   withComponentInputBinding,
@@ -18,7 +18,11 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { authHttpInterceptorFn, provideAuth0 } from '@auth0/auth0-angular';
 import { authInterceptor } from './authInterceptor';
 import { DialogService } from 'primeng/dynamicdialog';
-import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
+import { CommonModule, CurrencyPipe, DatePipe, registerLocaleData } from '@angular/common';
+import localeId from '@angular/common/locales/id';
+import localeIdExtra from '@angular/common/locales/extra/id';
+
+registerLocaleData(localeId, 'id', localeIdExtra);
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -94,6 +98,7 @@ export const appConfig: ApplicationConfig = {
         //translations
       },
     }),
+    { provide: LOCALE_ID, useValue: 'id' },
     DialogService,
     MessageService,
     DatePipe,
