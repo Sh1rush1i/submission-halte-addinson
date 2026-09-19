@@ -1,4 +1,4 @@
-<div class="styled-scrollbar h-full min-w-0 overflow-y-auto">
+<div class="h-full min-w-0 overflow-y-auto">
   <div class="mx-auto flex h-full min-w-0 flex-col px-4 py-8 sm:px-6 sm:py-8 lg:px-8">
     <div
       class="flex flex-col gap-5 pb-6 border-b border-b-gray-500 sm:flex-row sm:items-end sm:justify-between"
@@ -230,10 +230,17 @@
             <button
               type="submit"
               pButton
-              [disabled]="tripForm.invalid"
+              [disabled]="tripForm.invalid || isCreatingTrip()"
               class="flex items-center border-none gap-2 rounded-md bg-sky-800 px-4 py-1.5 text-sm text-white transition duration-700 hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <i class="pi pi-check"></i> Save Trip
+              @if (createTripIcon() === 'loading') {
+                <i class="pi pi-spin pi-spinner"></i>
+              } @else if (createTripIcon() === 'done') {
+                <i class="pi pi-check text-green-300"></i>
+              } @else {
+                <i class="pi pi-check"></i>
+              }
+              Save Trip
             </button>
           </div>
         </form>
@@ -442,6 +449,7 @@
                         incrementButtonIcon="pi pi-plus"
                         decrementButtonIcon="pi pi-minus"
                         pTooltip="Enter departure passanger"
+                        tooltipPosition="top"
                         [style]="{ width: '100%' }"
                         [inputStyle]="{ width: '100%', 'text-align': 'center' }"
                       />
@@ -470,6 +478,7 @@
                         [showButtons]="true"
                         buttonLayout="horizontal"
                         pTooltip="Enter disembark passanger"
+                        tooltipPosition="top"
                         incrementButtonIcon="pi pi-plus"
                         decrementButtonIcon="pi pi-minus"
                         [style]="{ width: '100%' }"
@@ -499,6 +508,7 @@
                         [useGrouping]="false"
                         [showButtons]="true"
                         pTooltip="Enter not transported passanger"
+                        tooltipPosition="top"
                         buttonLayout="horizontal"
                         incrementButtonIcon="pi pi-plus"
                         decrementButtonIcon="pi pi-minus"
