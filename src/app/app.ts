@@ -9,6 +9,8 @@ import { MessageService } from 'primeng/api';
 import { Subscription } from 'rxjs';
 import { ToastModule } from 'primeng/toast';
 import { User } from '@auth0/auth0-angular';
+import * as AOS from 'aos';
+
 // import { PrimeNG } from 'primeng/config';
 // import { TranslateService } from '@ngx-translate/core';
 
@@ -63,6 +65,13 @@ export class App {
     if (user?.name) {
       this.getUserName(user.name);
     }
+
+    AOS.init({
+      duration: 1000,
+      once: false,
+      easing: 'ease-in-out',
+      mirror: true,
+    });
 
     // console.log(this.username, this.currentUser());
   }

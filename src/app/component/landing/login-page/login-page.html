@@ -40,10 +40,14 @@
 
   <div class="lg:col-span-7 flex items-center justify-center px-6 py-10 sm:py-14">
     <div class="w-full max-w-sm">
-      <h1 class="font-display text-3xl text-[#1B1F3B] font-semibold">
+      <h1
+        class="font-display text-3xl text-[#1B1F3B] font-semibold"
+        data-aos="fade-down"
+        data-aos-delay="100"
+      >
         {{ isLogin ? 'Welcome back' : 'Create an account' }}
       </h1>
-      <p class="mt-2 text-sm text-[#6B7094]">
+      <p class="mt-2 text-sm text-[#6B7094]" data-aos="fade-down" data-aos-delay="200">
         {{
           isLogin
             ? 'Sign in to pick up right where you left off.'
@@ -59,7 +63,7 @@
       >
         @if (isLogin) {
           <!-- Email -->
-          <div class="flex flex-col gap-2">
+          <div class="flex flex-col gap-2" data-aos="zoom-in" data-aos-delay="100">
             <p-floatlabel variant="on">
               <input
                 pInputText
@@ -85,7 +89,7 @@
             }
           </div>
 
-          <div class="flex flex-col gap-2">
+          <div class="flex flex-col gap-2" data-aos="zoom-in" data-aos-delay="100">
             <p-floatlabel variant="on">
               <p-iconfield>
                 <input
@@ -120,7 +124,11 @@
           </div>
 
           <!-- Remember + forgot -->
-          <div class="flex items-center justify-between text-sm">
+          <div
+            class="flex items-center justify-between text-sm"
+            data-aos="zoom-in"
+            data-aos-delay="100"
+          >
             <label class="flex items-center gap-2 text-[#4B4F6B]">
               <p-checkbox formControlName="remember" [binary]="true" inputId="remember" />
               <span>Remember me</span>
@@ -130,7 +138,7 @@
             </a>
           </div>
         } @else if (!isLogin) {
-          <div class="flex flex-col gap-2">
+          <div class="flex flex-col gap-2" data-aos="zoom-in" data-aos-delay="100">
             <p-floatlabel variant="on">
               <input
                 pInputText
@@ -158,7 +166,7 @@
             }
           </div>
 
-          <div class="flex flex-col gap-2">
+          <div class="flex flex-col gap-2" data-aos="zoom-in" data-aos-delay="100">
             <p-floatlabel variant="on">
               <input
                 pInputText
@@ -183,7 +191,7 @@
             }
           </div>
 
-          <div class="flex flex-col gap-2">
+          <div class="flex flex-col gap-2" data-aos="zoom-in" data-aos-delay="100">
             <p-floatlabel variant="on">
               <p-iconfield>
                 <input
@@ -239,7 +247,7 @@
             </ul>
           </div>
 
-          <div class="flex flex-col gap-2">
+          <div class="flex flex-col gap-2" data-aos="zoom-in" data-aos-delay="100">
             <p-floatlabel variant="on">
               <p-iconfield>
                 <input
@@ -282,11 +290,13 @@
           type="submit"
           label="Sign in"
           class="w-full py-2.5 justify-center border-0 bg-gray-600 text-white hover:bg-gray-800 rounded font-semibold transition-colors"
+          data-aos="fade-up"
+          data-aos-delay="200"
         >
           {{ isLogin ? 'Sign In' : 'Sign Up' }}
         </button>
 
-        <p class="text-center text-sm text-[#6B7094]">
+        <p class="text-center text-sm text-[#6B7094]" data-aos="fade-up" data-aos-delay="300">
           {{ isLogin ? 'New to Addinson Submission?' : 'Already have an account?' }}
           <a
             href="javascript:void(0)"
