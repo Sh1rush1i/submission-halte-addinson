@@ -31,12 +31,12 @@ export class Sidebars {
 
   menuGroups = signal<NavGroup[]>([
     {
-      label: 'Home',
-      items: [{ icon: 'pi pi-home', label: 'Home', route: '/dashboard' }],
-    },
-    {
-      label: 'Halte',
-      items: [{ icon: 'pi pi-file-o', label: 'Trip', route: '/trip' }],
+      label: 'Main',
+      items: [
+        { icon: 'pi pi-home', label: 'Home', route: '/dashboard' },
+        { icon: 'pi pi-file-o', label: 'Trip', route: '/trip' },
+        { icon: 'pi pi-user', label: 'About Developer', route: '/about' },
+      ],
     },
     // {
     //   label: 'Traffic',
