@@ -141,12 +141,12 @@
 
         <!-- Right: Manual form -->
         <form [formGroup]="tripForm" (ngSubmit)="createTrip()" class="flex flex-col gap-6 pb-6">
-          <p class="text-sm text-gray-400" data-aos="fade-up" data-aos-delay="100">
+          <p class="text-sm text-gray-400">
             Create the trip first. Once saved, you'll be able to pick each stop from a dropdown and
             record its data.
           </p>
 
-          <div data-aos="fade-up" data-aos-delay="200">
+          <div>
             <label for="kodeTrip" class="mb-2.5 block text-xs font-medium text-gray-400"
               >Trip Code</label
             >
@@ -168,11 +168,7 @@
             }
           </div>
 
-          <div
-            class="grid grid-cols-1 gap-5 sm:grid-cols-3"
-            data-aos="fade-up"
-            data-aos-delay="300"
-          >
+          <div class="grid grid-cols-1 gap-5 sm:grid-cols-3">
             <div>
               <label for="namaSurveyor" class="mb-2.5 block text-xs font-medium text-gray-400"
                 >Surveyor Name</label
@@ -197,7 +193,7 @@
               }
             </div>
 
-            <div data-aos="fade-up" data-aos-delay="400">
+            <div>
               <label for="hariTanggal" class="mb-2.5 block text-xs font-medium text-gray-400"
                 >Day / Date</label
               >
@@ -219,7 +215,7 @@
               }
             </div>
 
-            <div data-aos="fade-up" data-aos-delay="500">
+            <div>
               <label for="nomorKendaraan" class="mb-2.5 block text-xs font-medium text-gray-400"
                 >Vehicle Number</label
               >
@@ -244,7 +240,7 @@
             </div>
           </div>
 
-          <div class="flex items-center justify-end gap-3" data-aos="fade-up" data-aos-delay="600 ">
+          <div class="flex items-center justify-end gap-3">
             <button
               type="button"
               pButton
@@ -284,17 +280,17 @@
           </div>
 
           <div class="mt-4 grid grid-cols-1 gap-4 text-sm sm:grid-cols-3">
-            <div data-aos="zoom-in" data-aos-delay="200">
+            <div>
               <p class="text-xs text-gray-500 uppercase font-mono">Surveyor</p>
               <p class="text-gray-200">{{ trip.namaSurveyor || '—' }}</p>
             </div>
-            <div data-aos="zoom-in" data-aos-delay="300">
+            <div>
               <p class="text-xs text-gray-500 uppercase font-mono">Day / Date</p>
               <p class="text-gray-200">
                 {{ trip.hariTanggal ? (trip.hariTanggal | date: 'yyyy-MM-dd') : '—' }}
               </p>
             </div>
-            <div data-aos="zoom-in" data-aos-delay="400">
+            <div>
               <p class="text-xs text-gray-500 uppercase font-mono">Vehicle Number</p>
               <p class="text-gray-200">{{ trip.nomorKendaraan || '—' }}</p>
             </div>
@@ -307,7 +303,7 @@
             (ngSubmit)="updateHalte()"
             class="flex w-full min-w-0 flex-col gap-3 lg:w-xl lg:shrink-0"
           >
-            <div class="flex items-center justify-between" data-aos="fade-up" data-aos-delay="100">
+            <div class="flex items-center justify-between">
               <h2 class="text-sm font-semibold text-gray-200">
                 <i class="pi pi-file-o text-amber-400 me-2"></i>Form
               </h2>
@@ -318,11 +314,7 @@
               }
             </div>
 
-            <div
-              class="bg-gray-500/5 border border-gray-600 rounded-md p-6"
-              data-aos="fade-up"
-              data-aos-delay="100"
-            >
+            <div class="bg-gray-500/5 border border-gray-600 rounded-md p-6">
               <label for="halteIndex" class="mb-2.5 block text-xs font-medium text-gray-400"
                 >Halte</label
               >
@@ -587,14 +579,14 @@
                     pButton
                     (click)="deleteHalteData(halteForm.controls.halteIndex.value!)"
                     [disabled]="!halteForm.controls.waktuKedatangan.value || isDeletingHalte()"
-                    class="flex items-center border-none gap-2 rounded-md bg-red-800 px-2 sm:px-4 py-2 sm:text-sm text-[0.8rem] text-white transition duration-700 hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-50"
+                    class="flex items-center border-none sm:gap-2 gap-1 rounded-md bg-red-800 px-2 sm:px-4 py-2 sm:text-sm text-[0.8rem] text-white transition duration-700 hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     @if (deleteHalteIcon() === 'loading') {
-                      <i class="pi pi-spin pi-spinner"></i>
+                      <i class="pi pi-spin pi-spinner sm:text-sm text-[0.8rem]"></i>
                     } @else if (deleteHalteIcon() === 'done') {
-                      <i class="pi pi-check text-green-300"></i>
+                      <i class="pi pi-check text-green-300 sm:text-sm text-[0.8rem]"></i>
                     } @else {
-                      <i class="pi pi-times"></i>
+                      <i class="pi pi-times sm:text-sm text-[0.8rem]"></i>
                     }
                     Delete Stop
                   </button>
@@ -603,14 +595,14 @@
                     type="submit"
                     pButton
                     [disabled]="halteForm.invalid || isSavingHalte()"
-                    class="flex items-center border-none gap-2 rounded-md bg-purple-800 px-2 sm:px-4 py-2 sm:text-sm text-[0.8rem] text-white transition duration-700 hover:bg-purple-600 disabled:cursor-not-allowed disabled:opacity-50"
+                    class="flex items-center border-none sm:gap-2 gap-1 rounded-md bg-purple-800 px-2 sm:px-4 py-2 sm:text-sm text-[0.8rem] text-white transition duration-700 hover:bg-purple-600 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     @if (saveHalteIcon() === 'loading') {
-                      <i class="pi pi-spin pi-spinner"></i>
+                      <i class="pi pi-spin pi-spinner sm:text-sm text-[0.8rem]"></i>
                     } @else if (saveHalteIcon() === 'done') {
-                      <i class="pi pi-check text-green-300"></i>
+                      <i class="pi pi-check text-green-300 sm:text-sm text-[0.8rem]"></i>
                     } @else {
-                      <i class="pi pi-check"></i>
+                      <i class="pi pi-check sm:text-sm text-[0.8rem]"></i>
                     }
                     Update Stop
                   </button>
