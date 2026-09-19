@@ -102,7 +102,7 @@
       <div class="flex items-center gap-2">
         <button
           pButton
-          class="bg-[#1e2430] hover:bg-gray-700 text-xs px-3 py-1.5 border border-gray-700 rounded-md transition-colors text-gray-200 flex items-center"
+          class="bg-sky-800 hover:bg-sky-700 text-xs px-3 py-1.5 border-none rounded-sm transition-colors text-gray-200 flex items-center"
           (click)="toggleChartType()"
         >
           <i class="pi" [ngClass]="chartType() === 'line' ? 'pi-chart-bar' : 'pi-chart-line'"></i>
@@ -111,7 +111,7 @@
 
         <button
           pButton
-          class="bg-[#1e2430] hover:bg-gray-700 text-xs px-3 py-1.5 border border-gray-700 rounded-md transition-colors text-gray-200 flex items-center"
+          class="bg-yellow-800 hover:bg-yellow-700 text-xs px-3 py-1.5 border-none rounded-sm transition-colors text-gray-200 flex items-center"
           (click)="resetZoom()"
         >
           <i class="pi pi-search-minus"></i>
