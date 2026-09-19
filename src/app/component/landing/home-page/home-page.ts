@@ -12,7 +12,11 @@ import {
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { finalize } from 'rxjs';
+
+// Chart.js dan plugin Zoom
 import { Chart, registerables } from 'chart.js';
+import zoomPlugin from 'chartjs-plugin-zoom';
+
 import { TripRecord, TripService } from '../../../service/trip.service';
 import { AuthService } from '../../../service/auth.service';
 import { FullPageLoading } from '../../misc/full-page-loading/full-page-loading';
@@ -24,7 +28,8 @@ import { TableModule } from 'primeng/table';
 import { MessageService } from 'primeng/api';
 import { DialogService } from 'primeng/dynamicdialog';
 
-Chart.register(...registerables);
+// Daftarkan semua komponen Chart.js beserta plugin Zoom
+Chart.register(...registerables, zoomPlugin);
 
 @Component({
   selector: 'app-home-page',
@@ -43,12 +48,16 @@ Chart.register(...registerables);
   providers: [MessageService, DialogService],
 })
 export class HomePage implements OnInit, AfterViewInit, OnDestroy {
+  // Hanya satu ViewChild yang tersisa dan strongly typed
   @ViewChild('barCanvas') barCanvasRef!: ElementRef<HTMLCanvasElement>;
 
   readonly today = new Date();
   readonly isLoading = signal(true);
   readonly trips = signal<TripRecord[]>([]);
+  readonly chartType = signal<'line' | 'bar'>('line'); // Signal untuk tipe chart
+
   private viewReady = signal(false);
+  private chartInstance: Chart | null = null;
 
   // ── Derived stats ────────────────────────────────────────────────────────────
   readonly totalTrips = computed(() => this.trips().length);
@@ -79,16 +88,14 @@ export class HomePage implements OnInit, AfterViewInit, OnDestroy {
   });
 
   /**
-   * Data multi-line chart (Perjalanan tiap Surveyor)
-   * X = Nama Halte (semua 56 rute)
+   * Data multi-line/bar chart (Perjalanan tiap Surveyor)
+   * X = Nama Halte
    * Y = Waktu / Jam
    */
   readonly chartData = computed(() => {
     const trips = this.trips();
     if (!trips.length) return null;
 
-    // 1. Ambil 56 halte sebagai Master Urutan (X-Axis labels)
-    // Menambahkan nomor urut (i + 1) supaya namanya unik dan Chart.js tidak menumpuk halte dengan nama sama.
     let masterHaltes: string[] = [];
     for (const t of trips) {
       if ((t.haltes?.length ?? 0) > masterHaltes.length) {
@@ -96,14 +103,12 @@ export class HomePage implements OnInit, AfterViewInit, OnDestroy {
       }
     }
 
-    // 2. Bangun Dataset garis untuk masing-masing surveyor
     const datasets = trips
       .filter((t) => t.haltes?.some((h) => h.waktuKedatangan || h.waktuKeberangkatan))
       .map((trip, idx) => {
         const data: any[] = [];
         let previousHour = -1;
 
-        // Loop melalui seluruh 56 halte di trip ini
         trip.haltes!.forEach((h, i) => {
           const timeStr = h.waktuKedatangan || h.waktuKeberangkatan;
 
@@ -111,20 +116,20 @@ export class HomePage implements OnInit, AfterViewInit, OnDestroy {
             const d = new Date(timeStr);
             let hour = d.getHours() + d.getMinutes() / 60;
 
-            // Jika waktu lompat mundur drastis, tambah 24 jam agar garis tidak patah ke bawah
             if (previousHour !== -1 && hour < previousHour - 6) {
               hour += 24;
             }
             previousHour = Math.max(previousHour, hour);
 
             data.push({
-              x: `${i + 1}. ${h.namaHalte}`, // Harus persis sama dengan masterHaltes
+              x: `${i + 1}. ${h.namaHalte}`,
               y: Math.round(hour * 100) / 100,
               rawTime: d,
             });
           }
         });
 
+        // Random color for the surveyor line/bar, based on index
         const hue = (idx * 137.5) % 360;
         const color = `hsl(${hue}, 70%, 60%)`;
 
@@ -132,13 +137,14 @@ export class HomePage implements OnInit, AfterViewInit, OnDestroy {
           label: trip.namaSurveyor || trip.kodeTrip,
           data: data,
           borderColor: color,
-          backgroundColor: color,
+          backgroundColor: color, // Penting saat chart berupa 'bar'
           pointBackgroundColor: color,
           pointBorderColor: '#fff',
           pointRadius: 4,
           pointHoverRadius: 6,
           tension: 0.3,
           fill: false,
+          borderRadius: 4, // Efek lengkung untuk mode 'bar'
         };
       });
 
@@ -155,9 +161,6 @@ export class HomePage implements OnInit, AfterViewInit, OnDestroy {
 
   readonly userName = computed(() => this.authService.currentUser()?.name ?? 'Surveyor');
 
-  private chartInstance: Chart | null = null;
-
-  // STRICTLY Constructor Dependency Injection (no inject() syntax)
   constructor(
     private tripService: TripService,
     private authService: AuthService,
@@ -165,17 +168,20 @@ export class HomePage implements OnInit, AfterViewInit, OnDestroy {
     private messageService: MessageService,
     private dialogService: DialogService,
   ) {
+    // Reaktif menggambar/memperbarui chart saat data berubah
     effect(() => {
       const data = this.chartData();
       const ready = this.viewReady();
       if (!ready) return;
 
       if (!data || data.datasets.length === 0) {
-        this.chartInstance?.destroy();
-        this.chartInstance = null;
+        if (this.chartInstance) {
+          this.chartInstance.destroy();
+          this.chartInstance = null;
+        }
         return;
       }
-      this.drawLineChart(data);
+      this.renderOrUpdateChart(data);
     });
   }
 
@@ -240,37 +246,40 @@ export class HomePage implements OnInit, AfterViewInit, OnDestroy {
     this.router.navigate([path]);
   }
 
-  vehicleBadgeClass(i: number): string {
-    const classes = [
-      'bg-sky-500/20 text-sky-300',
-      'bg-emerald-500/20 text-emerald-300',
-      'bg-amber-500/20 text-amber-300',
-      'bg-purple-500/20 text-purple-300',
-      'bg-rose-500/20 text-rose-300',
-    ];
-    return classes[i % classes.length];
+  // ── Chart Controls ──────────────────────────────────────────────────────────
+  toggleChartType(): void {
+    const newType = this.chartType() === 'line' ? 'bar' : 'line';
+    this.chartType.set(newType);
+
+    if (this.chartInstance) {
+      (this.chartInstance.config as any).type = newType;
+      this.chartInstance.update();
+    }
   }
 
-  vehicleBarClass(i: number): string {
-    const classes = [
-      'bg-sky-400',
-      'bg-emerald-400',
-      'bg-amber-400',
-      'bg-purple-400',
-      'bg-rose-400',
-    ];
-    return classes[i % classes.length];
+  resetZoom(): void {
+    if (this.chartInstance) {
+      this.chartInstance.resetZoom();
+    }
   }
 
-  // ── Chart.js line chart ───────────────────────
-  private drawLineChart(chartData: any): void {
+  // ── Chart.js Setup & Update ─────────────────────────────────────────────────
+  private renderOrUpdateChart(chartData: any): void {
     const canvas = this.barCanvasRef?.nativeElement;
     if (!canvas) return;
 
-    this.chartInstance?.destroy();
+    // Jika chart sudah ada, perbarui data & tipenya saja
+    if (this.chartInstance) {
+      this.chartInstance.data.labels = chartData.labels;
+      this.chartInstance.data.datasets = chartData.datasets;
+      (this.chartInstance.config as any).type = this.chartType();
+      this.chartInstance.update();
+      return;
+    }
 
+    // Jika chart belum ada, inisialisasi awal
     this.chartInstance = new Chart(canvas, {
-      type: 'line',
+      type: this.chartType(),
       data: {
         labels: chartData.labels,
         datasets: chartData.datasets,
@@ -278,11 +287,28 @@ export class HomePage implements OnInit, AfterViewInit, OnDestroy {
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        animation: false, // Dimatikan agar zoom/pan mulus pada data banyak
         plugins: {
           legend: {
             display: true,
             position: 'top',
             labels: { color: 'rgba(255,255,255,0.7)', font: { size: 11 } },
+          },
+          // Konfigurasi plugin Zoom
+          zoom: {
+            pan: {
+              enabled: true,
+              mode: 'x', // Hanya geser sumbu X
+            },
+            zoom: {
+              wheel: {
+                enabled: true,
+              },
+              pinch: {
+                enabled: true,
+              },
+              mode: 'x', // Hanya zoom sumbu X
+            },
           },
           tooltip: {
             backgroundColor: '#1a1d24',
@@ -291,7 +317,6 @@ export class HomePage implements OnInit, AfterViewInit, OnDestroy {
             padding: 10,
             cornerRadius: 8,
             callbacks: {
-              // Menambahkan "as any" untuk melewati Type Error 'unknown'
               title: (items) => (items[0].raw as any).x,
               label: (item) => {
                 const dsLabel = item.dataset.label;
@@ -301,7 +326,7 @@ export class HomePage implements OnInit, AfterViewInit, OnDestroy {
                   hour: '2-digit',
                   minute: '2-digit',
                 });
-                return `${dsLabel} · Tiba: ${timeStr}`;
+                return `${dsLabel} · Arrival: ${timeStr}`;
               },
             },
           },
@@ -311,7 +336,7 @@ export class HomePage implements OnInit, AfterViewInit, OnDestroy {
             type: 'category',
             title: {
               display: true,
-              text: 'Nama Halte',
+              text: 'Halte Name',
               color: 'rgba(255,255,255,0.45)',
               font: { size: 10 },
             },
@@ -320,7 +345,7 @@ export class HomePage implements OnInit, AfterViewInit, OnDestroy {
               font: { size: 10 },
               maxRotation: 45,
               minRotation: 45,
-              autoSkip: false, // Memaksa semua 56 label tampil tanpa ada yang dilewati
+              autoSkip: false,
             },
             grid: { color: 'rgba(255,255,255,0.06)' },
           },
@@ -328,7 +353,7 @@ export class HomePage implements OnInit, AfterViewInit, OnDestroy {
             type: 'linear',
             title: {
               display: true,
-              text: 'Waktu (Jam)',
+              text: 'Time (Hours)',
               color: 'rgba(255,255,255,0.45)',
               font: { size: 10 },
             },

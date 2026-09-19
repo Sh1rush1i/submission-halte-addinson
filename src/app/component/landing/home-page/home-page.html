@@ -5,7 +5,7 @@
   <app-full-page-loading />
 }
 
-<div class="min-h-screen bg-[#0d0f14] text-white px-4 py-8 sm:px-8">
+<div class="w-full min-w-0 flex-1 min-h-screen bg-[#0d0f14] text-white px-4 py-8 sm:px-8">
   <!-- ── Header ────────────────────────────────────────────────────────────── -->
   <div class="mb-8 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
     <div>
@@ -84,55 +84,76 @@
   </div>
 
   <!-- ── Main Content Grid ─────────────────────────────────────────────────── -->
-  <div class="card rounded-sm">
-    <div class="mb-4 flex items-center justify-between">
-      <div>
-        <h2 class="text-sm font-semibold text-white">Surveyor's Arrival Time</h2>
+  <div
+    class="card rounded-sm w-full min-w-0 overflow-hidden bg-gray-900/40 border border-white/5 p-4"
+  >
+    <div class="mb-6 flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+      <!-- Bagian Kiri: Judul, Subjudul, dan Teks Info -->
+      <div class="flex flex-col">
+        <h2 class="text-base font-semibold text-white">Surveyor's Arrival Time</h2>
         <p class="text-xs text-gray-500 mt-0.5">Surveyor's travel time per stop, by hour</p>
+        <span class="flex items-center text-[10px] text-yellow-100/70 mt-3">
+          <i class="pi pi-info-circle mr-1.5 text-yellow-200"></i> Scroll or pinch to zoom. Click
+          the name above the chart to hide or show the surveyor.
+        </span>
       </div>
-      <i class="pi pi-chart-line text-emerald-600"></i>
+
+      <!-- Bagian Kanan: Tombol Kontrol dan Ikon -->
+      <div class="flex items-center gap-2">
+        <button
+          pButton
+          class="bg-[#1e2430] hover:bg-gray-700 text-xs px-3 py-1.5 border border-gray-700 rounded-md transition-colors text-gray-200 flex items-center"
+          (click)="toggleChartType()"
+        >
+          <i class="pi" [ngClass]="chartType() === 'line' ? 'pi-chart-bar' : 'pi-chart-line'"></i>
+          <span class="ml-2">Show {{ chartType() === 'line' ? 'Bar' : 'Line' }}</span>
+        </button>
+
+        <button
+          pButton
+          class="bg-[#1e2430] hover:bg-gray-700 text-xs px-3 py-1.5 border border-gray-700 rounded-md transition-colors text-gray-200 flex items-center"
+          (click)="resetZoom()"
+        >
+          <i class="pi pi-search-minus"></i>
+          <span class="ml-2">Reset Zoom</span>
+        </button>
+
+        <i class="pi pi-chart-line text-emerald-600 ml-2 text-lg"></i>
+      </div>
     </div>
 
-    <!-- Wrapper Scroll Horizontal -->
-    <div class="w-full overflow-x-auto pb-2 custom-scrollbar">
-      <div
-        class="relative h-96 lg:min-w-full transition-all"
-        [class.min-w-[1200px]]="!isLoading() && trips().length > 0"
-        [class.w-full]="isLoading() || trips().length === 0"
-      >
-        <canvas
-          #barCanvas
-          class="w-full h-full"
-          [class.invisible]="isLoading() || trips().length === 0"
-        ></canvas>
+    <!-- Container Chart (tanpa scroll wrapper) -->
+    <div class="relative h-96 w-full transition-all">
+      <canvas
+        #barCanvas
+        class="touch-none"
+        [class.invisible]="isLoading() || trips().length === 0"
+      ></canvas>
 
-        @if (isLoading()) {
-          <div class="absolute inset-0 flex items-end gap-3 px-2">
-            @for (w of [40, 70, 55, 90, 65, 45, 60, 80, 50, 75]; track $index) {
-              <p-skeleton
-                [width]="'100%'"
-                [height]="w + 'px'"
-                styleClass="flex-1 rounded-sm opacity-40"
-              />
-            }
+      @if (isLoading()) {
+        <div class="absolute inset-0 flex items-end gap-3 px-2">
+          @for (w of [40, 70, 55, 90, 65, 45, 60, 80, 50, 75]; track $index) {
+            <p-skeleton
+              [width]="'100%'"
+              [height]="w + 'px'"
+              styleClass="flex-1 rounded-sm opacity-40"
+            />
+          }
+        </div>
+      } @else if (trips().length === 0) {
+        <!-- Empty State View -->
+        <div
+          class="absolute inset-0 w-full left-0 flex flex-col items-center justify-center border border-dashed border-gray-700/60 bg-gray-900/5 rounded-md"
+        >
+          <div class="w-14 h-14 rounded-full bg-gray-800/80 flex items-center justify-center mb-3">
+            <i class="pi pi-chart-line text-2xl text-emerald-500"></i>
           </div>
-        } @else if (trips().length === 0) {
-          <!-- Empty State View: Menggunakan kondisi data utama kosong -->
-          <div
-            class="absolute inset-0 w-full left-0 flex flex-col items-center justify-center border border-dashed border-gray-700/60 bg-gray-900/5 rounded-md"
-          >
-            <div
-              class="w-14 h-14 rounded-full bg-gray-800/80 flex items-center justify-center mb-3"
-            >
-              <i class="pi pi-chart-line text-2xl text-emerald-500"></i>
-            </div>
-            <p class="text-sm font-medium text-red-300">No Chart Data</p>
-            <p class="text-xs text-gray-500 mt-1 max-w-62.5 text-center leading-relaxed">
-              There is no trips data available yet.
-            </p>
-          </div>
-        }
-      </div>
+          <p class="text-sm font-medium text-red-300">No Chart Data</p>
+          <p class="text-xs text-gray-500 mt-1 max-w-62.5 text-center leading-relaxed">
+            There is no trips data available yet.
+          </p>
+        </div>
+      }
     </div>
   </div>
 
