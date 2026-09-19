@@ -90,8 +90,40 @@
       </div>
     </div>
 
-    @if (isLoading()) {
-      <app-full-page-loading></app-full-page-loading>
+    @if (isLoading() && viewMode() === 'card') {
+      <!-- Skeleton — Card view (card tidak punya komponen bawaan untuk dipakai ulang, jadi tetap versi tiruan) -->
+      <div class="mt-6 grid grid-cols-1 gap-5 p-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        @for (_ of [1, 2, 3, 4, 5, 6, 7, 8]; track $index) {
+          <div class="flex flex-col rounded-md border border-gray-600/50 bg-gray-500/5 p-5">
+            <div class="flex items-start justify-between">
+              <div class="flex flex-col gap-1.5">
+                <p-skeleton width="4.5rem" height="0.6rem" styleClass="rounded-sm" />
+                <p-skeleton width="5.5rem" height="0.9rem" styleClass="rounded-sm" />
+              </div>
+              <p-skeleton width="4rem" height="1.5rem" styleClass="rounded-md" />
+            </div>
+
+            <div class="mt-5 flex flex-col gap-3 border-t border-gray-700/50 pt-4">
+              <div class="flex items-center justify-between">
+                <p-skeleton width="4rem" height="0.7rem" styleClass="rounded-sm" />
+                <p-skeleton width="5rem" height="0.7rem" styleClass="rounded-sm" />
+              </div>
+              <div class="flex items-center justify-between">
+                <p-skeleton width="4.5rem" height="0.7rem" styleClass="rounded-sm" />
+                <p-skeleton width="3.5rem" height="0.7rem" styleClass="rounded-sm" />
+              </div>
+            </div>
+
+            <div class="mt-auto pt-5">
+              <div class="flex items-center justify-between mb-1.5">
+                <p-skeleton width="5.5rem" height="0.65rem" styleClass="rounded-sm" />
+                <p-skeleton width="2rem" height="0.65rem" styleClass="rounded-sm" />
+              </div>
+              <p-skeleton width="100%" height="0.375rem" styleClass="rounded-full" />
+            </div>
+          </div>
+        }
+      </div>
     } @else {
       <div
         class="relative mt-6 flex-1 min-h-0"
@@ -100,7 +132,7 @@
         (dragleave)="onDragLeave($event)"
         (drop)="onDrop($event)"
       >
-        <!-- Table view -->
+        <!-- Table view — SATU p-table yang sama dipakai untuk skeleton maupun data asli -->
         <div
           class="styled-scrollbar absolute inset-0 flex flex-col overflow-x-auto rounded-md border border-gray-600/50 transition-all duration-500 ease-out"
           [ngClass]="{
@@ -109,16 +141,16 @@
           }"
         >
           <p-table
-            [value]="records()"
+            [value]="isLoading() ? skeletonRows : records()"
             stripedRows
-            [paginator]="true"
+            [paginator]="!isLoading()"
             [rows]="10"
             [scrollable]="true"
             [rowsPerPageOptions]="[5, 10, 20]"
             scrollHeight="flex"
             dataKey="id"
             styleClass="w-full table-fixed min-w-[56rem] "
-            data-aos="fade-up"
+            data-aos="zoom-out"
             data-aos-delay="100"
           >
             <ng-template #header>
@@ -128,6 +160,8 @@
                     class="transition duration-250 ease-in-out hover:scale-105 text-ms py-3"
                     [ngClass]="col.widthClass + (col.align === 'center' ? ' text-center' : '')"
                     [style.minWidth]="col.minWidth"
+                    data-aos="zoom-out"
+                    data-aos-delay="100"
                   >
                     {{ col.header }}
                   </th>
@@ -146,40 +180,72 @@
                         : '',
                     ]"
                   >
-                    @switch (col.type) {
-                      @case ('index') {
-                        <span class="text-gray-400">{{ rowIndex + 1 }}</span>
+                    @if (isLoading()) {
+                      @switch (col.type) {
+                        @case ('index') {
+                          <p-skeleton
+                            width="1.25rem"
+                            height="0.8rem"
+                            styleClass="rounded-sm mx-auto"
+                          />
+                        }
+                        @case ('date') {
+                          <p-skeleton width="6rem" height="0.8rem" styleClass="rounded-sm" />
+                        }
+                        @case ('progress') {
+                          <p-skeleton
+                            width="4.5rem"
+                            height="1.5rem"
+                            styleClass="rounded-md mx-auto"
+                          />
+                        }
+                        @case ('action') {
+                          <p-skeleton
+                            width="0.9rem"
+                            height="0.9rem"
+                            styleClass="rounded-sm mx-auto"
+                          />
+                        }
+                        @default {
+                          <p-skeleton width="7rem" height="0.8rem" styleClass="rounded-sm" />
+                        }
                       }
-                      @case ('text') {
-                        <span class="text-sm font-medium" [ngClass]="col.rowClass">{{
-                          record[col.field]
-                        }}</span>
-                      }
-                      @case ('date') {
-                        <span class="text-sm text-gray-300">
-                          <i class="pi pi-calendar me-2 text-green-200"></i>
-                          {{ record[col.field] | date: 'dd MMM yyyy' }}
-                        </span>
-                      }
-                      @case ('progress') {
-                        <span
-                          class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold"
-                          [ngClass]="getHalteStatusClass(record)"
-                        >
-                          <i class="pi pi-map-marker"></i>
-                          {{ getFilledCount(record) }} / {{ record.haltes.length }}
-                        </span>
-                      }
-                      @case ('action') {
-                        <a
-                          href="javascript:void(0)"
-                          pTooltip="Open Trip Data"
-                          tooltipPosition="top"
-                          class="text-purple-300 transition hover:text-purple-100 hover:scale-110 inline-block"
-                          (click)="openItem(record.id)"
-                        >
-                          <i class="pi pi-external-link"></i>
-                        </a>
+                    } @else {
+                      @switch (col.type) {
+                        @case ('index') {
+                          <span class="text-gray-400">{{ rowIndex + 1 }}</span>
+                        }
+                        @case ('text') {
+                          <span class="text-sm font-medium" [ngClass]="col.rowClass">{{
+                            record[col.field]
+                          }}</span>
+                        }
+                        @case ('date') {
+                          <span class="text-sm text-gray-300">
+                            <i class="pi pi-calendar me-2 text-green-200"></i>
+                            {{ record[col.field] | date: 'dd MMM yyyy' }}
+                          </span>
+                        }
+                        @case ('progress') {
+                          <span
+                            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold"
+                            [ngClass]="getHalteStatusClass(record)"
+                          >
+                            <i class="pi pi-map-marker"></i>
+                            {{ getFilledCount(record) }} / {{ record.haltes.length }}
+                          </span>
+                        }
+                        @case ('action') {
+                          <a
+                            href="javascript:void(0)"
+                            pTooltip="Open Trip Data"
+                            tooltipPosition="top"
+                            class="text-purple-300 transition hover:text-purple-100 hover:scale-110 inline-block"
+                            (click)="openItem(record.id)"
+                          >
+                            <i class="pi pi-external-link"></i>
+                          </a>
+                        }
                       }
                     }
                   </td>

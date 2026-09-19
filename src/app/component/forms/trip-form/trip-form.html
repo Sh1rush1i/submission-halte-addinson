@@ -93,7 +93,119 @@
     </div>
 
     @if (isLoading()) {
-      <app-full-page-loading></app-full-page-loading>
+      <div class="mt-8 md:pb-6 pb-8 lg:pb-6 flex flex-col gap-6">
+        <!-- Skeleton — Trip Info card -->
+        <div class="rounded-md border border-gray-500/50 bg-gray-500/5 p-6">
+          <div class="flex flex-col gap-2">
+            <p-skeleton width="4rem" height="0.6rem" styleClass="rounded-sm" />
+            <p-skeleton width="12rem" height="1.2rem" styleClass="rounded-sm" />
+          </div>
+
+          <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+            @for (_ of [1, 2, 3]; track $index) {
+              <div class="flex flex-col gap-2">
+                <p-skeleton width="5rem" height="0.6rem" styleClass="rounded-sm" />
+                <p-skeleton width="7rem" height="0.85rem" styleClass="rounded-sm" />
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-6 lg:flex-row lg:items-start">
+          <!-- Skeleton — Form kiri -->
+          <div class="flex w-full min-w-0 flex-col gap-3 lg:w-xl lg:shrink-0">
+            <div class="flex items-center justify-between">
+              <p-skeleton width="4rem" height="0.85rem" styleClass="rounded-sm" />
+              <p-skeleton width="5rem" height="0.7rem" styleClass="rounded-sm" />
+            </div>
+
+            <div class="bg-gray-500/5 border border-gray-600 rounded-md p-6">
+              <p-skeleton width="3rem" height="0.6rem" styleClass="rounded-sm mb-2.5" />
+              <div class="flex items-center gap-2">
+                <p-skeleton width="2.5rem" height="2.5rem" styleClass="rounded-md shrink-0" />
+                <p-skeleton width="100%" height="2.5rem" styleClass="rounded-md flex-1" />
+                <p-skeleton width="2.5rem" height="2.5rem" styleClass="rounded-md shrink-0" />
+              </div>
+            </div>
+
+            <div class="flex flex-col border rounded-md border-gray-500/50 bg-gray-500/5 p-6 gap-4">
+              <div>
+                <p-skeleton width="5rem" height="0.6rem" styleClass="rounded-sm mb-2.5" />
+                <p-skeleton width="100%" height="2.5rem" styleClass="rounded-md" />
+              </div>
+              <div>
+                <p-skeleton width="6rem" height="0.6rem" styleClass="rounded-sm mb-2.5" />
+                <p-skeleton width="100%" height="2.5rem" styleClass="rounded-md" />
+              </div>
+            </div>
+
+            <div class="rounded-md border border-gray-500/50 bg-gray-500/5 p-6">
+              <p-skeleton width="8rem" height="0.85rem" styleClass="rounded-sm mb-4" />
+              <div class="grid grid-cols-1 gap-5 sm:grid-cols-3">
+                @for (_ of [1, 2, 3]; track $index) {
+                  <div>
+                    <p-skeleton width="3.5rem" height="0.6rem" styleClass="rounded-sm mb-2.5" />
+                    <p-skeleton width="100%" height="2.5rem" styleClass="rounded-md" />
+                  </div>
+                }
+              </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-3">
+              <p-skeleton width="4.5rem" height="2.25rem" styleClass="rounded-md" />
+              <p-skeleton width="6rem" height="2.25rem" styleClass="rounded-md" />
+              <p-skeleton width="6.5rem" height="2.25rem" styleClass="rounded-md" />
+            </div>
+          </div>
+
+          <!-- Skeleton — Stops Overview kanan -->
+          <div class="@container w-full min-w-0 flex-1 hidden sm:flex sm:flex-col">
+            <div class="mb-3 flex items-center justify-between">
+              <p-skeleton width="7rem" height="0.85rem" styleClass="rounded-sm" />
+              <p-skeleton width="4.5rem" height="0.7rem" styleClass="rounded-sm" />
+            </div>
+
+            <div class="grid grid-cols-1 gap-4 @sm:grid-cols-2 @3xl:grid-cols-3">
+              @for (_ of [1, 2, 3, 4, 5, 6]; track $index) {
+                <div class="flex flex-col rounded-md border border-gray-500/50 bg-gray-400/5 p-4">
+                  <div class="flex items-start justify-between gap-2">
+                    <div class="flex flex-col gap-1.5">
+                      <p-skeleton width="3.5rem" height="0.55rem" styleClass="rounded-sm" />
+                      <p-skeleton width="5rem" height="0.85rem" styleClass="rounded-sm" />
+                    </div>
+                    <div class="flex shrink-0 items-center gap-1">
+                      <p-skeleton width="1.75rem" height="1.75rem" styleClass="rounded-md" />
+                      <p-skeleton width="1.75rem" height="1.75rem" styleClass="rounded-md" />
+                    </div>
+                  </div>
+
+                  <div class="mt-3 space-y-1.5">
+                    <div class="flex items-center justify-between">
+                      <p-skeleton width="2.5rem" height="0.6rem" styleClass="rounded-sm" />
+                      <p-skeleton width="3rem" height="0.6rem" styleClass="rounded-sm" />
+                    </div>
+                    <div class="flex items-center justify-between">
+                      <p-skeleton width="2.5rem" height="0.6rem" styleClass="rounded-sm" />
+                      <p-skeleton width="3rem" height="0.6rem" styleClass="rounded-sm" />
+                    </div>
+                  </div>
+
+                  <div
+                    class="mt-3 grid grid-cols-3 gap-2 border-t border-gray-700/50 pt-3 text-center"
+                  >
+                    @for (_ of [1, 2, 3]; track $index) {
+                      <div class="flex flex-col items-center gap-1">
+                        <p-skeleton width="1rem" height="0.75rem" styleClass="rounded-sm" />
+                        <p-skeleton width="2.5rem" height="0.5rem" styleClass="rounded-sm" />
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
     } @else if (isNew()) {
       <div
         class="mt-8 md:pb-6 pb-8 lg:pb-0 flex flex-col gap-6 flex-1 min-h-0 lg:grid lg:grid-cols-2 lg:items-stretch"
@@ -271,8 +383,8 @@
       <p class="mt-8 text-sm text-red-400">Trip not found.</p>
     } @else {
       <div class="mt-8 md:pb-6 pb-8 lg:pb-6 flex flex-col gap-6">
-        <div class="rounded-md border border-gray-500/50 bg-gray-500/5 p-6" data-aos="zoom-in-up">
-          <div class="flex flex-col gap-0" data-aos="zoom-in" data-aos-delay="100">
+        <div class="rounded-md border border-gray-500/50 bg-gray-500/5 p-6">
+          <div class="flex flex-col gap-0">
             <p class="text-gray-500 text-xs">TRIP INFO</p>
             <h2 class="text-lg font-bold text-sky-200 font-mono uppercase">
               {{ trip?.kodeTrip }} <span class="text-white">|</span> {{ tripId }}

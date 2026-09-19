@@ -30,6 +30,7 @@ import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { AuthService } from '../../../service/auth.service';
 import { TooltipModule } from 'primeng/tooltip';
+import { SkeletonModule } from 'primeng/skeleton';
 
 function timeOrderValidator(group: AbstractControl): ValidationErrors | null {
   const datang = group.get('waktuKedatangan')?.value;
@@ -69,7 +70,7 @@ const ICON_RESET_DELAY_MS = 1800;
     SelectModule,
     TagModule,
     TableModule,
-    FullPageLoading,
+    SkeletonModule,
     ToastModule,
     IconFieldModule,
     InputIconModule,

@@ -17,6 +17,7 @@ import { ToastModule } from 'primeng/toast';
 import { HalteEntry, TripRecord, TripService } from '../../../service/trip.service';
 import { ImportService } from '../../../service/import.service';
 import { finalize } from 'rxjs';
+import { SkeletonModule } from 'primeng/skeleton';
 
 type ViewMode = 'table' | 'card';
 
@@ -41,7 +42,7 @@ interface ColumnDef {
     TableModule,
     ButtonModule,
     TagModule,
-    FullPageLoading,
+    SkeletonModule,
     TooltipModule,
     ToastModule,
   ],
@@ -130,6 +131,8 @@ export class TripPage {
     private dynamicDialogServices: DynamicDialogServices,
     private tripService: TripService,
   ) {}
+
+  readonly skeletonRows: Partial<TripRecord>[] = Array.from({ length: 10 }, (_, i) => ({ id: i }));
 
   private openConfirmModal(message: string, onConfirm: () => void, onClose?: () => void): void {
     this.ref = this.dynamicDialogServices.confirmModal(message);

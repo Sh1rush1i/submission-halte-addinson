@@ -34,15 +34,7 @@ Chart.register(...registerables, zoomPlugin);
 @Component({
   selector: 'app-home-page',
   standalone: true,
-  imports: [
-    CommonModule,
-    ButtonModule,
-    TooltipModule,
-    SkeletonModule,
-    FullPageLoading,
-    ToastModule,
-    TableModule,
-  ],
+  imports: [CommonModule, ButtonModule, TooltipModule, SkeletonModule, ToastModule, TableModule],
   templateUrl: './home-page.html',
   styleUrl: './home-page.css',
   providers: [MessageService, DialogService],
@@ -58,6 +50,10 @@ export class HomePage implements OnInit, AfterViewInit, OnDestroy {
 
   private viewReady = signal(false);
   private chartInstance: Chart | null = null;
+
+  readonly recentTripsSkeletonRows: Partial<TripRecord>[] = Array.from({ length: 5 }, (_, i) => ({
+    id: i,
+  }));
 
   // ── Derived stats ────────────────────────────────────────────────────────────
   readonly totalTrips = computed(() => this.trips().length);
