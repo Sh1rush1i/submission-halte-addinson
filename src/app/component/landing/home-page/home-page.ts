@@ -268,7 +268,6 @@ export class HomePage implements OnInit, AfterViewInit, OnDestroy {
     const canvas = this.barCanvasRef?.nativeElement;
     if (!canvas) return;
 
-    // Jika chart sudah ada, perbarui data & tipenya saja
     if (this.chartInstance) {
       this.chartInstance.data.labels = chartData.labels;
       this.chartInstance.data.datasets = chartData.datasets;
@@ -277,7 +276,6 @@ export class HomePage implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    // Jika chart belum ada, inisialisasi awal
     this.chartInstance = new Chart(canvas, {
       type: this.chartType(),
       data: {
@@ -287,18 +285,27 @@ export class HomePage implements OnInit, AfterViewInit, OnDestroy {
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        animation: false, // Dimatikan agar zoom/pan mulus pada data banyak
+        animation: {
+          duration: 900,
+          easing: 'easeOutQuart',
+          // BARU: dipanggil Chart.js sendiri persis saat animasi ini selesai —
+          // baru di titik itu kita matikan animasi untuk update/zoom selanjutnya
+          onComplete: () => {
+            if (this.chartInstance) {
+              this.chartInstance.options.animation = false as any;
+            }
+          },
+        },
         plugins: {
           legend: {
             display: true,
             position: 'top',
             labels: { color: 'rgba(255,255,255,0.7)', font: { size: 11 } },
           },
-          // Konfigurasi plugin Zoom
           zoom: {
             pan: {
               enabled: true,
-              mode: 'x', // Hanya geser sumbu X
+              mode: 'x',
             },
             zoom: {
               wheel: {
@@ -307,7 +314,7 @@ export class HomePage implements OnInit, AfterViewInit, OnDestroy {
               pinch: {
                 enabled: true,
               },
-              mode: 'x', // Hanya zoom sumbu X
+              mode: 'x',
             },
           },
           tooltip: {

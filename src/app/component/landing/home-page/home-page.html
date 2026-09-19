@@ -1,9 +1,9 @@
 <p-toast />
 
 <!-- Full-page loading -->
-@if (isLoading()) {
+<!-- @if (isLoading()) {
   <app-full-page-loading />
-}
+} -->
 
 <div class="w-full min-w-0 flex-1 min-h-full bg-[#0d0f14] text-white px-4 py-8 sm:px-8">
   <!-- ── Header ────────────────────────────────────────────────────────────── -->
@@ -17,17 +17,17 @@
       </p>
     </div>
 
-    <div class="flex gap-2 mt-3 sm:mt-0">
+    <div class="flex w-full gap-2 mt-3 sm:mt-0 sm:w-auto">
       <button
         pButton
-        class="bg-green-800 hover:bg-green-600 border-none rounded-md sm:py-2.5 py-3.5 sm:px-4 px-5 transition duration-700 flex items-center gap-2 text-white"
+        class="flex-1 sm:flex-none bg-green-800 hover:bg-green-600 border-none rounded-md sm:py-2.5 py-3.5 sm:px-4 px-5 transition duration-700 flex items-center justify-center gap-2 text-white"
         (click)="navigateTo('/trip')"
       >
         <i class="pi pi-block-quote"></i> See All Trips
       </button>
       <button
         pButton
-        class="bg-sky-800 hover:bg-sky-600 border-none rounded-md sm:py-2.5 py-3.5 sm:px-4 px-5 transition duration-700 flex items-center gap-2 text-white"
+        class="flex-1 sm:flex-none bg-sky-800 hover:bg-sky-600 border-none rounded-md sm:py-2.5 py-3.5 sm:px-4 px-5 transition duration-700 flex items-center justify-center gap-2 text-white"
         (click)="navigateTo('/trip/new')"
       >
         <i class="pi pi-plus"></i>New Trip
@@ -46,9 +46,9 @@
         @if (isLoading()) {
           <p-skeleton width="3rem" height="1.75rem" styleClass="mb-1 rounded-sm" />
         } @else {
-          <p class="text-3xl font-bold text-white">{{ totalTrips() }}</p>
+          <p class="sm:text-3xl text-xl font-bold text-white">{{ totalTrips() }}</p>
         }
-        <p class="text-xs text-gray-500 mt-0.5">Trips Total</p>
+        <p class="sm:text-xs text-[0.6rem] text-gray-500 mt-0.5">Trips Total</p>
       </div>
     </div>
 
@@ -61,9 +61,9 @@
         @if (isLoading()) {
           <p-skeleton width="3rem" height="1.75rem" styleClass="mb-1 rounded-sm" />
         } @else {
-          <p class="text-3xl font-bold text-white">{{ completedTrips() }}</p>
+          <p class="sm:text-3xl text-xl font-bold text-white">{{ completedTrips() }}</p>
         }
-        <p class="text-xs text-gray-500 mt-0.5">Finished</p>
+        <p class="sm:text-xs text-[0.6rem] text-gray-500 mt-0.5">Finished</p>
       </div>
     </div>
 
@@ -76,9 +76,9 @@
         @if (isLoading()) {
           <p-skeleton width="3rem" height="1.75rem" styleClass="mb-1 rounded-sm" />
         } @else {
-          <p class="text-3xl font-bold text-white">{{ inProgressTrips() }}</p>
+          <p class="sm:text-3xl text-xl font-bold text-white">{{ inProgressTrips() }}</p>
         }
-        <p class="text-xs text-gray-500 mt-0.5">On Process</p>
+        <p class="sm:text-xs text-[0.6rem] text-gray-500 mt-0.5">On Process</p>
       </div>
     </div>
   </div>
