@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, inject, DestroyRef } from '@angular/core';
 import {
   AbstractControl,
   FormBuilder,
@@ -7,7 +7,7 @@ import {
   ValidationErrors,
   Validators,
 } from '@angular/forms';
-
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { FloatLabelModule } from 'primeng/floatlabel';
@@ -53,6 +53,7 @@ export class LoginPage {
     private messageService: MessageService,
     private authService: AuthService,
     private router: Router,
+    private destroyRef: DestroyRef,
   ) {}
 
   nameValidator = (control: AbstractControl): ValidationErrors | null => {
@@ -168,6 +169,7 @@ export class LoginPage {
 
     this.authService
       .login(this.login.value.email ?? '', this.login.value.password ?? '')
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (response: any) => {
           this.loading = false;

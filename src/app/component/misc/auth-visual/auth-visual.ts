@@ -60,6 +60,8 @@ export class AuthVisual implements AfterViewInit, OnDestroy {
         }
       }
     });
+    this.scene?.clear();
+
     this.renderer?.dispose();
   }
 
