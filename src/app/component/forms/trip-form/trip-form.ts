@@ -147,7 +147,7 @@ export class TripForm implements OnInit, OnDestroy {
   }));
 
   readonly tripForm = this.fb.nonNullable.group({
-    kodeTrip: ['', Validators.required],
+    kodeTrip: [''],
     namaSurveyor: ['', Validators.required],
     hariTanggal: this.fb.control<Date | null>(null, Validators.required),
     nomorKendaraan: ['', Validators.required],
@@ -255,6 +255,14 @@ export class TripForm implements OnInit, OnDestroy {
         inputEl.blur();
       }
     });
+  }
+
+  private generateKodeTrip(nomorKendaraan: string): string {
+    const now = new Date();
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    const tanggal = `${pad(now.getDate())}-${pad(now.getMonth() + 1)}-${now.getFullYear()}`;
+    const jamMenit = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    return `${tanggal}-${jamMenit}-${nomorKendaraan || '-'}`;
   }
 
   private flashDone(icon: ReturnType<typeof signal<'idle' | 'loading' | 'done'>>): void {
@@ -493,9 +501,12 @@ export class TripForm implements OnInit, OnDestroy {
       this.createTripIcon.set('loading');
 
       const value = this.tripForm.getRawValue();
+      const kodeTrip = value.kodeTrip?.trim()
+        ? value.kodeTrip.trim()
+        : this.generateKodeTrip(value.nomorKendaraan);
 
       this.tripService
-        .createTrip(value)
+        .createTrip({ ...value, kodeTrip })
         .pipe(
           takeUntilDestroyed(this.destroyRef),
           finalize(() => this.isCreatingTrip.set(false)),
