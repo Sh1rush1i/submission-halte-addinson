@@ -125,10 +125,10 @@
                 #avatarInner
                 class="avatar-flip-inner relative h-24 w-24 overflow-hidden rounded-full shadow-lg ring-1 ring-white/10"
               >
-                @for (src of avatarImages; track $index) {
+                @for (src of identities; track $index) {
                   <img
-                    [src]="src"
-                    [alt]="names[$index]"
+                    [src]="src.avatarImage"
+                    [alt]="src.name"
                     class="absolute inset-0 h-full w-full object-cover transition-opacity duration-200"
                     [class.opacity-100]="$index === currentAvatarIndex"
                     [class.opacity-0]="$index !== currentAvatarIndex"
@@ -161,8 +161,11 @@
               </span>
 
               <span #nameSpan class="name-fade-up inline-block">
-                <span
-                  class="bg-clip-text text-transparent"
+                <a
+                  [href]="identities[currentNameIndex].instagramUrl"
+                  target="_blank"
+                  rel="noopener"
+                  class="bg-clip-text text-transparent hover:opacity-80 transition-opacity"
                   style="
                     background-image: linear-gradient(
                       90deg,
@@ -176,8 +179,8 @@
                     animation: shine 6s linear infinite;
                   "
                 >
-                  {{ names[currentNameIndex] }}
-                </span>
+                  {{ identities[currentNameIndex].name }}
+                </a>
               </span>
             </h1>
 

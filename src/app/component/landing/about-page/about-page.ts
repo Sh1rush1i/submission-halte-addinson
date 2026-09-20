@@ -39,11 +39,21 @@ export class AboutPage implements AfterViewInit, OnDestroy {
 
   constructor(private cdr: ChangeDetectorRef) {}
 
-  names: string[] = ['sh1rush1', 'm4ul4'];
+  identities: { name: string; avatarImage: string; instagramUrl: string }[] = [
+    {
+      name: 'sh1rush1',
+      avatarImage: '/pernah malam.jpg',
+      instagramUrl: 'https://instagram.com/if.sh1rush1',
+    },
+    {
+      name: 'm4ul4',
+      avatarImage: '/maret.jpg',
+      instagramUrl: 'https://instagram.com/if.m4ul4',
+    },
+  ];
   currentNameIndex = 0;
   private nameIntervalId: any;
 
-  avatarImages: string[] = ['/pernah malam.jpg', '/maret.jpg'];
   currentAvatarIndex = 0;
 
   skills: SkillItem[] = [
@@ -155,7 +165,7 @@ export class AboutPage implements AfterViewInit, OnDestroy {
   }
 
   private cycleName(): void {
-    this.currentNameIndex = (this.currentNameIndex + 1) % this.names.length;
+    this.currentNameIndex = (this.currentNameIndex + 1) % this.identities.length;
     const avatarEl = this.avatarInner?.nativeElement;
     if (avatarEl) {
       avatarEl.classList.add('avatar-flipping');
