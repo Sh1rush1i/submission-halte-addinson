@@ -1,4 +1,4 @@
-import { Component, OnInit, Signal, signal } from '@angular/core';
+import { Component, computed, OnInit, Signal, signal } from '@angular/core';
 import { NavigationEnd, RouterOutlet } from '@angular/router';
 import { Sidebars } from './component/misc/sidebars/sidebars';
 import { ButtonModule } from 'primeng/button';
@@ -6,10 +6,11 @@ import { SidebarModule } from 'primeng/sidebar';
 import { Router } from '@angular/router';
 import { AuthService } from './service/auth.service';
 import { MessageService } from 'primeng/api';
-import { Subscription } from 'rxjs';
+import { filter, Subscription } from 'rxjs';
 import { ToastModule } from 'primeng/toast';
 import { User } from '@auth0/auth0-angular';
 import * as AOS from 'aos';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 // import { PrimeNG } from 'primeng/config';
 // import { TranslateService } from '@ngx-translate/core';
@@ -29,22 +30,23 @@ export class App {
   username: string = '';
 
   private currentUser!: Signal<User | null>;
+  private currentUrl!: Signal<NavigationEnd | null>;
 
   firstSegment() {
     const url = window.location.pathname;
     const segments = url.split('/').filter((segment) => segment.length > 0);
-    // console.log('firstSegment', segments.length > 0 ? segments[0] : '');
     return segments.length > 0 ? segments[0] : '';
   }
 
   constructor(
-    // private config: PrimeNG,
-    // private translateService: TranslateService,
     private router: Router,
     private authService: AuthService,
     private messageService: MessageService,
   ) {
     this.currentUser = this.authService.currentUser;
+    this.currentUrl = toSignal(this.router.events.pipe(filter((e) => e instanceof NavigationEnd)), {
+      initialValue: null,
+    });
   }
 
   viewState = signal('Desktop');
@@ -72,9 +74,19 @@ export class App {
       easing: 'ease-in-out',
       mirror: true,
     });
-
-    // console.log(this.username, this.currentUser());
   }
+
+  readonly pageLabel = computed(() => {
+    this.currentUrl();
+
+    const url = this.router.url;
+    const firstSegment = url.split('/').filter(Boolean)[0];
+
+    if (!firstSegment) return 'Dashboard';
+
+    const clean = firstSegment.split('?')[0].split('#')[0];
+    return clean.charAt(0).toUpperCase() + clean.slice(1);
+  });
 
   getUserName(name: string) {
     this.username = name;

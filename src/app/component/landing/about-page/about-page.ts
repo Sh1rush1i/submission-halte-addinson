@@ -67,7 +67,7 @@ export class AboutPage implements AfterViewInit, OnDestroy {
       role: 'Front-end Web Developer',
       company: 'PT. Unicorn Intertranz',
       description:
-        'Developed an internal company management system with inventory tracking, data monitoring, homepage, and etc, using Angular and Bootstrap',
+        'Developed an internal company management system with inventory tracking, data monitoring, homepage, and etc, using Angular and Bootstrap.',
       accent: '#7ec8e3',
     },
     {
