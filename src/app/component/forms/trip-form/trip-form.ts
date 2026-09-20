@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   AbstractControl,
@@ -46,7 +46,6 @@ function toDate(v: Date | string | null | undefined): Date | null {
   return isNaN(d.getTime()) ? null : d;
 }
 
-/** Map all halte date fields to Date objects after an API response */
 function normaliseHaltes(haltes: HalteEntry[]): HalteEntry[] {
   return haltes.map((h) => ({
     ...h,
@@ -60,6 +59,7 @@ const ICON_RESET_DELAY_MS = 1800;
 
 @Component({
   selector: 'app-trip-form',
+  standalone: true,
   imports: [
     CommonModule,
     ReactiveFormsModule,
@@ -80,10 +80,13 @@ const ICON_RESET_DELAY_MS = 1800;
   styleUrl: './trip-form.css',
   providers: [MessageService, DialogService],
 })
-export class TripForm {
+export class TripForm implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
 
   ref: DynamicDialogRef | undefined | null;
+
+  // Track timeouts to clear them on destroy
+  private timeouts: any[] = [];
 
   // ── Page-level loading (initial fetch / import) ────────────────────────────
   readonly isLoading = signal(true);
@@ -191,18 +194,30 @@ export class TripForm {
       .subscribe((index) => this.onHalteSelected(index));
   }
 
+  ngOnDestroy(): void {
+    if (this.ref) {
+      this.ref.close();
+    }
+
+    this.timeouts.forEach(clearTimeout);
+  }
+
   // ── Internal helpers ────────────────────────────────────────────────────────
 
   private flashDone(icon: ReturnType<typeof signal<'idle' | 'loading' | 'done'>>): void {
     icon.set('done');
-    setTimeout(() => icon.set('idle'), ICON_RESET_DELAY_MS);
+    const timeoutId = setTimeout(() => icon.set('idle'), ICON_RESET_DELAY_MS);
+    this.timeouts.push(timeoutId);
   }
 
   private loadTrip(): void {
     this.isLoading.set(true);
     this.tripService
       .getTrip(this.tripId!)
-      .pipe(finalize(() => this.isLoading.set(false)))
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => this.isLoading.set(false)),
+      )
       .subscribe({
         next: (found) => {
           if (!found) {
@@ -238,7 +253,7 @@ export class TripForm {
       return;
     }
 
-    this.ref.onClose.subscribe((result) => {
+    this.ref.onClose.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((result) => {
       if (result?.isValid) {
         onConfirm();
       }
@@ -361,7 +376,10 @@ export class TripForm {
             nomorKendaraan: imported.nomorKendaraan,
             haltes: cleanedHaltes,
           })
-          .pipe(finalize(() => this.isImporting.set(false)))
+          .pipe(
+            takeUntilDestroyed(this.destroyRef), // <-- Prevent ghost execution
+            finalize(() => this.isImporting.set(false)),
+          )
           .subscribe({
             next: (results) => {
               if (results?.length) {
@@ -425,7 +443,10 @@ export class TripForm {
 
       this.tripService
         .createTrip(value)
-        .pipe(finalize(() => this.isCreatingTrip.set(false)))
+        .pipe(
+          takeUntilDestroyed(this.destroyRef),
+          finalize(() => this.isCreatingTrip.set(false)),
+        )
         .subscribe({
           next: (newTrip) => {
             this.flashDone(this.createTripIcon);
@@ -530,7 +551,10 @@ export class TripForm {
 
       this.tripService
         .deleteHalteData(this.trip!.id, index)
-        .pipe(finalize(() => this.isDeletingHalte.set(false)))
+        .pipe(
+          takeUntilDestroyed(this.destroyRef),
+          finalize(() => this.isDeletingHalte.set(false)),
+        )
         .subscribe({
           next: (updated) => {
             if (updated) {
@@ -573,12 +597,17 @@ export class TripForm {
 
         this.tripService
           .deleteTrip(this.trip!.id)
-          .pipe(finalize(() => this.isDeletingTrip.set(false)))
+          .pipe(
+            takeUntilDestroyed(this.destroyRef),
+            finalize(() => this.isDeletingTrip.set(false)),
+          )
           .subscribe({
             next: () => {
               this.flashDone(this.deleteTripIcon);
               this.invokeToast('Trip deleted successfully.', 'success');
-              setTimeout(() => this.router.navigate(['/trip']), 600);
+
+              const timeoutId = setTimeout(() => this.router.navigate(['/trip']), 600);
+              this.timeouts.push(timeoutId);
             },
             error: (err) => {
               console.error('Failed to delete trip:', err);
@@ -610,7 +639,7 @@ export class TripForm {
       return;
     }
 
-    this.ref.onClose.subscribe((result) => {
+    this.ref.onClose.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((result) => {
       if (result?.isValid) {
         this.persistHalteData(index, (saved) => {
           if (saved) this.invokeToast(`"${HALTE_NAMES[index]}" saved.`, 'success');
@@ -654,7 +683,10 @@ export class TripForm {
 
     this.tripService
       .updateHalte(this.trip.id, index, value)
-      .pipe(finalize(() => this.isSavingHalte.set(false)))
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => this.isSavingHalte.set(false)),
+      )
       .subscribe({
         next: (updated) => {
           if (!updated) {

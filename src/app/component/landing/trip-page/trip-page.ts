@@ -1,26 +1,26 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, signal, OnInit, OnDestroy, DestroyRef } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, Router } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { finalize } from 'rxjs';
 
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
+import { SkeletonModule } from 'primeng/skeleton';
+import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
+import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
 
 import { FullPageLoading } from '../../misc/full-page-loading/full-page-loading';
 import { ExportService } from '../../../service/export.service';
-import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { DynamicDialogServices } from '../../../service/dynamic-dialog.service';
-import { MessageService } from 'primeng/api';
-import { ToastModule } from 'primeng/toast';
 import { HalteEntry, TripRecord, TripService } from '../../../service/trip.service';
 import { ImportService } from '../../../service/import.service';
-import { finalize } from 'rxjs';
-import { SkeletonModule } from 'primeng/skeleton';
 
 type ViewMode = 'table' | 'card';
-
 type ColumnType = 'index' | 'text' | 'date' | 'progress' | 'action';
 
 interface ColumnDef {
@@ -50,9 +50,8 @@ interface ColumnDef {
   styleUrl: './trip-page.css',
   providers: [DatePipe, DialogService, MessageService],
 })
-export class TripPage {
+export class TripPage implements OnInit, OnDestroy {
   readonly viewMode = signal<ViewMode>('table');
-
   readonly records = signal<TripRecord[]>([]);
 
   ref: DynamicDialogRef | undefined | null;
@@ -123,6 +122,11 @@ export class TripPage {
   readonly hasData = computed(() => this.records().length > 0);
   readonly isLoading = signal(true);
 
+  readonly skeletonRows: Partial<TripRecord>[] = Array.from({ length: 10 }, (_, i) => ({ id: i }));
+
+  readonly isDraggingFile = signal(false);
+  private dragDepth = 0;
+
   constructor(
     private router: Router,
     private messageService: MessageService,
@@ -130,9 +134,18 @@ export class TripPage {
     private exportService: ExportService,
     private dynamicDialogServices: DynamicDialogServices,
     private tripService: TripService,
+    private destroyRef: DestroyRef,
   ) {}
 
-  readonly skeletonRows: Partial<TripRecord>[] = Array.from({ length: 10 }, (_, i) => ({ id: i }));
+  ngOnInit() {
+    this.getData();
+  }
+
+  ngOnDestroy() {
+    if (this.ref) {
+      this.ref.close();
+    }
+  }
 
   private openConfirmModal(message: string, onConfirm: () => void, onClose?: () => void): void {
     this.ref = this.dynamicDialogServices.confirmModal(message);
@@ -142,20 +155,13 @@ export class TripPage {
       return;
     }
 
-    this.ref.onClose.subscribe((result) => {
+    this.ref.onClose.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((result) => {
       if (result?.isValid) {
         onConfirm();
       }
       onClose?.();
     });
   }
-
-  ngOnInit() {
-    this.getData();
-  }
-
-  readonly isDraggingFile = signal(false);
-  private dragDepth = 0;
 
   onDragOver(event: DragEvent): void {
     event.preventDefault();
@@ -197,7 +203,6 @@ export class TripPage {
 
       if (parsed.length === 0) {
         this.isLoading.set(false);
-
         this.invokeToast('No trip data found in this file.', 'warn');
         return;
       }
@@ -206,7 +211,6 @@ export class TripPage {
 
       if (valid.length === 0) {
         this.isLoading.set(false);
-
         this.invokeToast(
           `None of the ${parsed.length} trip(s) in this file could be imported. All had missing or invalid data.`,
           'error',
@@ -224,7 +228,6 @@ export class TripPage {
       this.openConfirmModal(message, () => this.saveImportedTrips(valid, invalid));
     } catch (err) {
       this.isLoading.set(false);
-
       console.error(err);
       this.invokeToast(
         err instanceof Error ? err.message : 'Failed to read the dropped file.',
@@ -238,7 +241,6 @@ export class TripPage {
     invalid: { trip: TripRecord; reason: string }[];
   } {
     const existingCodes = new Set(this.records().map((r) => r.kodeTrip.trim().toLowerCase()));
-
     const valid: TripRecord[] = [];
     const invalid: { trip: TripRecord; reason: string }[] = [];
 
@@ -261,7 +263,6 @@ export class TripPage {
         return;
       }
 
-      // Clean up halte-level data: drop any halte with an invalid time order.
       const cleanedHaltes = trip.haltes.map((halte) => {
         const kedatangan = halte.waktuKedatangan ? new Date(halte.waktuKedatangan) : null;
         const keberangkatan = halte.waktuKeberangkatan ? new Date(halte.waktuKeberangkatan) : null;
@@ -273,7 +274,6 @@ export class TripPage {
       });
 
       existingCodes.add(trip.kodeTrip.trim().toLowerCase());
-
       valid.push({ ...trip, haltes: cleanedHaltes });
     });
 
@@ -296,7 +296,10 @@ export class TripPage {
 
     this.tripService
       .bulkCreateTrips(tripsToCreate)
-      .pipe(finalize(() => this.isLoading.set(false)))
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => this.isLoading.set(false)),
+      )
       .subscribe({
         next: (created) => {
           const current = this.records();
@@ -359,7 +362,10 @@ export class TripPage {
 
     this.tripService
       .getAllTrips()
-      .pipe(finalize(() => this.isLoading.set(false)))
+      .pipe(
+        takeUntilDestroyed(this.destroyRef), // <-- Prevent ghost execution
+        finalize(() => this.isLoading.set(false)),
+      )
       .subscribe({
         next: (trips) => {
           try {
@@ -417,7 +423,6 @@ export class TripPage {
     return (this.getFilledCount(record) / record.haltes.length) * 100;
   }
 
-  // Color dynamic helpers based on progress
   getHalteStatusClass(record: TripRecord): string {
     const percent = this.getProgressPercent(record);
 

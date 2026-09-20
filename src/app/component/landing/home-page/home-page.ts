@@ -8,10 +8,12 @@ import {
   effect,
   OnInit,
   OnDestroy,
+  DestroyRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { finalize } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 // Chart.js dan plugin Zoom
 import { Chart, registerables } from 'chart.js';
@@ -19,7 +21,6 @@ import zoomPlugin from 'chartjs-plugin-zoom';
 
 import { TripRecord, TripService } from '../../../service/trip.service';
 import { AuthService } from '../../../service/auth.service';
-import { FullPageLoading } from '../../misc/full-page-loading/full-page-loading';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 import { SkeletonModule } from 'primeng/skeleton';
@@ -161,8 +162,7 @@ export class HomePage implements OnInit, AfterViewInit, OnDestroy {
     private tripService: TripService,
     private authService: AuthService,
     private router: Router,
-    private messageService: MessageService,
-    private dialogService: DialogService,
+    private destroyRef: DestroyRef,
   ) {
     // Reaktif menggambar/memperbarui chart saat data berubah
     effect(() => {
@@ -184,7 +184,10 @@ export class HomePage implements OnInit, AfterViewInit, OnDestroy {
   ngOnInit(): void {
     this.tripService
       .getAllTrips()
-      .pipe(finalize(() => this.isLoading.set(false)))
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => this.isLoading.set(false)),
+      )
       .subscribe({
         next: (trips) => {
           const mapped = (trips ?? []).map((t) => ({
