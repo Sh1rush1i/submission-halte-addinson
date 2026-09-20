@@ -1,16 +1,14 @@
 import { CommonModule } from '@angular/common';
 import {
-  AfterViewInit,
   Component,
   DestroyRef,
   OnDestroy,
   OnInit,
-  ViewChild,
   computed,
   effect,
   inject,
   signal,
-  viewChild,
+  viewChildren,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
@@ -29,13 +27,11 @@ import { DatePickerModule } from 'primeng/datepicker';
 import { SelectModule } from 'primeng/select';
 import { TagModule } from 'primeng/tag';
 import { TableModule } from 'primeng/table';
-import { FullPageLoading } from '../../misc/full-page-loading/full-page-loading';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { TripService, HALTE_NAMES, HalteEntry, TripRecord } from '../../../service/trip.service';
 import { DynamicDialogServices } from '../../../service/dynamic-dialog.service';
 import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
-import * as XLSX from 'xlsx';
 import { ExportService } from '../../../service/export.service';
 import { ImportService } from '../../../service/import.service';
 import { IconFieldModule } from 'primeng/iconfield';
@@ -94,9 +90,11 @@ const ICON_RESET_DELAY_MS = 1800;
 })
 export class TripForm implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
-  pnInput = viewChild<InputNumber>('pnInput');
+  pnInputs = viewChildren(InputNumber);
 
   ref: DynamicDialogRef | undefined | null;
+
+  private wiredSet = new WeakSet<InputNumber>();
 
   // Track timeouts to clear them on destroy
   private timeouts: any[] = [];
@@ -179,12 +177,14 @@ export class TripForm implements OnInit, OnDestroy {
     private authService: AuthService,
   ) {
     effect(() => {
-      const cmp = this.pnInput();
-      console.log('effect fired, pnInput:', cmp); // sementara, buat debug
-      if (!cmp || this.wired) return;
+      const list = this.pnInputs();
+      console.log('effect fired, count:', list.length);
 
-      this.wired = true;
-      this.setupNoKeyboardOnButtons(cmp);
+      for (const cmp of list) {
+        if (this.wiredSet.has(cmp)) continue;
+        this.wiredSet.add(cmp);
+        this.setupNoKeyboardOnButtons(cmp);
+      }
     });
   }
 
@@ -224,50 +224,6 @@ export class TripForm implements OnInit, OnDestroy {
     this.timeouts.forEach(clearTimeout);
   }
 
-  private allowFocus = false;
-  private wired = false;
-
-  ngAfterViewInit(): void {
-    const pnInput = this.pnInput();
-    if (!pnInput) {
-      return; // elemen belum ke-render (misal masih di dalam *ngIf/dialog yang belum tampil)
-    }
-
-    const inputEl: HTMLInputElement = pnInput.input().nativeElement;
-    const hostEl: HTMLElement = pnInput.el.nativeElement;
-
-    const upBtn = hostEl.querySelector(
-      '.p-inputnumber-button-up, [data-pc-section="incrementbutton"]',
-    );
-    const downBtn = hostEl.querySelector(
-      '.p-inputnumber-button-down, [data-pc-section="decrementbutton"]',
-    );
-
-    const markButtonPress = () => {
-      this.allowFocus = false;
-    };
-
-    const markDirectTap = () => {
-      this.allowFocus = true;
-    };
-
-    [upBtn, downBtn].forEach((btn) => {
-      btn?.addEventListener('mousedown', markButtonPress);
-      btn?.addEventListener('touchstart', markButtonPress, { passive: true });
-    });
-
-    inputEl.addEventListener('mousedown', markDirectTap);
-    inputEl.addEventListener('touchstart', markDirectTap, { passive: true });
-
-    inputEl.addEventListener('focus', () => {
-      if (!this.allowFocus) {
-        inputEl.blur();
-      }
-    });
-
-    console.log('HOST HTML:', hostEl.outerHTML);
-  }
-
   // ── Internal helpers ────────────────────────────────────────────────────────
 
   private setupNoKeyboardOnButtons(cmp: InputNumber): void {
@@ -281,8 +237,10 @@ export class TripForm implements OnInit, OnDestroy {
       '.p-inputnumber-button-down, [data-pc-section="decrementbutton"]',
     );
 
-    const markButtonPress = () => (this.allowFocus = false);
-    const markDirectTap = () => (this.allowFocus = true);
+    let allowFocus = false;
+
+    const markButtonPress = () => (allowFocus = false);
+    const markDirectTap = () => (allowFocus = true);
 
     [upBtn, downBtn].forEach((btn) => {
       btn?.addEventListener('mousedown', markButtonPress);
@@ -293,7 +251,7 @@ export class TripForm implements OnInit, OnDestroy {
     inputEl.addEventListener('touchstart', markDirectTap, { passive: true });
 
     inputEl.addEventListener('focus', () => {
-      if (!this.allowFocus) {
+      if (!allowFocus) {
         inputEl.blur();
       }
     });
