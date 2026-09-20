@@ -8,6 +8,7 @@ import {
   computed,
   inject,
   signal,
+  viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
@@ -91,7 +92,7 @@ const ICON_RESET_DELAY_MS = 1800;
 })
 export class TripForm implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
-  @ViewChild('pnInput') pnInput!: InputNumber;
+  pnInput = viewChild.required<InputNumber>('pnInput');
 
   ref: DynamicDialogRef | undefined | null;
 
@@ -213,8 +214,8 @@ export class TripForm implements OnInit, OnDestroy {
   }
 
   ngAfterViewInit(): void {
-    const inputEl: HTMLInputElement = this.pnInput.input().nativeElement;
-    const hostEl: HTMLElement = this.pnInput.el.nativeElement; // tanpa ()
+    const inputEl: HTMLInputElement = this.pnInput().input().nativeElement;
+    const hostEl: HTMLElement = this.pnInput().el.nativeElement;
 
     inputEl.setAttribute('inputmode', 'none');
 
