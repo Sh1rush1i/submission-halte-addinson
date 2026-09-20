@@ -1,4 +1,4 @@
-import { Component, computed, OnInit, Signal, signal } from '@angular/core';
+import { Component, computed, OnInit, Signal, signal, DestroyRef } from '@angular/core';
 import { NavigationEnd, RouterOutlet } from '@angular/router';
 import { Sidebars } from './component/misc/sidebars/sidebars';
 import { ButtonModule } from 'primeng/button';
@@ -10,7 +10,7 @@ import { filter, Subscription } from 'rxjs';
 import { ToastModule } from 'primeng/toast';
 import { User } from '@auth0/auth0-angular';
 import * as AOS from 'aos';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 
 // import { PrimeNG } from 'primeng/config';
 // import { TranslateService } from '@ngx-translate/core';
@@ -42,6 +42,7 @@ export class App {
     private router: Router,
     private authService: AuthService,
     private messageService: MessageService,
+    private destroyRef: DestroyRef,
   ) {
     this.currentUser = this.authService.currentUser;
     this.currentUrl = toSignal(this.router.events.pipe(filter((e) => e instanceof NavigationEnd)), {
@@ -93,15 +94,20 @@ export class App {
   }
 
   newLogin() {
-    this.loginSub = this.authService.loginSuccess$.subscribe(() => {
-      this.invokeToast('Login success.', 'success');
-    });
+    this.loginSub = this.authService.loginSuccess$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.invokeToast('Login success.', 'success');
+      });
   }
 
   onAuthFailed() {
-    this.authFailedSub = this.authService.authFailed$.subscribe(() => {
-      this.invokeToast('Session has expired or you are not logged in.', 'error');
-    });
+    this.authFailedSub = this.authService.authFailed$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.invokeToast('Session has expired or you are not logged in.', 'error');
+        this.router.navigate(['/login']);
+      });
   }
 
   ngOnDestroy() {
@@ -119,6 +125,28 @@ export class App {
       summary: 'Notification',
       detail: message,
     });
+  }
+
+  openRickRoll(event: Event): void {
+    event.preventDefault();
+
+    const videoId = 'dQw4w9WgXcQ';
+    const webUrl = `https://www.youtube.com/watch?v=${videoId}`;
+    const appUrl = `vnd.youtube://watch?v=${videoId}`;
+
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent,
+    );
+
+    if (isMobile) {
+      window.location.href = appUrl;
+
+      setTimeout(() => {
+        window.open(webUrl, '_blank', 'noopener,noreferrer');
+      }, 500);
+    } else {
+      window.open(webUrl, '_blank', 'noopener,noreferrer');
+    }
   }
 
   // translate(lang: string) {
