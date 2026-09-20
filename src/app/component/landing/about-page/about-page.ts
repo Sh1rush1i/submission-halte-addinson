@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import * as THREE from 'three';
+import { TooltipModule } from 'primeng/tooltip';
 
 interface SkillItem {
   name: string;
@@ -26,7 +27,7 @@ interface ExperienceItem {
 
 @Component({
   selector: 'app-about-page',
-  imports: [CommonModule],
+  imports: [CommonModule, TooltipModule],
   templateUrl: './about-page.html',
   styleUrl: './about-page.css',
 })
