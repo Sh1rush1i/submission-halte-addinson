@@ -123,6 +123,7 @@ export class AboutPage implements AfterViewInit, OnDestroy {
   private observer?: IntersectionObserver;
   private resizeObserver?: ResizeObserver;
   private container!: HTMLElement;
+  private avatarTimeoutId: any;
 
   ngAfterViewInit(): void {
     this.container = this.canvasRef.nativeElement.parentElement!;
@@ -138,10 +139,28 @@ export class AboutPage implements AfterViewInit, OnDestroy {
 
   ngOnDestroy(): void {
     cancelAnimationFrame(this.animationFrameId);
-    this.renderer?.dispose();
+
+    clearInterval(this.nameIntervalId);
+    if (this.avatarTimeoutId) {
+      clearTimeout(this.avatarTimeoutId);
+    }
+
     this.observer?.disconnect();
     this.resizeObserver?.disconnect();
-    clearInterval(this.nameIntervalId);
+
+    if (this.particles) {
+      this.particles.geometry?.dispose();
+      (this.particles.material as THREE.Material)?.dispose();
+    }
+
+    if (this.linesMesh) {
+      this.linesMesh.geometry?.dispose();
+      (this.linesMesh.material as THREE.Material)?.dispose();
+    }
+
+    this.renderer?.dispose();
+
+    this.scene?.clear();
   }
 
   onResize(): void {
@@ -164,15 +183,37 @@ export class AboutPage implements AfterViewInit, OnDestroy {
     this.tiltX = -this.mouseY * 6;
   }
 
+  openInstagram(event: Event, webUrl: string): void {
+    event.preventDefault();
+
+    const username = webUrl.split('/').pop();
+    const appUrl = `instagram://user?username=${username}`;
+
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent,
+    );
+
+    if (isMobile) {
+      window.location.href = appUrl;
+
+      setTimeout(() => {
+        window.open(webUrl, '_blank', 'noopener,noreferrer');
+      }, 500);
+    } else {
+      window.open(webUrl, '_blank', 'noopener,noreferrer');
+    }
+  }
+
   private cycleName(): void {
     this.currentNameIndex = (this.currentNameIndex + 1) % this.identities.length;
     const avatarEl = this.avatarInner?.nativeElement;
+
     if (avatarEl) {
       avatarEl.classList.add('avatar-flipping');
-      setTimeout(() => {
+
+      this.avatarTimeoutId = setTimeout(() => {
         this.currentAvatarIndex = this.currentNameIndex;
         this.cdr.detectChanges();
-
         avatarEl.classList.remove('avatar-flipping');
       }, 250);
     }

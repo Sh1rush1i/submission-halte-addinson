@@ -123,7 +123,8 @@
 
               <div
                 #avatarInner
-                class="avatar-flip-inner relative h-24 w-24 overflow-hidden rounded-full shadow-lg ring-1 ring-white/10"
+                class="avatar-flip-inner relative h-24 w-24 overflow-hidden rounded-full shadow-lg ring-1 ring-white/10 cursor-pointer"
+                (click)="openInstagram($event, identities[currentAvatarIndex].instagramUrl)"
               >
                 @for (src of identities; track $index) {
                   <img
@@ -161,11 +162,11 @@
               </span>
 
               <span #nameSpan class="name-fade-up inline-block">
+                <!-- Tambahkan (click) -->
                 <a
                   [href]="identities[currentNameIndex].instagramUrl"
-                  target="_blank"
-                  rel="noopener"
-                  class="bg-clip-text text-transparent hover:opacity-80 transition-opacity"
+                  (click)="openInstagram($event, identities[currentNameIndex].instagramUrl)"
+                  class="bg-clip-text text-transparent hover:opacity-80 transition-opacity cursor-pointer"
                   style="
                     background-image: linear-gradient(
                       90deg,
@@ -180,6 +181,25 @@
                   "
                 >
                   {{ identities[currentNameIndex].name }}
+                </a> </span
+              ><span #nameSpan class="name-fade-up inline-block">
+                <a
+                  [href]="identities[currentNameIndex].instagramUrl"
+                  (click)="openInstagram($event, identities[currentNameIndex].instagramUrl)"
+                  class="bg-clip-text text-transparent hover:opacity-80 transition-opacity cursor-pointer"
+                  style="
+                    background-image: linear-gradient(
+                      90deg,
+                      #ffffff,
+                      #7ec8e3,
+                      #c1435a,
+                      #e0b463,
+                      #ffffff
+                    );
+                    background-size: 300% auto;
+                    animation: shine 6s linear infinite;
+                  "
+                >
                 </a>
               </span>
             </h1>
