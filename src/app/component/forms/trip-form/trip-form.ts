@@ -7,6 +7,7 @@ import {
   OnInit,
   ViewChild,
   computed,
+  effect,
   inject,
   signal,
   viewChild,
@@ -91,9 +92,9 @@ const ICON_RESET_DELAY_MS = 1800;
   styleUrl: './trip-form.css',
   providers: [MessageService, DialogService],
 })
-export class TripForm implements OnInit, OnDestroy, AfterViewInit {
+export class TripForm implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
-  pnInput = viewChild.required<InputNumber>('pnInput');
+  pnInput = viewChild<InputNumber>('pnInput');
 
   ref: DynamicDialogRef | undefined | null;
 
@@ -176,7 +177,16 @@ export class TripForm implements OnInit, OnDestroy, AfterViewInit {
     private importService: ImportService,
     private exportService: ExportService,
     private authService: AuthService,
-  ) {}
+  ) {
+    effect(() => {
+      const cmp = this.pnInput();
+      console.log('effect fired, pnInput:', cmp); // sementara, buat debug
+      if (!cmp || this.wired) return;
+
+      this.wired = true;
+      this.setupNoKeyboardOnButtons(cmp);
+    });
+  }
 
   ngOnInit(): void {
     this.activatedRoute.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
@@ -215,10 +225,16 @@ export class TripForm implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private allowFocus = false;
+  private wired = false;
 
   ngAfterViewInit(): void {
-    const inputEl: HTMLInputElement = this.pnInput().input().nativeElement;
-    const hostEl: HTMLElement = this.pnInput().el.nativeElement;
+    const pnInput = this.pnInput();
+    if (!pnInput) {
+      return; // elemen belum ke-render (misal masih di dalam *ngIf/dialog yang belum tampil)
+    }
+
+    const inputEl: HTMLInputElement = pnInput.input().nativeElement;
+    const hostEl: HTMLElement = pnInput.el.nativeElement;
 
     const upBtn = hostEl.querySelector(
       '.p-inputnumber-button-up, [data-pc-section="incrementbutton"]',
@@ -227,12 +243,10 @@ export class TripForm implements OnInit, OnDestroy, AfterViewInit {
       '.p-inputnumber-button-down, [data-pc-section="decrementbutton"]',
     );
 
-    // Tandai: focus yang akan terjadi berikutnya BUKAN dari tap user ke input
     const markButtonPress = () => {
       this.allowFocus = false;
     };
 
-    // Tandai: user beneran tap ke input -> focus boleh lanjut, keyboard boleh keluar
     const markDirectTap = () => {
       this.allowFocus = true;
     };
@@ -245,16 +259,45 @@ export class TripForm implements OnInit, OnDestroy, AfterViewInit {
     inputEl.addEventListener('mousedown', markDirectTap);
     inputEl.addEventListener('touchstart', markDirectTap, { passive: true });
 
-    // Kuncinya di sini: begitu ke-focus, cek apakah ini hasil tap tombol
     inputEl.addEventListener('focus', () => {
       if (!this.allowFocus) {
-        // blur lagi secara sinkron -> keyboard gak sempat muncul
+        inputEl.blur();
+      }
+    });
+
+    console.log('HOST HTML:', hostEl.outerHTML);
+  }
+
+  // ── Internal helpers ────────────────────────────────────────────────────────
+
+  private setupNoKeyboardOnButtons(cmp: InputNumber): void {
+    const inputEl: HTMLInputElement = cmp.input().nativeElement;
+    const hostEl: HTMLElement = cmp.el.nativeElement;
+
+    const upBtn = hostEl.querySelector(
+      '.p-inputnumber-button-up, [data-pc-section="incrementbutton"]',
+    );
+    const downBtn = hostEl.querySelector(
+      '.p-inputnumber-button-down, [data-pc-section="decrementbutton"]',
+    );
+
+    const markButtonPress = () => (this.allowFocus = false);
+    const markDirectTap = () => (this.allowFocus = true);
+
+    [upBtn, downBtn].forEach((btn) => {
+      btn?.addEventListener('mousedown', markButtonPress);
+      btn?.addEventListener('touchstart', markButtonPress, { passive: true });
+    });
+
+    inputEl.addEventListener('mousedown', markDirectTap);
+    inputEl.addEventListener('touchstart', markDirectTap, { passive: true });
+
+    inputEl.addEventListener('focus', () => {
+      if (!this.allowFocus) {
         inputEl.blur();
       }
     });
   }
-
-  // ── Internal helpers ────────────────────────────────────────────────────────
 
   private flashDone(icon: ReturnType<typeof signal<'idle' | 'loading' | 'done'>>): void {
     icon.set('done');
