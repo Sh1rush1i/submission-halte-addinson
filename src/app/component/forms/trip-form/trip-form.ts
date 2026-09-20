@@ -1,5 +1,15 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  OnDestroy,
+  OnInit,
+  computed,
+  inject,
+  signal,
+  AfterViewInit,
+  ViewChild,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   AbstractControl,
@@ -31,6 +41,7 @@ import { InputIconModule } from 'primeng/inputicon';
 import { AuthService } from '../../../service/auth.service';
 import { TooltipModule } from 'primeng/tooltip';
 import { SkeletonModule } from 'primeng/skeleton';
+import { InputNumber } from 'primeng/inputnumber';
 
 function timeOrderValidator(group: AbstractControl): ValidationErrors | null {
   const datang = group.get('waktuKedatangan')?.value;
@@ -82,6 +93,7 @@ const ICON_RESET_DELAY_MS = 1800;
 })
 export class TripForm implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
+  @ViewChild('inputNumber') inputNumber!: InputNumber;
 
   ref: DynamicDialogRef | undefined | null;
 
@@ -202,6 +214,10 @@ export class TripForm implements OnInit, OnDestroy {
     this.timeouts.forEach(clearTimeout);
   }
 
+  ngAfterViewInit(): void {
+    this.setupKeyboardGuard();
+  }
+
   // ── Internal helpers ────────────────────────────────────────────────────────
 
   private flashDone(icon: ReturnType<typeof signal<'idle' | 'loading' | 'done'>>): void {
@@ -267,12 +283,17 @@ export class TripForm implements OnInit, OnDestroy {
     );
   }
 
-  lockKeyboard: boolean = true;
+  private setupKeyboardGuard(): void {
+    const nativeInput = this.inputNumber.input().nativeElement as HTMLInputElement;
 
-  onContainerMouseDown(event: Event) {
-    const target = event.target as HTMLElement;
+    nativeInput.setAttribute('inputmode', 'none');
 
-    this.lockKeyboard = target.tagName !== 'INPUT';
+    const openKeyboard = () => nativeInput.setAttribute('inputmode', 'numeric');
+    const closeKeyboard = () => nativeInput.setAttribute('inputmode', 'none');
+
+    nativeInput.addEventListener('mousedown', openKeyboard);
+    nativeInput.addEventListener('touchstart', openKeyboard);
+    nativeInput.addEventListener('blur', closeKeyboard);
   }
 
   // ── Drag-and-drop ───────────────────────────────────────────────────────────
