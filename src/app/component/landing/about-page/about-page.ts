@@ -80,9 +80,10 @@ export class AboutPage implements AfterViewInit, OnDestroy {
     },
     {
       period: '2020 — 2021',
-      role: 'Junior Web Developer',
-      company: 'Agensi Digital Kreatif',
-      description: 'Mengerjakan landing page dan sistem CMS ringan untuk klien UMKM.',
+      role: 'Inter Front-end Web Dev & IT Support',
+      company: 'Center of Excellence (CoE) Smart Tourism & Hospitalitu, Telkom University',
+      description:
+        'Designed tourism website in figma, and provided IT support for the organization.',
       accent: '#e0b463',
     },
   ];
