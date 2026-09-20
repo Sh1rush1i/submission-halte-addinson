@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import {
+  AfterViewInit,
   Component,
   DestroyRef,
   OnDestroy,
@@ -90,7 +91,7 @@ const ICON_RESET_DELAY_MS = 1800;
   styleUrl: './trip-form.css',
   providers: [MessageService, DialogService],
 })
-export class TripForm implements OnInit, OnDestroy {
+export class TripForm implements OnInit, OnDestroy, AfterViewInit {
   private fb = inject(FormBuilder);
   pnInput = viewChild.required<InputNumber>('pnInput');
 
@@ -217,7 +218,9 @@ export class TripForm implements OnInit, OnDestroy {
     const inputEl: HTMLInputElement = this.pnInput().input().nativeElement;
     const hostEl: HTMLElement = this.pnInput().el.nativeElement;
 
-    inputEl.setAttribute('inputmode', 'none');
+    // Default: readonly, biar focus dari tombol +/- gak munculin keyboard
+    inputEl.setAttribute('readonly', 'true');
+    inputEl.setAttribute('inputmode', 'none'); // extra layer, gapapa dobel
 
     const upBtn = hostEl.querySelector(
       '.p-inputnumber-button-up, [data-pc-section="incrementbutton"]',
@@ -226,16 +229,27 @@ export class TripForm implements OnInit, OnDestroy {
       '.p-inputnumber-button-down, [data-pc-section="decrementbutton"]',
     );
 
-    const disableKeyboard = () => inputEl.setAttribute('inputmode', 'none');
-    const enableKeyboard = () => inputEl.setAttribute('inputmode', 'decimal');
+    // User tap langsung ke input -> baru buka keyboard
+    const enableKeyboard = () => {
+      inputEl.removeAttribute('readonly');
+      inputEl.setAttribute('inputmode', 'decimal');
+    };
 
-    [upBtn, downBtn].forEach((btn) => {
-      btn?.addEventListener('mousedown', disableKeyboard);
-      btn?.addEventListener('touchstart', disableKeyboard, { passive: true });
-    });
+    // Kalau blur (user pindah fokus/tap di luar), balikin ke readonly lagi
+    const disableKeyboard = () => {
+      inputEl.setAttribute('readonly', 'true');
+      inputEl.setAttribute('inputmode', 'none');
+    };
 
     inputEl.addEventListener('mousedown', enableKeyboard);
     inputEl.addEventListener('touchstart', enableKeyboard, { passive: true });
+    inputEl.addEventListener('blur', disableKeyboard);
+
+    // Jaga-jaga: pastiin tombol +/- gak ikut buka readonly
+    [upBtn, downBtn].forEach((btn) => {
+      btn?.addEventListener('mousedown', disableKeyboard, { capture: true });
+      btn?.addEventListener('touchstart', disableKeyboard, { capture: true, passive: true });
+    });
   }
 
   // ── Internal helpers ────────────────────────────────────────────────────────
