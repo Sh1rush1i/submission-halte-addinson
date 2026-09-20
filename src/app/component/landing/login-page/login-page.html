@@ -28,17 +28,28 @@
     <div class="relative z-10 flex items-center gap-2">
       <span
         class="flex h-8 w-8 items-center justify-center rounded-full border border-gray-200/60 text-white font-display text-xs font-extrabold"
+        data-aos="fade-down"
+        data-aos-delay="100"
         >A</span
       >
-      <span class="font-display text-lg tracking-wide text-white">Addinson</span>
+      <span
+        class="font-display text-lg tracking-wide text-white"
+        data-aos="fade-down"
+        data-aos-delay="200"
+        >Addinson</span
+      >
     </div>
-    <p class="relative z-10 max-w-xs text-xs text-[#AEB4D6]">
+    <p
+      class="relative z-10 max-w-xs text-xs text-[#AEB4D6]"
+      data-aos="zoom-in"
+      data-aos-delay="100"
+    >
       Submission management tool for Addinson 🥀. Streamline the submission process and enhance
       collaboration.
     </p>
   </div>
 
-  <div class="lg:col-span-7 flex items-center justify-center px-6 py-10 sm:py-14">
+  <div class="lg:col-span-7 flex items-center justify-center px-6 pt-8 pb-14 sm:pt-14 sm:pb-14">
     <div class="w-full max-w-sm">
       <h1
         class="font-display text-3xl text-[#1B1F3B] font-semibold"
@@ -56,7 +67,7 @@
       </p>
 
       <form
-        class="mt-9 flex flex-col gap-6"
+        class="sm:mt-9 mt-4 flex flex-col gap-6"
         [formGroup]="isLogin ? login : register"
         (ngSubmit)="isLogin ? onSubmit() : onRegister()"
         novalidate
@@ -285,26 +296,26 @@
         }
 
         <!-- Submit -->
-        <button
-          pButton
-          type="submit"
-          label="Sign in"
-          class="w-full py-2.5 justify-center border-0 bg-gray-600 text-white hover:bg-gray-800 rounded font-semibold transition-colors"
-          data-aos="fade-up"
-          data-aos-delay="200"
-        >
-          {{ isLogin ? 'Sign In' : 'Sign Up' }}
-        </button>
-
-        <p class="text-center text-sm text-[#6B7094]" data-aos="fade-up" data-aos-delay="300">
-          {{ isLogin ? 'New to Addinson Submission?' : 'Already have an account?' }}
-          <a
-            href="javascript:void(0)"
-            (click)="toggleLogin()"
-            class="font-medium text-[#1B1F3B] underline-offset-4 hover:underline"
-            >{{ isLogin ? 'Sign up' : 'Sign in' }}</a
+        <div class="flex flex-col gap-4 sm:mt-9 mt-4" data-aos="fade-up" data-aos-delay="200">
+          <button
+            pButton
+            type="submit"
+            label="Sign in"
+            class="w-full py-2.5 justify-center border-0 bg-gray-600 text-white hover:bg-gray-800 rounded font-semibold transition-colors"
           >
-        </p>
+            {{ isLogin ? 'Sign In' : 'Sign Up' }}
+          </button>
+
+          <p class="text-center text-sm text-[#6B7094]">
+            {{ isLogin ? 'New to Addinson Submission?' : 'Already have an account?' }}
+            <a
+              href="javascript:void(0)"
+              (click)="toggleLogin()"
+              class="font-medium text-[#1B1F3B] underline-offset-4 hover:underline"
+              >{{ isLogin ? 'Sign up' : 'Sign in' }}</a
+            >
+          </p>
+        </div>
       </form>
     </div>
   </div>
