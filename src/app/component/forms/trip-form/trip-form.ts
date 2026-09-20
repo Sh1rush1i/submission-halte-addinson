@@ -214,13 +214,11 @@ export class TripForm implements OnInit, OnDestroy, AfterViewInit {
     this.timeouts.forEach(clearTimeout);
   }
 
+  private allowFocus = false;
+
   ngAfterViewInit(): void {
     const inputEl: HTMLInputElement = this.pnInput().input().nativeElement;
     const hostEl: HTMLElement = this.pnInput().el.nativeElement;
-
-    // Default: readonly, biar focus dari tombol +/- gak munculin keyboard
-    inputEl.setAttribute('readonly', 'true');
-    inputEl.setAttribute('inputmode', 'none'); // extra layer, gapapa dobel
 
     const upBtn = hostEl.querySelector(
       '.p-inputnumber-button-up, [data-pc-section="incrementbutton"]',
@@ -229,26 +227,30 @@ export class TripForm implements OnInit, OnDestroy, AfterViewInit {
       '.p-inputnumber-button-down, [data-pc-section="decrementbutton"]',
     );
 
-    // User tap langsung ke input -> baru buka keyboard
-    const enableKeyboard = () => {
-      inputEl.removeAttribute('readonly');
-      inputEl.setAttribute('inputmode', 'decimal');
+    // Tandai: focus yang akan terjadi berikutnya BUKAN dari tap user ke input
+    const markButtonPress = () => {
+      this.allowFocus = false;
     };
 
-    // Kalau blur (user pindah fokus/tap di luar), balikin ke readonly lagi
-    const disableKeyboard = () => {
-      inputEl.setAttribute('readonly', 'true');
-      inputEl.setAttribute('inputmode', 'none');
+    // Tandai: user beneran tap ke input -> focus boleh lanjut, keyboard boleh keluar
+    const markDirectTap = () => {
+      this.allowFocus = true;
     };
 
-    inputEl.addEventListener('mousedown', enableKeyboard);
-    inputEl.addEventListener('touchstart', enableKeyboard, { passive: true });
-    inputEl.addEventListener('blur', disableKeyboard);
-
-    // Jaga-jaga: pastiin tombol +/- gak ikut buka readonly
     [upBtn, downBtn].forEach((btn) => {
-      btn?.addEventListener('mousedown', disableKeyboard, { capture: true });
-      btn?.addEventListener('touchstart', disableKeyboard, { capture: true, passive: true });
+      btn?.addEventListener('mousedown', markButtonPress);
+      btn?.addEventListener('touchstart', markButtonPress, { passive: true });
+    });
+
+    inputEl.addEventListener('mousedown', markDirectTap);
+    inputEl.addEventListener('touchstart', markDirectTap, { passive: true });
+
+    // Kuncinya di sini: begitu ke-focus, cek apakah ini hasil tap tombol
+    inputEl.addEventListener('focus', () => {
+      if (!this.allowFocus) {
+        // blur lagi secara sinkron -> keyboard gak sempat muncul
+        inputEl.blur();
+      }
     });
   }
 
