@@ -4,11 +4,10 @@ import {
   DestroyRef,
   OnDestroy,
   OnInit,
+  ViewChild,
   computed,
   inject,
   signal,
-  AfterViewInit,
-  ViewChild,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
@@ -22,7 +21,7 @@ import { finalize } from 'rxjs';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
-import { InputNumberModule } from 'primeng/inputnumber';
+import { InputNumber, InputNumberModule } from 'primeng/inputnumber';
 import { DatePickerModule } from 'primeng/datepicker';
 import { SelectModule } from 'primeng/select';
 import { TagModule } from 'primeng/tag';
@@ -41,7 +40,6 @@ import { InputIconModule } from 'primeng/inputicon';
 import { AuthService } from '../../../service/auth.service';
 import { TooltipModule } from 'primeng/tooltip';
 import { SkeletonModule } from 'primeng/skeleton';
-import { InputNumber } from 'primeng/inputnumber';
 
 function timeOrderValidator(group: AbstractControl): ValidationErrors | null {
   const datang = group.get('waktuKedatangan')?.value;
@@ -93,7 +91,7 @@ const ICON_RESET_DELAY_MS = 1800;
 })
 export class TripForm implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
-  @ViewChild('inputNumber') inputNumber!: InputNumber;
+  @ViewChild('pnInput') pnInput!: InputNumber;
 
   ref: DynamicDialogRef | undefined | null;
 
@@ -215,7 +213,28 @@ export class TripForm implements OnInit, OnDestroy {
   }
 
   ngAfterViewInit(): void {
-    this.setupKeyboardGuard();
+    const inputEl: HTMLInputElement = this.pnInput.input().nativeElement;
+    const hostEl: HTMLElement = this.pnInput.el.nativeElement; // tanpa ()
+
+    inputEl.setAttribute('inputmode', 'none');
+
+    const upBtn = hostEl.querySelector(
+      '.p-inputnumber-button-up, [data-pc-section="incrementbutton"]',
+    );
+    const downBtn = hostEl.querySelector(
+      '.p-inputnumber-button-down, [data-pc-section="decrementbutton"]',
+    );
+
+    const disableKeyboard = () => inputEl.setAttribute('inputmode', 'none');
+    const enableKeyboard = () => inputEl.setAttribute('inputmode', 'decimal');
+
+    [upBtn, downBtn].forEach((btn) => {
+      btn?.addEventListener('mousedown', disableKeyboard);
+      btn?.addEventListener('touchstart', disableKeyboard, { passive: true });
+    });
+
+    inputEl.addEventListener('mousedown', enableKeyboard);
+    inputEl.addEventListener('touchstart', enableKeyboard, { passive: true });
   }
 
   // ── Internal helpers ────────────────────────────────────────────────────────
@@ -281,19 +300,6 @@ export class TripForm implements OnInit, OnDestroy {
     this.ref = this.dynamicDialogServices.infoModal(
       'Please fill departure time first before entering passenger data.',
     );
-  }
-
-  private setupKeyboardGuard(): void {
-    const nativeInput = this.inputNumber.input().nativeElement as HTMLInputElement;
-
-    nativeInput.setAttribute('inputmode', 'none');
-
-    const openKeyboard = () => nativeInput.setAttribute('inputmode', 'numeric');
-    const closeKeyboard = () => nativeInput.setAttribute('inputmode', 'none');
-
-    nativeInput.addEventListener('mousedown', openKeyboard);
-    nativeInput.addEventListener('touchstart', openKeyboard);
-    nativeInput.addEventListener('blur', closeKeyboard);
   }
 
   // ── Drag-and-drop ───────────────────────────────────────────────────────────
