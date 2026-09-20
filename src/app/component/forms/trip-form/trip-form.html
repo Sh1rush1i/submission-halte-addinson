@@ -572,21 +572,27 @@
                         <i class="pi pi-arrow-up-right text-emerald-500"></i>Board
                       </label>
 
-                      <p-inputnumber
-                        inputId="penumpangNaik"
-                        formControlName="penumpangNaik"
-                        [disabled]="!halteForm.controls.waktuKedatangan.value"
-                        [min]="0"
-                        [useGrouping]="false"
-                        [showButtons]="true"
-                        buttonLayout="horizontal"
-                        incrementButtonIcon="pi pi-plus"
-                        decrementButtonIcon="pi pi-minus"
-                        pTooltip="Enter departure passanger"
-                        tooltipPosition="top"
-                        [style]="{ width: '100%' }"
-                        [inputStyle]="{ width: '100%', 'text-align': 'center' }"
-                      />
+                      <span
+                        (mousedown)="onContainerMouseDown($event)"
+                        (touchstart)="onContainerMouseDown($event)"
+                      >
+                        <p-inputnumber
+                          inputId="penumpangNaik"
+                          formControlName="penumpangNaik"
+                          [disabled]="!halteForm.controls.waktuKedatangan.value"
+                          [min]="0"
+                          [useGrouping]="false"
+                          [showButtons]="true"
+                          buttonLayout="horizontal"
+                          incrementButtonIcon="pi pi-plus"
+                          decrementButtonIcon="pi pi-minus"
+                          [readonly]="lockKeyboard"
+                          pTooltip="Enter departure passanger"
+                          tooltipPosition="top"
+                          [style]="{ width: '100%' }"
+                          [inputStyle]="{ width: '100%', 'text-align': 'center' }"
+                        />
+                      </span>
 
                       @if (!halteForm.controls.waktuKedatangan.value) {
                         <div

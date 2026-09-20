@@ -267,6 +267,14 @@ export class TripForm implements OnInit, OnDestroy {
     );
   }
 
+  lockKeyboard: boolean = true;
+
+  onContainerMouseDown(event: Event) {
+    const target = event.target as HTMLElement;
+
+    this.lockKeyboard = target.tagName !== 'INPUT';
+  }
+
   // ── Drag-and-drop ───────────────────────────────────────────────────────────
 
   readonly isDraggingFile = signal(false);
