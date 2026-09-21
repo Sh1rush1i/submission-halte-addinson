@@ -1,0 +1,160 @@
+/* ── Animasi keluar: fade-up + collapse tinggi ───────────────────────────── */
+.greeting-wrap {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition:
+    grid-template-rows 600ms cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 500ms ease,
+    transform 600ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.greeting-wrap.leaving {
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transform: translateY(-24px);
+}
+.greeting-inner {
+  min-height: 0;
+}
+
+/* ── Title: muncul per huruf + gelombang cahaya ──────────────────────────── */
+.greeting-word {
+  display: inline-block;
+  white-space: nowrap;
+  margin-right: 0.28em;
+}
+.greeting-char {
+  display: inline-block;
+  /* Tiap huruf mengambil "irisan" gradient yang sama, jadi terlihat menyambung */
+  background-image: linear-gradient(90deg, #bae6fd, #ffffff, #fbcfe8);
+  background-size: calc(var(--n) * 100%) 100%;
+  background-position: calc(var(--i) / (var(--n) - 1) * 100%) 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  opacity: 0;
+  animation:
+    greeting-char-in 700ms cubic-bezier(0.2, 0.9, 0.25, 1.2) forwards,
+    greeting-char-wave 3.6s ease-in-out infinite;
+  animation-delay: calc(var(--i) * 35ms), calc(var(--i) * 35ms + 1.6s);
+}
+
+@keyframes greeting-char-in {
+  0% {
+    opacity: 0;
+    transform: translateY(0.6em) scale(0.6) rotate(-8deg);
+    filter: blur(6px);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-0.15em) scale(1.1) rotate(2deg);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
+}
+@keyframes greeting-char-wave {
+  0%,
+  60%,
+  100% {
+    filter: brightness(1) drop-shadow(0 0 0 transparent);
+    transform: translateY(0);
+  }
+  30% {
+    filter: brightness(1.6) drop-shadow(0 0 6px rgb(249 168 212 / 0.8));
+    transform: translateY(-2px);
+  }
+}
+
+/* ── Teks sekunder ───────────────────────────────────────────────────────── */
+.greeting-fade-up {
+  opacity: 0;
+  animation: greeting-fade-up 700ms ease-out var(--delay, 0s) forwards;
+}
+@keyframes greeting-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.greeting-star {
+  display: inline-block;
+  animation: greeting-twinkle 2s ease-in-out infinite;
+}
+@keyframes greeting-twinkle {
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: scale(0.8) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.3) rotate(90deg);
+    color: #f9a8d4;
+  }
+}
+
+/* ── Kilatan kamera (sekali di awal, berasal dari sisi ikon kamera) ──────── */
+.greeting-flash {
+  position: absolute;
+  inset: 0;
+  z-index: 15;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at 12% 50%,
+    rgb(255 255 255 / 0.9),
+    rgb(186 230 253 / 0.4) 35%,
+    transparent 70%
+  );
+  opacity: 0;
+  animation: greeting-flash 900ms ease-out 200ms 1 both;
+}
+@keyframes greeting-flash {
+  0% {
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* ── Hormati pengaturan reduced motion ───────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .greeting-char,
+  .greeting-fade-up {
+    animation: none;
+    opacity: 1;
+  }
+  .greeting-flash,
+  .greeting-star {
+    animation: none;
+  }
+  .greeting-wrap {
+    transition: opacity 200ms ease;
+  }
+}
+
+/* ── Countdown bar: habis persis di akhir durasi ─────────────────────────── */
+.greeting-bar {
+  width: 100%;
+  animation-name: greeting-bar-shrink;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+@keyframes greeting-bar-shrink {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
