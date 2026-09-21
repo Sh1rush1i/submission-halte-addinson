@@ -427,9 +427,19 @@
             </div>
 
             <div class="bg-gray-500/5 border border-gray-600 rounded-md p-6">
-              <label for="halteIndex" class="mb-2.5 block text-xs font-medium text-gray-400"
-                >Halte</label
-              >
+              <div class="mb-2.5 flex items-center justify-between">
+                <label for="halteIndex" class="block text-xs font-medium text-gray-400"
+                  >Halte</label
+                >
+                @if (
+                  halteForm.controls.halteIndex.value !== null &&
+                  hasDraft(halteForm.controls.halteIndex.value!)
+                ) {
+                  <span class="flex items-center gap-1 text-[10px] text-amber-400">
+                    <i class="pi pi-exclamation-triangle"></i>Unsaved draft
+                  </span>
+                }
+              </div>
               <div class="sm:flex items-center grid grid-cols-1 gap-2">
                 <button
                   type="button"
@@ -759,6 +769,11 @@
                           Stop {{ item.index + 1 }}
                         </p>
                         <p class="text-sm font-semibold text-gray-100">{{ item.name }}</p>
+                        @if (hasDraft(item.index)) {
+                          <p class="mt-1 flex items-center gap-1 text-[10px] text-amber-400">
+                            <i class="pi pi-circle-fill text-[6px]"></i>Unsaved draft
+                          </p>
+                        }
                       </div>
                       <div class="flex shrink-0 items-center gap-1">
                         <button

@@ -18,7 +18,7 @@ import {
   ValidationErrors,
   Validators,
 } from '@angular/forms';
-import { finalize } from 'rxjs';
+import { debounceTime, finalize, merge } from 'rxjs';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -98,6 +98,10 @@ export class TripForm implements OnInit, OnDestroy {
 
   // Track timeouts to clear them on destroy
   private timeouts: any[] = [];
+
+  // ── Draft (localStorage) config ─────────────────────────────────────────────
+  private readonly DRAFT_PREFIX = 'trip-halte-draft';
+  readonly draftIndices = signal<Set<number>>(new Set());
 
   // ── Page-level loading (initial fetch / import) ────────────────────────────
   readonly isLoading = signal(true);
@@ -191,6 +195,7 @@ export class TripForm implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.activatedRoute.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
       this.tripId = params.get('id');
+      this.scanDraftsForCurrentScope();
       this.trip = null;
       this.halteForm.reset({
         halteIndex: null,
@@ -214,6 +219,22 @@ export class TripForm implements OnInit, OnDestroy {
     this.halteForm.controls.halteIndex.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((index) => this.onHalteSelected(index));
+
+    const halteDataControls = [
+      this.halteForm.controls.waktuKedatangan,
+      this.halteForm.controls.waktuKeberangkatan,
+      this.halteForm.controls.penumpangNaik,
+      this.halteForm.controls.penumpangTurun,
+      this.halteForm.controls.penumpangTidakTerangkut,
+    ];
+
+    merge(...halteDataControls.map((control) => control.valueChanges))
+      .pipe(debounceTime(400), takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        const index = this.halteForm.controls.halteIndex.value;
+        if (index === null || index === undefined) return;
+        this.writeDraft(index, this.halteForm.getRawValue());
+      });
   }
 
   ngOnDestroy(): void {
@@ -267,7 +288,10 @@ export class TripForm implements OnInit, OnDestroy {
 
   private flashDone(icon: ReturnType<typeof signal<'idle' | 'loading' | 'done'>>): void {
     icon.set('done');
-    const timeoutId = setTimeout(() => icon.set('idle'), ICON_RESET_DELAY_MS);
+    const timeoutId = setTimeout(() => {
+      icon.set('idle');
+      this.timeouts = this.timeouts.filter((id) => id !== timeoutId);
+    }, ICON_RESET_DELAY_MS);
     this.timeouts.push(timeoutId);
   }
 
@@ -326,6 +350,78 @@ export class TripForm implements OnInit, OnDestroy {
     this.ref = this.dynamicDialogServices.infoModal(
       'Please fill departure time first before entering passenger data.',
     );
+  }
+
+  // ── Draft persistence (localStorage) ────────────────────────────────────────
+
+  private draftKey(index: number): string {
+    return `${this.DRAFT_PREFIX}:${this.tripId ?? 'new'}:${index}`;
+  }
+
+  private writeDraft(index: number, value: unknown): void {
+    try {
+      localStorage.setItem(this.draftKey(index), JSON.stringify(value));
+      this.draftIndices.update((set) => new Set(set).add(index));
+    } catch (err) {
+      console.warn('Failed to save halte draft to localStorage:', err);
+    }
+  }
+
+  private readDraft(index: number): any | null {
+    try {
+      const raw = localStorage.getItem(this.draftKey(index));
+      return raw ? JSON.parse(raw) : null;
+    } catch (err) {
+      console.warn('Failed to read halte draft from localStorage:', err);
+      return null;
+    }
+  }
+
+  private clearDraft(index: number): void {
+    try {
+      localStorage.removeItem(this.draftKey(index));
+      this.draftIndices.update((set) => {
+        if (!set.has(index)) return set;
+        const next = new Set(set);
+        next.delete(index);
+        return next;
+      });
+    } catch (err) {
+      console.warn('Failed to clear halte draft from localStorage:', err);
+    }
+  }
+
+  private clearAllDrafts(scope: string): void {
+    try {
+      const prefix = `${this.DRAFT_PREFIX}:${scope}:`;
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const key = localStorage.key(i);
+        if (key?.startsWith(prefix)) {
+          localStorage.removeItem(key);
+        }
+      }
+      this.draftIndices.set(new Set());
+    } catch (err) {
+      console.warn('Failed to clear halte drafts from localStorage:', err);
+    }
+  }
+
+  /** Scan localStorage once for the current trip scope and populate draftIndices. */
+  private scanDraftsForCurrentScope(): void {
+    const found = new Set<number>();
+    try {
+      const prefix = `${this.DRAFT_PREFIX}:${this.tripId ?? 'new'}:`;
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key?.startsWith(prefix)) {
+          const idx = Number(key.slice(prefix.length));
+          if (!Number.isNaN(idx)) found.add(idx);
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to scan halte drafts from localStorage:', err);
+    }
+    this.draftIndices.set(found);
   }
 
   // ── Drag-and-drop ───────────────────────────────────────────────────────────
@@ -448,6 +544,9 @@ export class TripForm implements OnInit, OnDestroy {
                   `Trip imported successfully with ${filledCount} stop(s).`,
                   'success',
                 );
+                // Imported trip is fully persisted server-side — any leftover
+                // "new" drafts no longer apply, so clean them up.
+                this.clearAllDrafts('new');
                 this.router.navigate(['/trip', results[0].id]);
               } else {
                 this.invokeToast('Failed to create trip from imported file.', 'error');
@@ -515,6 +614,9 @@ export class TripForm implements OnInit, OnDestroy {
           next: (newTrip) => {
             this.flashDone(this.createTripIcon);
             this.invokeToast('Trip successfully created.', 'success');
+            // A brand-new trip has no haltes yet — any leftover "new" drafts
+            // (from a previous unfinished attempt) no longer apply.
+            this.clearAllDrafts('new');
             this.router.navigate(['/trip', newTrip.id]);
           },
           error: (err) => {
@@ -531,6 +633,7 @@ export class TripForm implements OnInit, OnDestroy {
   onHalteSelected(index: number | null): void {
     if (index === null || !this.trip) return;
     const halte = this.trip.haltes[index];
+
     this.halteForm.patchValue(
       {
         waktuKedatangan: halte.waktuKedatangan,
@@ -541,6 +644,21 @@ export class TripForm implements OnInit, OnDestroy {
       },
       { emitEvent: false },
     );
+
+    const draft = this.readDraft(index);
+    if (draft) {
+      this.halteForm.patchValue(
+        {
+          waktuKedatangan: toDate(draft.waktuKedatangan),
+          waktuKeberangkatan: toDate(draft.waktuKeberangkatan),
+          penumpangNaik: draft.penumpangNaik ?? 0,
+          penumpangTurun: draft.penumpangTurun ?? 0,
+          penumpangTidakTerangkut: draft.penumpangTidakTerangkut ?? 0,
+        },
+        { emitEvent: false },
+      );
+      this.invokeToast(`Continue data "${HALTE_NAMES[index]}", not yet saved.`, 'info');
+    }
   }
 
   editHalte(index: number): void {
@@ -625,18 +743,23 @@ export class TripForm implements OnInit, OnDestroy {
               this.trip = { ...updated, haltes: normaliseHaltes(updated.haltes) };
               this.flashDone(this.deleteHalteIcon);
               this.invokeToast('Halte stop data deleted successfully.', 'success');
+
+              this.clearDraft(index);
             } else {
               this.deleteHalteIcon.set('idle');
               this.invokeToast('Delete returned no data.', 'warn');
             }
 
             if (this.halteForm.controls.halteIndex.value === index) {
-              this.halteForm.reset({
-                halteIndex: index,
-                penumpangNaik: 0,
-                penumpangTurun: 0,
-                penumpangTidakTerangkut: 0,
-              });
+              this.halteForm.reset(
+                {
+                  halteIndex: index,
+                  penumpangNaik: 0,
+                  penumpangTurun: 0,
+                  penumpangTidakTerangkut: 0,
+                },
+                { emitEvent: false },
+              );
             }
           },
           error: (err) => {
@@ -669,6 +792,11 @@ export class TripForm implements OnInit, OnDestroy {
             next: () => {
               this.flashDone(this.deleteTripIcon);
               this.invokeToast('Trip deleted successfully.', 'success');
+
+              // Whole trip is gone — clear every leftover draft scoped to it.
+              if (this.tripId) {
+                this.clearAllDrafts(this.tripId);
+              }
 
               const timeoutId = setTimeout(() => this.router.navigate(['/trip']), 600);
               this.timeouts.push(timeoutId);
@@ -774,6 +902,8 @@ export class TripForm implements OnInit, OnDestroy {
           );
 
           this.flashDone(this.saveHalteIcon);
+
+          this.clearDraft(index);
           onDone(true);
         },
         error: (err) => {
@@ -836,6 +966,11 @@ export class TripForm implements OnInit, OnDestroy {
 
   isHalteFilled(halte: HalteEntry): boolean {
     return !!halte.waktuKedatangan || !!halte.waktuKeberangkatan;
+  }
+
+  /** Whether the currently-selected halte has an unsaved draft sitting in localStorage. */
+  hasDraft(index: number): boolean {
+    return this.draftIndices().has(index);
   }
 
   cancel(): void {
