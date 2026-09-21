@@ -424,6 +424,37 @@ export class TripForm implements OnInit, OnDestroy {
     this.draftIndices.set(found);
   }
 
+  // ── DELETE DRAFT ────────────────────────────────────────────────────────────
+
+  deleteDraft(index: number): void {
+    if (index === null || index === undefined || !this.hasDraft(index)) return;
+
+    this.openConfirmModal(
+      `Delete unsaved draft for "${HALTE_NAMES[index]}"? The form will be restored to the last saved data.`,
+      () => {
+        this.clearDraft(index);
+        this.restoreHalteFromSaved(index);
+        this.invokeToast('Draft deleted.', 'success');
+      },
+    );
+  }
+
+  private restoreHalteFromSaved(index: number): void {
+    const saved = this.trip?.haltes[index];
+
+    this.halteForm.patchValue(
+      {
+        waktuKedatangan: saved?.waktuKedatangan ?? null,
+        waktuKeberangkatan: saved?.waktuKeberangkatan ?? null,
+        penumpangNaik: saved?.penumpangNaik ?? 0,
+        penumpangTurun: saved?.penumpangTurun ?? 0,
+        penumpangTidakTerangkut: saved?.penumpangTidakTerangkut ?? 0,
+      },
+      { emitEvent: false },
+    );
+    this.halteForm.markAsPristine();
+  }
+
   // ── Drag-and-drop ───────────────────────────────────────────────────────────
 
   readonly isDraggingFile = signal(false);

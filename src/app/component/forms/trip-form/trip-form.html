@@ -686,22 +686,38 @@
                   }
                 </div>
 
-                <div class="flex items-center justify-end gap-3">
+                <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  <!-- BUTTON BACK -->
                   <button
                     type="button"
                     pButton
                     (click)="cancel()"
-                    class="rounded-md border bg-transparent border-sky-700 px-2 sm:px-4 py-1.5 text-[0.8rem] sm:text-sm text-white transition-colors hover:bg-sky-800"
+                    class="order-2 sm:order-1 col-span-1 flex w-full items-center justify-center gap-1 sm:gap-2 rounded-md border bg-transparent border-sky-700 px-2 sm:px-3 py-2 text-[0.8rem] sm:text-sm text-white transition-colors hover:bg-sky-800"
                   >
-                    <i class="pi pi-times"></i> Back
+                    <i class="pi pi-times sm:text-sm text-[0.8rem]"></i> Back
                   </button>
 
+                  <!-- BUTTON DELETE DRAFT -->
+                  <button
+                    type="button"
+                    pButton
+                    (click)="deleteDraft(halteForm.controls.halteIndex.value!)"
+                    [disabled]="!hasDraft(halteForm.controls.halteIndex.value!)"
+                    pTooltip="Discard unsaved draft and restore saved data"
+                    tooltipPosition="top"
+                    class="order-3 sm:order-2 col-span-1 flex w-full items-center justify-center border-none gap-1 sm:gap-2 rounded-md bg-amber-700 px-2 sm:px-3 py-2 text-[0.8rem] sm:text-sm text-white transition duration-700 hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <i class="pi pi-eraser sm:text-sm text-[0.8rem]"></i>
+                    Delete Draft
+                  </button>
+
+                  <!-- BUTTON DELETE STOP (Paling bawah di HP) -->
                   <button
                     type="button"
                     pButton
                     (click)="deleteHalteData(halteForm.controls.halteIndex.value!)"
                     [disabled]="!halteForm.controls.waktuKedatangan.value || isDeletingHalte()"
-                    class="flex items-center border-none sm:gap-2 gap-1 rounded-md bg-red-800 px-2 sm:px-4 py-2 sm:text-sm text-[0.8rem] text-white transition duration-700 hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-50"
+                    class="order-4 sm:order-3 col-span-2 sm:col-span-1 flex w-full items-center justify-center border-none gap-1 sm:gap-2 rounded-md bg-red-800 px-2 sm:px-3 py-2 text-[0.8rem] sm:text-sm text-white transition duration-700 hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     @if (deleteHalteIcon() === 'loading') {
                       <i class="pi pi-spin pi-spinner sm:text-sm text-[0.8rem]"></i>
@@ -713,11 +729,12 @@
                     Delete Stop
                   </button>
 
+                  <!-- BUTTON UPDATE STOP (Paling Atas di HP) -->
                   <button
                     type="submit"
                     pButton
                     [disabled]="halteForm.invalid || isSavingHalte()"
-                    class="flex items-center border-none sm:gap-2 gap-1 rounded-md bg-purple-800 px-2 sm:px-4 py-2 sm:text-sm text-[0.8rem] text-white transition duration-700 hover:bg-purple-600 disabled:cursor-not-allowed disabled:opacity-50"
+                    class="order-1 sm:order-4 col-span-2 sm:col-span-1 flex w-full items-center justify-center border-none gap-1 sm:gap-2 rounded-md bg-purple-800 px-2 sm:px-3 py-3 sm:py-2 text-[0.9rem] sm:text-sm font-bold text-white transition duration-700 hover:bg-purple-600 disabled:cursor-not-allowed disabled:opacity-50 shadow-md sm:shadow-none"
                   >
                     @if (saveHalteIcon() === 'loading') {
                       <i class="pi pi-spin pi-spinner sm:text-sm text-[0.8rem]"></i>
