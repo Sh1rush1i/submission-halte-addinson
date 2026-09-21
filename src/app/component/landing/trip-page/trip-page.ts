@@ -23,8 +23,10 @@ import { ImportService } from '../../../service/import.service';
 type ViewMode = 'table' | 'card';
 type ColumnType = 'index' | 'text' | 'date' | 'progress' | 'action';
 
+type TripRow = TripRecord & { filledCount: number };
+
 interface ColumnDef {
-  field: keyof TripRecord | 'no' | 'action';
+  field: keyof TripRow | 'no' | 'action';
   header: string;
   type: ColumnType;
   widthClass: string;
@@ -52,7 +54,7 @@ interface ColumnDef {
 })
 export class TripPage implements OnInit, OnDestroy {
   readonly viewMode = signal<ViewMode>('table');
-  readonly records = signal<TripRecord[]>([]);
+  readonly records = signal<TripRow[]>([]);
 
   ref: DynamicDialogRef | undefined | null;
 
@@ -71,7 +73,7 @@ export class TripPage implements OnInit, OnDestroy {
       header: 'Trip Code',
       type: 'text',
       widthClass: 'w-28 font-mono text-sky-200',
-      minWidth: '120px',
+      minWidth: '210px',
       rowClass: 'text-sky-100',
     },
     {
@@ -100,11 +102,11 @@ export class TripPage implements OnInit, OnDestroy {
       rowClass: 'text-sky-100',
     },
     {
-      field: 'haltes',
+      field: 'filledCount',
       header: 'Stops Filled',
       type: 'progress',
       widthClass: 'w-32 text-red-200',
-      minWidth: '120px',
+      minWidth: '160px',
       align: 'center',
       rowClass: '',
     },
@@ -145,6 +147,11 @@ export class TripPage implements OnInit, OnDestroy {
     if (this.ref) {
       this.ref.close();
     }
+  }
+
+  private toFilledCount(haltes: HalteEntry[]): number {
+    if (!haltes?.length) return 0;
+    return haltes.filter((h) => !!h.waktuKedatangan || !!h.waktuKeberangkatan).length;
   }
 
   private openConfirmModal(message: string, onConfirm: () => void, onClose?: () => void): void {
@@ -303,17 +310,21 @@ export class TripPage implements OnInit, OnDestroy {
       .subscribe({
         next: (created) => {
           const current = this.records();
-          const mapped = (created ?? []).map((t) => ({
-            ...t,
-            hariTanggal: t.hariTanggal ? new Date(t.hariTanggal) : new Date(),
-            haltes: (t.haltes ?? []).map((h) => ({
+          const mapped = (created ?? []).map((t) => {
+            const haltes = (t.haltes ?? []).map((h) => ({
               ...h,
               waktuKedatangan: h?.waktuKedatangan ? new Date(h.waktuKedatangan) : null,
               waktuKeberangkatan: h?.waktuKeberangkatan ? new Date(h.waktuKeberangkatan) : null,
-            })),
-          }));
-          this.records.set([...mapped, ...current]);
+            }));
 
+            return {
+              ...t,
+              hariTanggal: t.hariTanggal ? new Date(t.hariTanggal) : new Date(),
+              haltes,
+              filledCount: this.toFilledCount(haltes),
+            };
+          });
+          this.records.set([...mapped, ...current]);
           if (invalid.length > 0) {
             this.invokeToast(
               `${valid.length} trip(s) imported. ${invalid.length} trip(s) skipped: ${invalid.map((i) => i.reason).join('; ')}`,
@@ -369,15 +380,20 @@ export class TripPage implements OnInit, OnDestroy {
       .subscribe({
         next: (trips) => {
           try {
-            const mapped = (trips ?? []).map((t) => ({
-              ...t,
-              hariTanggal: t.hariTanggal ? new Date(t.hariTanggal) : new Date(),
-              haltes: (t.haltes ?? []).map((h) => ({
+            const mapped = (trips ?? []).map((t) => {
+              const haltes = (t.haltes ?? []).map((h) => ({
                 ...h,
                 waktuKedatangan: h?.waktuKedatangan ? new Date(h.waktuKedatangan) : null,
                 waktuKeberangkatan: h?.waktuKeberangkatan ? new Date(h.waktuKeberangkatan) : null,
-              })),
-            }));
+              }));
+
+              return {
+                ...t,
+                hariTanggal: t.hariTanggal ? new Date(t.hariTanggal) : new Date(),
+                haltes,
+                filledCount: this.toFilledCount(haltes), // ← field baru untuk filter
+              };
+            });
             this.records.set(mapped);
           } catch (mapErr) {
             console.error('Failed while transforming trip data:', mapErr, trips);

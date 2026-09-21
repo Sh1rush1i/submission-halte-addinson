@@ -207,13 +207,58 @@
           >
             <ng-template #header>
               <tr class="text-xs uppercase">
-                <th class="text-left px-6 py-4">Trip Code</th>
-                <th class="text-left px-4 py-4">Surveyor</th>
-                <th class="text-left px-4 py-4">Date</th>
-                <th class="text-left px-4 py-4">Vehicle</th>
-                <th class="text-left px-4 py-4">Progress</th>
-                <th class="text-left px-4 py-4">Status</th>
-                <th class="w-10 px-4"></th>
+                <th class="text-left px-6 py-4" style="min-width: 210px">
+                  <div class="flex items-center gap-2">
+                    <span>Trip Code</span>
+                    <p-column-filter type="text" field="kodeTrip" display="menu" />
+                  </div>
+                </th>
+                <th class="text-left px-4 py-4">
+                  <div class="flex items-center gap-2">
+                    <span>Surveyor</span>
+                    <p-column-filter type="text" field="namaSurveyor" display="menu" />
+                  </div>
+                </th>
+                <th class="text-left px-4 py-4" style="min-width: 120px">
+                  <div class="flex items-center gap-2">
+                    <span>Date</span>
+                    <p-column-filter type="date" field="hariTanggal" display="menu" />
+                  </div>
+                </th>
+                <th class="text-left px-4 py-4">
+                  <div class="flex items-center gap-2">
+                    <span>Vehicle</span>
+                    <p-column-filter type="text" field="nomorKendaraan" display="menu" />
+                  </div>
+                </th>
+                <th class="text-left px-4 py-4">
+                  <div class="flex items-center gap-2">
+                    <span>Progress</span>
+                    <p-column-filter type="numeric" field="progressPct" display="menu" />
+                  </div>
+                </th>
+                <th class="text-left px-4 py-4" style="min-width: 180px">
+                  <div class="flex items-center gap-2">
+                    <span>Status</span>
+                    <p-column-filter field="statusText" matchMode="equals" display="menu">
+                      <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                        <p-select
+                          [ngModel]="value"
+                          (ngModelChange)="filter($event)"
+                          [options]="[
+                            { label: 'Finished', value: 'Finished' },
+                            { label: 'On Road', value: 'On Road' },
+                            { label: 'Not yet started', value: 'Not yet started' },
+                          ]"
+                          placeholder="Any"
+                          [showClear]="true"
+                          styleClass="w-full"
+                        />
+                      </ng-template>
+                    </p-column-filter>
+                  </div>
+                </th>
+                <th class="w-10 px-4">#</th>
               </tr>
             </ng-template>
             <ng-template #body let-trip>
@@ -277,6 +322,28 @@
                     <i class="pi pi-external-link text-purple-600 text-xs"></i>
                   </td>
                 }
+              </tr>
+            </ng-template>
+            <ng-template #emptymessage>
+              <tr>
+                <td colspan="9" class="p-0">
+                  <div
+                    class="flex flex-col items-center justify-center w-full min-h-[65vh] text-center bg-transparent"
+                  >
+                    <i
+                      class="pi pi-info-circle text-red-400 text-3xl mb-2 transition duration-250 ease-in-out hover:scale-105"
+                    ></i>
+                    <span
+                      class="text-gray-300 text-lg font-medium transition duration-250 ease-in-out hover:scale-105"
+                    >
+                      No data available
+                    </span>
+                    <p class="mt-1 max-w-sm text-sm text-gray-500">
+                      Stop departure entry will appear here. Start by adding the first entry or
+                      change table filter.
+                    </p>
+                  </div>
+                </td>
               </tr>
             </ng-template>
           </p-table>

@@ -28,6 +28,8 @@ import { ToastModule } from 'primeng/toast';
 import { TableModule } from 'primeng/table';
 import { MessageService } from 'primeng/api';
 import { DialogService } from 'primeng/dynamicdialog';
+import { SelectModule } from 'primeng/select';
+import { FormsModule } from '@angular/forms';
 
 // Daftarkan semua komponen Chart.js beserta plugin Zoom
 Chart.register(...registerables, zoomPlugin);
@@ -35,7 +37,16 @@ Chart.register(...registerables, zoomPlugin);
 @Component({
   selector: 'app-home-page',
   standalone: true,
-  imports: [CommonModule, ButtonModule, TooltipModule, SkeletonModule, ToastModule, TableModule],
+  imports: [
+    CommonModule,
+    ButtonModule,
+    TooltipModule,
+    SkeletonModule,
+    ToastModule,
+    TableModule,
+    FormsModule,
+    SelectModule,
+  ],
   templateUrl: './home-page.html',
   styleUrl: './home-page.css',
   providers: [MessageService, DialogService],
@@ -52,7 +63,7 @@ export class HomePage implements OnInit, AfterViewInit, OnDestroy {
   private viewReady = signal(false);
   private chartInstance: Chart | null = null;
 
-  readonly recentTripsSkeletonRows: Partial<TripRecord>[] = Array.from({ length: 5 }, (_, i) => ({
+  readonly recentTripsSkeletonRows: Partial<TripRecord>[] = Array.from({ length: 4 }, (_, i) => ({
     id: i,
   }));
 
@@ -190,15 +201,25 @@ export class HomePage implements OnInit, AfterViewInit, OnDestroy {
       )
       .subscribe({
         next: (trips) => {
-          const mapped = (trips ?? []).map((t) => ({
-            ...t,
-            hariTanggal: t.hariTanggal ? new Date(t.hariTanggal) : new Date(),
-            haltes: (t.haltes ?? []).map((h) => ({
+          const mapped = (trips ?? []).map((t) => {
+            const hariTanggal = t.hariTanggal ? new Date(t.hariTanggal) : new Date();
+            const haltes = (t.haltes ?? []).map((h) => ({
               ...h,
               waktuKedatangan: h?.waktuKedatangan ? new Date(h.waktuKedatangan) : null,
               waktuKeberangkatan: h?.waktuKeberangkatan ? new Date(h.waktuKeberangkatan) : null,
-            })),
-          }));
+            }));
+
+            const filled = haltes.filter((h) => h.waktuKedatangan || h.waktuKeberangkatan).length;
+            const progressPct = haltes.length ? Math.round((filled / haltes.length) * 100) : 0;
+            const statusText =
+              progressPct === 100
+                ? 'Finished'
+                : progressPct > 0
+                  ? 'On Road / Not Finished'
+                  : 'Not yet started';
+
+            return { ...t, hariTanggal, haltes, progressPct, statusText };
+          });
           this.trips.set(mapped);
         },
         error: () => this.trips.set([]),
@@ -235,7 +256,7 @@ export class HomePage implements OnInit, AfterViewInit, OnDestroy {
       };
     if (pct > 0)
       return {
-        text: 'On Road',
+        text: 'On Road / Not Finished',
         cls: 'text-amber-300 bg-amber-900/30 border border-amber-800',
       };
     return { text: 'Not yet started', cls: 'text-gray-400 bg-gray-800/50 border border-gray-700' };
