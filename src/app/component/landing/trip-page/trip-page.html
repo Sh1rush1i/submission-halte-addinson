@@ -90,6 +90,56 @@
       </div>
     </div>
 
+    @if (showGreetingCard()) {
+      <div
+        class="relative my-3 overflow-hidden rounded-lg border border-pink-300/30 bg-gradient-to-r from-sky-950/60 via-slate-900/70 to-pink-950/50 px-5 py-4 shadow-[0_0_25px_-5px_rgba(236,182,255,0.25)]"
+        data-aos="fade-down"
+      >
+        <!-- Sparkle accents -->
+        <i class="pi pi-star-fill absolute top-2 right-10 text-[10px] text-cyan-200/50"></i>
+        <i class="pi pi-star-fill absolute bottom-3 right-24 text-[8px] text-pink-200/40"></i>
+        <i class="pi pi-star-fill absolute top-1/2 right-4 text-[6px] text-sky-200/40"></i>
+
+        <button
+          pButton
+          class="absolute top-2.5 right-2.5 !h-6 !w-6 !min-w-0 !p-0 !rounded-full !border-none !bg-white/5 hover:!bg-white/15 flex items-center justify-center text-gray-300 transition-colors"
+          (click)="dismissGreetingCard()"
+        >
+          <i class="pi pi-times text-[11px]"></i>
+        </button>
+
+        <div class="flex items-center gap-3">
+          <div
+            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-sky-300/20 to-pink-300/20 border border-white/10"
+          >
+            <i
+              class="pi pi-sparkles text-lg bg-gradient-to-br from-sky-200 to-pink-200 bg-clip-text text-transparent"
+            ></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p
+              class="text-sm font-semibold bg-gradient-to-r from-sky-200 via-white to-pink-200 bg-clip-text text-transparent"
+            >
+              Halo Ges, apa kabar, semoga baik baik saja xixixi.
+            </p>
+            <p class="text-xs text-gray-400 mt-0.5">Semoga survei hari ini lancar ✦ ~ Hq</p>
+            <p class="text-[10px] text-gray-500 mt-1.5 flex items-center gap-1.5">
+              <i class="pi pi-clock text-[9px]"></i>
+              Hilang otomatis dalam {{ greetingCountdown() }} detik
+            </p>
+          </div>
+        </div>
+
+        <!-- Countdown progress bar -->
+        <div class="absolute bottom-0 left-0 h-0.5 w-full bg-white/5">
+          <div
+            class="h-full bg-gradient-to-r from-sky-300 to-pink-300 transition-all duration-1000 ease-linear"
+            [style.width.%]="(greetingCountdown() / 30) * 100"
+          ></div>
+        </div>
+      </div>
+    }
+
     @if (isLoading() && viewMode() === 'card') {
       <!-- Skeleton — Card view (card tidak punya komponen bawaan untuk dipakai ulang, jadi tetap versi tiruan) -->
       <div class="mt-6 grid grid-cols-1 gap-5 p-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

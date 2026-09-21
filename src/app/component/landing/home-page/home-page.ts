@@ -52,16 +52,18 @@ Chart.register(...registerables, zoomPlugin);
   providers: [MessageService, DialogService],
 })
 export class HomePage implements OnInit, AfterViewInit, OnDestroy {
-  // Hanya satu ViewChild yang tersisa dan strongly typed
   @ViewChild('barCanvas') barCanvasRef!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('passengerCanvas') passengerCanvasRef!: ElementRef<HTMLCanvasElement>;
 
   readonly today = new Date();
   readonly isLoading = signal(true);
   readonly trips = signal<TripRecord[]>([]);
-  readonly chartType = signal<'line' | 'bar'>('line'); // Signal untuk tipe chart
+  readonly chartType = signal<'line' | 'bar'>('line');
+  readonly passengerChartType = signal<'line' | 'bar'>('line');
 
   private viewReady = signal(false);
   private chartInstance: Chart | null = null;
+  private passengerChartInstance: Chart | null = null;
 
   readonly recentTripsSkeletonRows: Partial<TripRecord>[] = Array.from({ length: 5 }, (_, i) => ({
     id: i,
@@ -103,7 +105,7 @@ export class HomePage implements OnInit, AfterViewInit, OnDestroy {
   readonly chartData = computed(() => {
     const trips = [...this.trips()]
       .sort((a, b) => new Date(b.hariTanggal).getTime() - new Date(a.hariTanggal).getTime())
-      .slice(0, 4); 
+      .slice(0, 8);
     if (!trips.length) return null;
 
     let masterHaltes: string[] = [];
@@ -139,22 +141,74 @@ export class HomePage implements OnInit, AfterViewInit, OnDestroy {
           }
         });
 
-        // Random color for the surveyor line/bar, based on index
         const hue = (idx * 137.5) % 360;
         const color = `hsl(${hue}, 70%, 60%)`;
 
         return {
-          label: trip.namaSurveyor || trip.kodeTrip,
+          label: this.getTripIdentifier(trip),
           data: data,
           borderColor: color,
-          backgroundColor: color, // Penting saat chart berupa 'bar'
+          backgroundColor: color,
           pointBackgroundColor: color,
           pointBorderColor: '#fff',
           pointRadius: 4,
           pointHoverRadius: 6,
           tension: 0.3,
           fill: false,
-          borderRadius: 4, // Efek lengkung untuk mode 'bar'
+          borderRadius: 4,
+        };
+      });
+
+    return { labels: masterHaltes, datasets };
+  });
+
+  readonly passengerChartData = computed(() => {
+    const trips = [...this.trips()]
+      .sort((a, b) => new Date(b.hariTanggal).getTime() - new Date(a.hariTanggal).getTime())
+      .slice(0, 8);
+    if (!trips.length) return null;
+
+    let masterHaltes: string[] = [];
+    for (const t of trips) {
+      if ((t.haltes?.length ?? 0) > masterHaltes.length) {
+        masterHaltes = t.haltes!.map((h, i) => `${i + 1}. ${h.namaHalte}`);
+      }
+    }
+
+    const datasets = trips
+      .filter((t) => t.haltes?.length)
+      .map((trip, idx) => {
+        const data: any[] = [];
+        let runningTotal = 0;
+
+        trip.haltes!.forEach((h: any, i) => {
+          const naik = Number(h.penumpangNaik ?? 0);
+          const turun = Number(h.penumpangTurun ?? 0);
+          runningTotal += naik - turun;
+
+          data.push({
+            x: `${i + 1}. ${h.namaHalte}`,
+            y: runningTotal,
+            naik,
+            turun,
+          });
+        });
+
+        const hue = (idx * 137.5) % 360;
+        const color = `hsl(${hue}, 70%, 60%)`;
+
+        return {
+          label: this.getTripIdentifier(trip),
+          data,
+          borderColor: color,
+          backgroundColor: color,
+          pointBackgroundColor: color,
+          pointBorderColor: '#fff',
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          tension: 0.3,
+          fill: false,
+          borderRadius: 4,
         };
       });
 
@@ -177,7 +231,6 @@ export class HomePage implements OnInit, AfterViewInit, OnDestroy {
     private router: Router,
     private destroyRef: DestroyRef,
   ) {
-    // Reaktif menggambar/memperbarui chart saat data berubah
     effect(() => {
       const data = this.chartData();
       const ready = this.viewReady();
@@ -191,6 +244,21 @@ export class HomePage implements OnInit, AfterViewInit, OnDestroy {
         return;
       }
       this.renderOrUpdateChart(data);
+    });
+
+    effect(() => {
+      const data = this.passengerChartData();
+      const ready = this.viewReady();
+      if (!ready) return;
+
+      if (!data || data.datasets.length === 0) {
+        if (this.passengerChartInstance) {
+          this.passengerChartInstance.destroy();
+          this.passengerChartInstance = null;
+        }
+        return;
+      }
+      this.renderOrUpdatePassengerChart(data);
     });
   }
 
@@ -234,6 +302,7 @@ export class HomePage implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.chartInstance?.destroy();
+    this.passengerChartInstance?.destroy();
   }
 
   // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -264,6 +333,18 @@ export class HomePage implements OnInit, AfterViewInit, OnDestroy {
     return { text: 'Not yet started', cls: 'text-gray-400 bg-gray-800/50 border border-gray-700' };
   }
 
+  private getTripIdentifier(trip: TripRecord): string {
+    const firstHalte = trip.haltes?.[0];
+    const timeSource: Date =
+      firstHalte?.waktuKedatangan || firstHalte?.waktuKeberangkatan || trip.hariTanggal;
+
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    const dateStr = `${pad(timeSource.getDate())}-${pad(timeSource.getMonth() + 1)}-${timeSource.getFullYear()}`;
+    const timeStr = `${pad(timeSource.getHours())}:${pad(timeSource.getMinutes())}`;
+
+    return `${trip.namaSurveyor} (${dateStr}|${timeStr})`;
+  }
+
   navigateTo(path: string): void {
     this.router.navigate([path]);
   }
@@ -279,9 +360,25 @@ export class HomePage implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
+  togglePassengerChartType(): void {
+    const newType = this.passengerChartType() === 'line' ? 'bar' : 'line';
+    this.passengerChartType.set(newType);
+
+    if (this.passengerChartInstance) {
+      (this.passengerChartInstance.config as any).type = newType;
+      this.passengerChartInstance.update();
+    }
+  }
+
   resetZoom(): void {
     if (this.chartInstance) {
       this.chartInstance.resetZoom();
+    }
+  }
+
+  resetPassengerZoom(): void {
+    if (this.passengerChartInstance) {
+      this.passengerChartInstance.resetZoom();
     }
   }
 
@@ -394,6 +491,104 @@ export class HomePage implements OnInit, AfterViewInit, OnDestroy {
                 const h = Math.floor(val) % 24;
                 return `${h.toString().padStart(2, '0')}:00`;
               },
+            },
+            grid: { color: 'rgba(255,255,255,0.06)' },
+          },
+        },
+      },
+    });
+  }
+
+  private renderOrUpdatePassengerChart(chartData: any): void {
+    const canvas = this.passengerCanvasRef?.nativeElement;
+    if (!canvas) return;
+
+    if (this.passengerChartInstance) {
+      this.passengerChartInstance.data.labels = chartData.labels;
+      this.passengerChartInstance.data.datasets = chartData.datasets;
+      (this.passengerChartInstance.config as any).type = this.chartType();
+      this.passengerChartInstance.update();
+      return;
+    }
+
+    this.passengerChartInstance = new Chart(canvas, {
+      type: this.chartType(),
+      data: {
+        labels: chartData.labels,
+        datasets: chartData.datasets,
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: {
+          duration: 900,
+          easing: 'easeOutQuart',
+          onComplete: () => {
+            if (this.passengerChartInstance) {
+              this.passengerChartInstance.options.animation = false as any;
+            }
+          },
+        },
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top',
+            labels: { color: 'rgba(255,255,255,0.7)', font: { size: 11 } },
+          },
+          zoom: {
+            pan: { enabled: true, mode: 'x' },
+            zoom: {
+              wheel: { enabled: true },
+              pinch: { enabled: true },
+              mode: 'x',
+            },
+          },
+          tooltip: {
+            backgroundColor: '#1a1d24',
+            titleColor: '#fff',
+            bodyColor: '#e5e7eb',
+            padding: 10,
+            cornerRadius: 8,
+            callbacks: {
+              title: (items) => (items[0].raw as any).x,
+              label: (item) => {
+                const dsLabel = item.dataset.label;
+                const raw = item.raw as any;
+                return `${dsLabel} · Total: ${raw.y} (Naik: ${raw.naik}, Turun: ${raw.turun})`;
+              },
+            },
+          },
+        },
+        scales: {
+          x: {
+            type: 'category',
+            title: {
+              display: true,
+              text: 'Halte Name',
+              color: 'rgba(255,255,255,0.45)',
+              font: { size: 10 },
+            },
+            ticks: {
+              color: 'rgba(255,255,255,0.45)',
+              font: { size: 10 },
+              maxRotation: 45,
+              minRotation: 45,
+              autoSkip: false,
+            },
+            grid: { color: 'rgba(255,255,255,0.06)' },
+          },
+          y: {
+            type: 'linear',
+            title: {
+              display: true,
+              text: 'Total Net Passengers',
+              color: 'rgba(255,255,255,0.45)',
+              font: { size: 10 },
+            },
+            ticks: {
+              color: 'rgba(255,255,255,0.35)',
+              font: { size: 10 },
+              stepSize: 1,
             },
             grid: { color: 'rgba(255,255,255,0.06)' },
           },

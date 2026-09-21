@@ -55,6 +55,9 @@ interface ColumnDef {
 export class TripPage implements OnInit, OnDestroy {
   readonly viewMode = signal<ViewMode>('table');
   readonly records = signal<TripRow[]>([]);
+  readonly showGreetingCard = signal(true);
+  readonly greetingCountdown = signal(30);
+  private greetingInterval?: ReturnType<typeof setInterval>;
 
   ref: DynamicDialogRef | undefined | null;
 
@@ -140,13 +143,29 @@ export class TripPage implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
+    this.greetingInterval = setInterval(() => {
+      const remaining = this.greetingCountdown() - 1;
+      if (remaining <= 0) {
+        this.showGreetingCard.set(false);
+        if (this.greetingInterval) clearInterval(this.greetingInterval);
+      } else {
+        this.greetingCountdown.set(remaining);
+      }
+    }, 1000);
+
     this.getData();
   }
 
   ngOnDestroy() {
+    if (this.greetingInterval) clearInterval(this.greetingInterval);
     if (this.ref) {
       this.ref.close();
     }
+  }
+
+  dismissGreetingCard(): void {
+    this.showGreetingCard.set(false);
+    if (this.greetingInterval) clearInterval(this.greetingInterval);
   }
 
   private toFilledCount(haltes: HalteEntry[]): number {
