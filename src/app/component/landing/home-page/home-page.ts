@@ -63,7 +63,7 @@ export class HomePage implements OnInit, AfterViewInit, OnDestroy {
   private viewReady = signal(false);
   private chartInstance: Chart | null = null;
 
-  readonly recentTripsSkeletonRows: Partial<TripRecord>[] = Array.from({ length: 4 }, (_, i) => ({
+  readonly recentTripsSkeletonRows: Partial<TripRecord>[] = Array.from({ length: 5 }, (_, i) => ({
     id: i,
   }));
 
@@ -101,7 +101,9 @@ export class HomePage implements OnInit, AfterViewInit, OnDestroy {
    * Y = Waktu / Jam
    */
   readonly chartData = computed(() => {
-    const trips = this.trips();
+    const trips = [...this.trips()]
+      .sort((a, b) => new Date(b.hariTanggal).getTime() - new Date(a.hariTanggal).getTime())
+      .slice(0, 4); 
     if (!trips.length) return null;
 
     let masterHaltes: string[] = [];
