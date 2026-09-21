@@ -614,8 +614,6 @@ export class TripForm implements OnInit, OnDestroy {
           next: (newTrip) => {
             this.flashDone(this.createTripIcon);
             this.invokeToast('Trip successfully created.', 'success');
-            // A brand-new trip has no haltes yet — any leftover "new" drafts
-            // (from a previous unfinished attempt) no longer apply.
             this.clearAllDrafts('new');
             this.router.navigate(['/trip', newTrip.id]);
           },
@@ -863,18 +861,26 @@ export class TripForm implements OnInit, OnDestroy {
     if (!this.trip) return onDone(false);
 
     const value = this.halteForm.getRawValue();
-    if (!value.waktuKedatangan) return onDone(false);
+    const kedatangan = value.waktuKedatangan;
+    if (!kedatangan) return onDone(false);
 
-    if (this.halteForm.errors?.['timeOrder']) {
+    const keberangkatan = value.waktuKeberangkatan ?? new Date();
+
+    if (keberangkatan <= kedatangan) {
       this.invokeToast('Departure must be after arrival.', 'warn');
       return onDone(false);
     }
 
+    const payload = {
+      ...value,
+      waktuKedatangan: kedatangan,
+      waktuKeberangkatan: keberangkatan,
+    };
+
     this.isSavingHalte.set(true);
     this.saveHalteIcon.set('loading');
-
     this.tripService
-      .updateHalte(this.trip.id, index, value)
+      .updateHalte(this.trip.id, index, payload)
       .pipe(
         takeUntilDestroyed(this.destroyRef),
         finalize(() => this.isSavingHalte.set(false)),
