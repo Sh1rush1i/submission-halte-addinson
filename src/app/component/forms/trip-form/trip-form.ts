@@ -18,7 +18,7 @@ import {
   ValidationErrors,
   Validators,
 } from '@angular/forms';
-import { debounceTime, finalize, merge } from 'rxjs';
+import { debounceTime, distinctUntilChanged, finalize, merge } from 'rxjs';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -217,7 +217,7 @@ export class TripForm implements OnInit, OnDestroy {
     });
 
     this.halteForm.controls.halteIndex.valueChanges
-      .pipe(takeUntilDestroyed(this.destroyRef))
+      .pipe(distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
       .subscribe((index) => this.onHalteSelected(index));
 
     const halteDataControls = [
