@@ -95,16 +95,19 @@
     </div>
   </div>
 
-  <!-- ── Main Content Grid ─────────────────────────────────────────────────── -->
+  <!-- ── Arrival Time Chart ────────────────────────────────────────────────── -->
   <div
     class="card rounded-sm w-full min-w-0 overflow-hidden bg-gray-900/40 border border-white/5 p-4"
     data-aos="fade-up"
     data-aos-delay="100"
   >
     <div class="mb-6 flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-      <!-- Bagian Kiri: Judul, Subjudul, dan Teks Info -->
+      <!-- Kiri: Judul & info -->
       <div class="flex flex-col">
-        <h2 class="text-base font-semibold text-white">Surveyor's Arrival Time</h2>
+        <div class="flex items-center gap-2">
+          <h2 class="text-base font-semibold text-white">Surveyor's Arrival Time</h2>
+          <i class="pi pi-clock text-emerald-600 text-sm"></i>
+        </div>
         <p class="text-xs text-gray-500 mt-0.5">Surveyor's travel time per stop, by hour</p>
         <span class="flex items-center text-[10px] text-yellow-100/70 mt-3">
           <i class="pi pi-info-circle mr-1.5 text-yellow-200"></i> Scroll or pinch to zoom. Click
@@ -112,11 +115,13 @@
         </span>
       </div>
 
-      <!-- Bagian Kanan: Tombol Kontrol dan Ikon -->
-      <div class="flex items-center gap-2">
+      <!-- Kanan: Filter & kontrol -->
+      <div class="grid grid-cols-2 gap-2 w-full sm:w-64 shrink-0">
+        <!-- Baris tombol -->
         <button
           pButton
-          class="bg-sky-800 hover:bg-sky-700 text-xs px-3 py-1.5 border-none rounded-sm transition-colors text-gray-200 flex items-center"
+          size="small"
+          class="justify-center bg-sky-800 hover:bg-sky-700 text-xs border-none rounded-sm transition-colors text-gray-200 flex items-center"
           (click)="toggleChartType()"
         >
           <i class="pi" [ngClass]="chartType() === 'line' ? 'pi-chart-bar' : 'pi-chart-line'"></i>
@@ -125,23 +130,50 @@
 
         <button
           pButton
-          class="bg-yellow-800 hover:bg-yellow-700 text-xs px-3 py-1.5 border-none rounded-sm transition-colors text-gray-200 flex items-center"
+          size="small"
+          class="justify-center bg-yellow-800 hover:bg-yellow-700 text-xs border-none rounded-sm transition-colors text-gray-200 flex items-center"
           (click)="resetZoom()"
         >
           <i class="pi pi-search-minus"></i>
           <span class="ml-2">Reset Zoom</span>
         </button>
 
-        <i class="pi pi-chart-line text-emerald-600 ml-2 text-lg"></i>
+        <!-- Baris filter -->
+        <p-datepicker
+          [ngModel]="arrivalDate()"
+          (ngModelChange)="arrivalDate.set($event)"
+          size="small"
+          dateFormat="d M yy"
+          placeholder="All Dates"
+          [showClear]="true"
+          [showIcon]="true"
+          appendTo="body"
+          styleClass="w-full"
+          inputStyleClass="text-xs w-full"
+        />
+
+        <p-select
+          [ngModel]="arrivalCount()"
+          (ngModelChange)="arrivalCount.set($event)"
+          size="small"
+          [options]="countOptions"
+          optionLabel="label"
+          optionValue="value"
+          appendTo="body"
+          styleClass="w-full text-xs"
+        />
       </div>
     </div>
 
-    <!-- Container Chart (tanpa scroll wrapper) -->
-    <div class="relative h-96 w-full transition-all">
+    <!-- Container Chart -->
+    <div
+      class="relative w-full transition-all"
+      [style.height.px]="hasArrivalData() ? arrivalChartHeight() : 384"
+    >
       <canvas
         #barCanvas
         class="touch-none"
-        [class.invisible]="isLoading() || trips().length === 0"
+        [class.invisible]="isLoading() || !hasArrivalData()"
       ></canvas>
 
       @if (isLoading()) {
@@ -154,18 +186,31 @@
             />
           }
         </div>
-      } @else if (trips().length === 0) {
-        <!-- Empty State View -->
+      } @else if (!hasArrivalData()) {
         <div
           class="absolute inset-0 w-full left-0 flex flex-col items-center justify-center border border-dashed border-gray-700/60 bg-gray-900/5 rounded-md"
         >
           <div class="w-14 h-14 rounded-full bg-gray-800/80 flex items-center justify-center mb-3">
-            <i class="pi pi-chart-line text-2xl text-emerald-500"></i>
+            <i class="pi pi-clock text-2xl text-emerald-500"></i>
           </div>
           <p class="text-sm font-medium text-red-300">No Chart Data</p>
           <p class="text-xs text-gray-500 mt-1 max-w-62.5 text-center leading-relaxed">
-            There is no trips data available yet.
+            @if (arrivalDate()) {
+              No trips on the selected date.
+            } @else {
+              There is no trips data available yet.
+            }
           </p>
+          @if (arrivalDate()) {
+            <button
+              pButton
+              class="mt-3 bg-gray-800 hover:bg-gray-700 text-xs px-3 py-1.5 border-none rounded-sm text-gray-300"
+              (click)="arrivalDate.set(null)"
+            >
+              <i class="pi pi-filter-slash"></i>
+              <span class="ml-2">Clear Date</span>
+            </button>
+          }
         </div>
       }
     </div>
@@ -176,8 +221,12 @@
     class="card rounded-sm w-full min-w-0 overflow-hidden bg-gray-900/40 border border-white/5 p-4 mt-8"
   >
     <div class="mb-6 flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+      <!-- Kiri: Judul & info -->
       <div class="flex flex-col">
-        <h2 class="text-base font-semibold text-white">Total Net Passengers per Stop</h2>
+        <div class="flex items-center gap-2">
+          <h2 class="text-base font-semibold text-white">Total Passengers Each Stop</h2>
+          <i class="pi pi-users text-emerald-600 text-sm"></i>
+        </div>
         <p class="text-xs text-gray-500 mt-0.5">
           Cumulative passengers on board (boarded − alighted) per stop, per surveyor
         </p>
@@ -187,10 +236,13 @@
         </span>
       </div>
 
-      <div class="flex items-center gap-2">
+      <!-- Kanan: Filter & kontrol -->
+      <div class="grid grid-cols-2 gap-2 w-full sm:w-64 shrink-0">
+        <!-- Baris tombol -->
         <button
           pButton
-          class="bg-sky-800 hover:bg-sky-700 text-xs px-3 py-1.5 border-none rounded-sm transition-colors text-gray-200 flex items-center"
+          size="small"
+          class="justify-center bg-sky-800 hover:bg-sky-700 text-xs border-none rounded-sm transition-colors text-gray-200 flex items-center"
           (click)="togglePassengerChartType()"
         >
           <i
@@ -202,22 +254,49 @@
 
         <button
           pButton
-          class="bg-yellow-800 hover:bg-yellow-700 text-xs px-3 py-1.5 border-none rounded-sm transition-colors text-gray-200 flex items-center"
+          size="small"
+          class="justify-center bg-yellow-800 hover:bg-yellow-700 text-xs border-none rounded-sm transition-colors text-gray-200 flex items-center"
           (click)="resetPassengerZoom()"
         >
           <i class="pi pi-search-minus"></i>
           <span class="ml-2">Reset Zoom</span>
         </button>
 
-        <i class="pi pi-users text-emerald-600 ml-2 text-lg"></i>
+        <!-- Baris filter -->
+        <p-datepicker
+          [ngModel]="passengerDate()"
+          (ngModelChange)="passengerDate.set($event)"
+          size="small"
+          dateFormat="d M yy"
+          placeholder="All Dates"
+          [showClear]="true"
+          [showIcon]="true"
+          appendTo="body"
+          styleClass="w-full"
+          inputStyleClass="text-xs w-full"
+        />
+
+        <p-select
+          [ngModel]="passengerCount()"
+          (ngModelChange)="passengerCount.set($event)"
+          size="small"
+          [options]="countOptions"
+          optionLabel="label"
+          optionValue="value"
+          appendTo="body"
+          styleClass="w-full text-xs"
+        />
       </div>
     </div>
 
-    <div class="relative h-96 w-full transition-all">
+    <div
+      class="relative w-full transition-all"
+      [style.height.px]="hasPassengerData() ? passengerChartHeight() : 384"
+    >
       <canvas
         #passengerCanvas
         class="touch-none"
-        [class.invisible]="isLoading() || trips().length === 0"
+        [class.invisible]="isLoading() || !hasPassengerData()"
       ></canvas>
 
       @if (isLoading()) {
@@ -230,7 +309,7 @@
             />
           }
         </div>
-      } @else if (trips().length === 0) {
+      } @else if (!hasPassengerData()) {
         <div
           class="absolute inset-0 w-full left-0 flex flex-col items-center justify-center border border-dashed border-gray-700/60 bg-gray-900/5 rounded-md"
         >
@@ -239,8 +318,22 @@
           </div>
           <p class="text-sm font-medium text-red-300">No Chart Data</p>
           <p class="text-xs text-gray-500 mt-1 max-w-62.5 text-center leading-relaxed">
-            There is no trips data available yet.
+            @if (passengerDate()) {
+              No passenger data on the selected date.
+            } @else {
+              There is no passenger data available yet.
+            }
           </p>
+          @if (passengerDate()) {
+            <button
+              pButton
+              class="mt-3 bg-gray-800 hover:bg-gray-700 text-xs px-3 py-1.5 border-none rounded-sm text-gray-300"
+              (click)="passengerDate.set(null)"
+            >
+              <i class="pi pi-filter-slash"></i>
+              <span class="ml-2">Clear Date</span>
+            </button>
+          }
         </div>
       }
     </div>

@@ -30,6 +30,7 @@ import { MessageService } from 'primeng/api';
 import { DialogService } from 'primeng/dynamicdialog';
 import { SelectModule } from 'primeng/select';
 import { FormsModule } from '@angular/forms';
+import { DatePickerModule } from 'primeng/datepicker';
 
 // Daftarkan semua komponen Chart.js beserta plugin Zoom
 Chart.register(...registerables, zoomPlugin);
@@ -46,6 +47,7 @@ Chart.register(...registerables, zoomPlugin);
     TableModule,
     FormsModule,
     SelectModule,
+    DatePickerModule,
   ],
   templateUrl: './home-page.html',
   styleUrl: './home-page.css',
@@ -61,6 +63,19 @@ export class HomePage implements OnInit, AfterViewInit, OnDestroy {
   readonly chartType = signal<'line' | 'bar'>('line');
   readonly passengerChartType = signal<'line' | 'bar'>('line');
 
+  readonly countOptions = Array.from({ length: 10 }, (_, i) => ({
+    label: `${i + 1} Data`,
+    value: i + 1,
+  }));
+
+  // filter chart kedatangan
+  readonly arrivalDate = signal<Date | null>(null);
+  readonly arrivalCount = signal(8);
+
+  // filter chart penumpang
+  readonly passengerDate = signal<Date | null>(null);
+  readonly passengerCount = signal(8);
+
   private viewReady = signal(false);
   private chartInstance: Chart | null = null;
   private passengerChartInstance: Chart | null = null;
@@ -68,6 +83,60 @@ export class HomePage implements OnInit, AfterViewInit, OnDestroy {
   readonly recentTripsSkeletonRows: Partial<TripRecord>[] = Array.from({ length: 5 }, (_, i) => ({
     id: i,
   }));
+
+  /** Ambil trip sesuai tanggal + limit jumlah data */
+  private pickTrips(date: Date | null, count: number): TripRecord[] {
+    let list = [...this.trips()];
+
+    if (date) {
+      list = list.filter((t) => {
+        const d = new Date(t.hariTanggal);
+        return (
+          d.getFullYear() === date.getFullYear() &&
+          d.getMonth() === date.getMonth() &&
+          d.getDate() === date.getDate()
+        );
+      });
+    }
+
+    return list
+      .sort((a, b) => new Date(b.hariTanggal).getTime() - new Date(a.hariTanggal).getTime())
+      .slice(0, count);
+  }
+
+  private buildMasterHaltes(trips: TripRecord[]): string[] {
+    let master: string[] = [];
+    for (const t of trips) {
+      if ((t.haltes?.length ?? 0) > master.length) {
+        master = t.haltes!.map((h, i) => `${i + 1}. ${h.namaHalte}`);
+      }
+    }
+    return master;
+  }
+
+  private isEmptyValue(v: any): boolean {
+    return v === null || v === undefined || v === '';
+  }
+
+  readonly hasArrivalData = computed(() => (this.chartData()?.datasets.length ?? 0) > 0);
+  readonly hasPassengerData = computed(() => (this.passengerChartData()?.datasets.length ?? 0) > 0);
+
+  private computeChartHeight(datasetCount: number): number {
+    const basePlotHeight = 520;
+    const itemsPerRowEstimate = 3;
+    const legendRowHeight = 26;
+    const legendRows = datasetCount > 0 ? Math.ceil(datasetCount / itemsPerRowEstimate) : 1;
+
+    return basePlotHeight + legendRows * legendRowHeight;
+  }
+
+  readonly arrivalChartHeight = computed(() =>
+    this.computeChartHeight(this.chartData()?.datasets.length ?? 0),
+  );
+
+  readonly passengerChartHeight = computed(() =>
+    this.computeChartHeight(this.passengerChartData()?.datasets.length ?? 0),
+  );
 
   // ── Derived stats ────────────────────────────────────────────────────────────
   readonly totalTrips = computed(() => this.trips().length);
@@ -103,17 +172,10 @@ export class HomePage implements OnInit, AfterViewInit, OnDestroy {
    * Y = Waktu / Jam
    */
   readonly chartData = computed(() => {
-    const trips = [...this.trips()]
-      .sort((a, b) => new Date(b.hariTanggal).getTime() - new Date(a.hariTanggal).getTime())
-      .slice(0, 8);
+    const trips = this.pickTrips(this.arrivalDate(), this.arrivalCount());
     if (!trips.length) return null;
 
-    let masterHaltes: string[] = [];
-    for (const t of trips) {
-      if ((t.haltes?.length ?? 0) > masterHaltes.length) {
-        masterHaltes = t.haltes!.map((h, i) => `${i + 1}. ${h.namaHalte}`);
-      }
-    }
+    const masterHaltes = this.buildMasterHaltes(trips);
 
     const datasets = trips
       .filter((t) => t.haltes?.some((h) => h.waktuKedatangan || h.waktuKeberangkatan))
@@ -122,80 +184,23 @@ export class HomePage implements OnInit, AfterViewInit, OnDestroy {
         let previousHour = -1;
 
         trip.haltes!.forEach((h, i) => {
+          const x = `${i + 1}. ${h.namaHalte}`;
           const timeStr = h.waktuKedatangan || h.waktuKeberangkatan;
 
-          if (timeStr) {
-            const d = new Date(timeStr);
-            let hour = d.getHours() + d.getMinutes() / 60;
-
-            if (previousHour !== -1 && hour < previousHour - 6) {
-              hour += 24;
-            }
-            previousHour = Math.max(previousHour, hour);
-
-            data.push({
-              x: `${i + 1}. ${h.namaHalte}`,
-              y: Math.round(hour * 100) / 100,
-              rawTime: d,
-            });
+          if (!timeStr) {
+            data.push({ x, y: null, rawTime: null });
+            return;
           }
+
+          const d = new Date(timeStr);
+          let hour = d.getHours() + d.getMinutes() / 60;
+          if (previousHour !== -1 && hour < previousHour - 6) hour += 24;
+          previousHour = Math.max(previousHour, hour);
+
+          data.push({ x, y: Math.round(hour * 100) / 100, rawTime: d });
         });
 
-        const hue = (idx * 137.5) % 360;
-        const color = `hsl(${hue}, 70%, 60%)`;
-
-        return {
-          label: this.getTripIdentifier(trip),
-          data: data,
-          borderColor: color,
-          backgroundColor: color,
-          pointBackgroundColor: color,
-          pointBorderColor: '#fff',
-          pointRadius: 4,
-          pointHoverRadius: 6,
-          tension: 0.3,
-          fill: false,
-          borderRadius: 4,
-        };
-      });
-
-    return { labels: masterHaltes, datasets };
-  });
-
-  readonly passengerChartData = computed(() => {
-    const trips = [...this.trips()]
-      .sort((a, b) => new Date(b.hariTanggal).getTime() - new Date(a.hariTanggal).getTime())
-      .slice(0, 8);
-    if (!trips.length) return null;
-
-    let masterHaltes: string[] = [];
-    for (const t of trips) {
-      if ((t.haltes?.length ?? 0) > masterHaltes.length) {
-        masterHaltes = t.haltes!.map((h, i) => `${i + 1}. ${h.namaHalte}`);
-      }
-    }
-
-    const datasets = trips
-      .filter((t) => t.haltes?.length)
-      .map((trip, idx) => {
-        const data: any[] = [];
-        let runningTotal = 0;
-
-        trip.haltes!.forEach((h: any, i) => {
-          const naik = Number(h.penumpangNaik ?? 0);
-          const turun = Number(h.penumpangTurun ?? 0);
-          runningTotal += naik - turun;
-
-          data.push({
-            x: `${i + 1}. ${h.namaHalte}`,
-            y: runningTotal,
-            naik,
-            turun,
-          });
-        });
-
-        const hue = (idx * 137.5) % 360;
-        const color = `hsl(${hue}, 70%, 60%)`;
+        const color = `hsl(${(idx * 137.5) % 360}, 70%, 60%)`;
 
         return {
           label: this.getTripIdentifier(trip),
@@ -209,8 +214,67 @@ export class HomePage implements OnInit, AfterViewInit, OnDestroy {
           tension: 0.3,
           fill: false,
           borderRadius: 4,
+          spanGaps: false,
         };
       });
+
+    return { labels: masterHaltes, datasets };
+  });
+
+  readonly passengerChartData = computed(() => {
+    const trips = this.pickTrips(this.passengerDate(), this.passengerCount());
+    if (!trips.length) return null;
+
+    const masterHaltes = this.buildMasterHaltes(trips);
+
+    const datasets = trips
+      .filter((t) => t.haltes?.length)
+      .map((trip, idx) => {
+        const data: any[] = [];
+        let runningTotal = 0;
+
+        trip.haltes!.forEach((h: any, i) => {
+          const x = `${i + 1}. ${h.namaHalte}`;
+          const naikEmpty = this.isEmptyValue(h.penumpangNaik);
+          const turunEmpty = this.isEmptyValue(h.penumpangTurun);
+
+          // Belum diisi sama sekali → titik kosong, running total tidak berubah
+          if (naikEmpty && turunEmpty) {
+            data.push({ x, y: null, naik: null, turun: null });
+            return;
+          }
+
+          const naik = naikEmpty ? 0 : Number(h.penumpangNaik);
+          const turun = turunEmpty ? 0 : Number(h.penumpangTurun);
+          runningTotal += naik - turun;
+
+          data.push({
+            x,
+            y: runningTotal,
+            naik: naikEmpty ? null : naik,
+            turun: turunEmpty ? null : turun,
+          });
+        });
+
+        const color = `hsl(${(idx * 137.5) % 360}, 70%, 60%)`;
+
+        return {
+          label: this.getTripIdentifier(trip),
+          data,
+          borderColor: color,
+          backgroundColor: color,
+          pointBackgroundColor: color,
+          pointBorderColor: '#fff',
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          tension: 0.3,
+          fill: false,
+          borderRadius: 4,
+          spanGaps: false,
+        };
+      })
+
+      .filter((ds) => ds.data.some((d) => d.y !== null));
 
     return { labels: masterHaltes, datasets };
   });
@@ -445,14 +509,13 @@ export class HomePage implements OnInit, AfterViewInit, OnDestroy {
             callbacks: {
               title: (items) => (items[0].raw as any).x,
               label: (item) => {
-                const dsLabel = item.dataset.label;
-                const rawData = item.raw as any;
-                const d = rawData.rawTime as Date;
-                const timeStr = d.toLocaleTimeString('id-ID', {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                });
-                return `${dsLabel} · Arrival: ${timeStr}`;
+                const raw = item.raw as any;
+                if (raw?.y === null || raw?.y === undefined) {
+                  return `${item.dataset.label} · Belum ada data`;
+                }
+                const naik = raw.naik === null ? '-' : raw.naik;
+                const turun = raw.turun === null ? '-' : raw.turun;
+                return `${item.dataset.label} · Total: ${raw.y} (Naik: ${naik}, Turun: ${turun})`;
               },
             },
           },
@@ -506,13 +569,13 @@ export class HomePage implements OnInit, AfterViewInit, OnDestroy {
     if (this.passengerChartInstance) {
       this.passengerChartInstance.data.labels = chartData.labels;
       this.passengerChartInstance.data.datasets = chartData.datasets;
-      (this.passengerChartInstance.config as any).type = this.chartType();
+      (this.passengerChartInstance.config as any).type = this.passengerChartType();
       this.passengerChartInstance.update();
       return;
     }
 
     this.passengerChartInstance = new Chart(canvas, {
-      type: this.chartType(),
+      type: this.passengerChartType(),
       data: {
         labels: chartData.labels,
         datasets: chartData.datasets,
@@ -552,9 +615,13 @@ export class HomePage implements OnInit, AfterViewInit, OnDestroy {
             callbacks: {
               title: (items) => (items[0].raw as any).x,
               label: (item) => {
-                const dsLabel = item.dataset.label;
                 const raw = item.raw as any;
-                return `${dsLabel} · Total: ${raw.y} (Naik: ${raw.naik}, Turun: ${raw.turun})`;
+                if (raw?.y === null || raw?.y === undefined) {
+                  return `${item.dataset.label} · No Data`;
+                }
+                const naik = raw.naik === null ? '-' : raw.naik;
+                const turun = raw.turun === null ? '-' : raw.turun;
+                return `${item.dataset.label} · Total: ${raw.y} (Board: ${naik}, Disembark: ${turun})`;
               },
             },
           },
