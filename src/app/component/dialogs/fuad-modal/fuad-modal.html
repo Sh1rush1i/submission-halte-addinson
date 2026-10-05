@@ -1,0 +1,73 @@
+<div class="flex flex-col items-center gap-6 px-2 py-4">
+  <!-- Gambar -->
+  <div
+    class="relative w-full max-w-xs overflow-hidden rounded-sm border border-white/10 shadow-2xl"
+  >
+    <img
+      src="Ambussing.gif"
+      alt="Fuad"
+      class="w-full object-cover"
+      onerror="this.src = 'https://placehold.co/400x300/1a1a2e/a78bfa?text=🎉+Fuad&font=slab'"
+    />
+    <!-- Overlay gradient bawah -->
+    <div
+      class="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent pointer-events-none"
+    ></div>
+    <div class="absolute bottom-3 left-0 right-0 flex justify-center">
+      <span
+        class="rounded-full bg-yellow-600/90 px-4 py-1 text-xs font-semibold tracking-widest text-white uppercase shadow"
+      >
+        Ambussing, Hamba Penat
+      </span>
+    </div>
+  </div>
+
+  <!-- Teks -->
+  <div class="text-center">
+    <h2 class="text-lg font-bold text-white">Pop Mie, Pop Mie, Pop Mie</h2>
+    <p class="mt-1 text-sm text-gray-400">Maapkeun My, Requestnya Mas Addin loh ya fr fr</p>
+  </div>
+
+  <!-- Gambar -->
+  <div
+    class="relative w-full max-w-xs overflow-hidden rounded-sm border border-white/10 shadow-2xl"
+  >
+    <img
+      src="doksli.png"
+      alt="Fuad"
+      class="w-full object-cover"
+      onerror="this.src = 'https://placehold.co/400x300/1a1a2e/a78bfa?text=🎉+Fuad&font=slab'"
+    />
+    <!-- Overlay gradient bawah -->
+    <div
+      class="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent pointer-events-none"
+    ></div>
+    <div class="absolute bottom-3 left-0 right-0 flex justify-center">
+      <span
+        class="rounded-full bg-green-600/90 px-4 py-1 text-xs font-semibold tracking-widest text-white uppercase shadow"
+      >
+        Doksli, Dokumen Asli
+      </span>
+    </div>
+  </div>
+
+  <!-- Buttons -->
+  <div class="flex w-full gap-3">
+    <button
+      pButton
+      type="button"
+      class="flex-1 rounded-sm border-none bg-gray-700/60 px-4 py-2.5 text-sm font-medium text-gray-200 hover:bg-gray-600/60 transition-colors"
+      (click)="dismiss()"
+    >
+      <i class="pi pi-arrow-left mr-2 text-xs"></i>Yauda si Wir
+    </button>
+    <button
+      pButton
+      type="button"
+      class="flex-1 rounded-sm bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white border-none hover:bg-blue-500 transition-colors shadow-lg shadow-blue-900/40"
+      (click)="confirm()"
+    >
+      <i class="pi pi-check mr-2 text-xs"></i>Mang Eak
+    </button>
+  </div>
+</div>

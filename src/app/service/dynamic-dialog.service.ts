@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { DialogService } from 'primeng/dynamicdialog';
 import { ConfirmDialogModal } from '../component/dialogs/confirm-dialog-modal/confirm-dialog-modal';
 import { InfoDialogModal } from '../component/dialogs/info-dialog-modal/info-dialog-modal';
+import { FuadModal } from '../component/dialogs/fuad-modal/fuad-modal';
 
 @Injectable({ providedIn: 'root' })
 export class DynamicDialogServices {
@@ -28,6 +29,16 @@ export class DynamicDialogServices {
       data: {
         message: message,
       },
+    });
+  }
+
+  fuadModal() {
+    return this.dialogService.open(FuadModal, {
+      header: 'AmbatuBus',
+      style: { width: '22rem' },
+      contentStyle: { padding: '0' },
+      baseZIndex: 10000,
+      closable: true,
     });
   }
 }

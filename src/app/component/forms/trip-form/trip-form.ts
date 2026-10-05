@@ -346,6 +346,23 @@ export class TripForm implements OnInit, OnDestroy {
     });
   }
 
+  private openFuadModal(onClose?: () => void): void {
+    this.ref = this.dynamicDialogServices.fuadModal();
+
+    if (!this.ref) {
+      onClose?.();
+      return;
+    }
+
+    this.ref.onClose.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      onClose?.();
+    });
+  }
+
+  testFuadModal(): void {
+    this.openFuadModal();
+  }
+
   infoModal() {
     this.ref = this.dynamicDialogServices.infoModal(
       'Please fill departure time first before entering passenger data.',
@@ -644,9 +661,20 @@ export class TripForm implements OnInit, OnDestroy {
         .subscribe({
           next: (newTrip) => {
             this.flashDone(this.createTripIcon);
-            this.invokeToast('Trip successfully created.', 'success');
             this.clearAllDrafts('new');
-            this.router.navigate(['/trip', newTrip.id]);
+
+            const userName = this.authService.currentUser()?.name ?? '';
+            const isFuad = userName.toLowerCase().includes('fuad');
+
+            if (isFuad) {
+              this.invokeToast('Trip successfully created.', 'success');
+              this.openFuadModal(() => {
+                this.router.navigate(['/trip', newTrip.id]);
+              });
+            } else {
+              this.invokeToast('Trip successfully created.', 'success');
+              this.router.navigate(['/trip', newTrip.id]);
+            }
           },
           error: (err) => {
             console.error(err);
