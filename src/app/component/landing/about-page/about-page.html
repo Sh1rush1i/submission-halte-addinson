@@ -1,9 +1,6 @@
-<div class="relative min-h-full w-full min-w-0 flex-1 bg-[#0d0f14] text-white">
-  <!-- BACKGROUND THREE.JS — mengikuti tinggi asli container ini, bukan 100vh -->
-  <canvas #threeCanvas class="pointer-events-none absolute inset-0 z-0"></canvas>
-  <div
-    class="pointer-events-none absolute inset-0 z-0 bg-linear-to-b from-[#0d0f14]/40 via-transparent to-[#0d0f14]"
-  ></div>
+<div class="relative min-h-full w-full min-w-0 flex-1 text-white">
+  <canvas #threeCanvas class="pointer-events-none absolute inset-0 z-0 block"></canvas>
+  <div class="pointer-events-none absolute inset-0 z-0 bg-linear-to-b"></div>
 
   <!-- WRAPPER KONTEN -->
   <div class="relative z-10 px-4 py-8 sm:px-8">
@@ -98,7 +95,7 @@
       <!-- KIRI: kartu profil -->
       <aside class="lg:sticky lg:top-8 lg:h-fit">
         <div
-          class="reveal relative overflow-hidden rounded-2xl border border-[#232733] bg-[#12141c]/70 backdrop-blur-md transition-transform duration-200 ease-out"
+          class="reveal relative overflow-hidden rounded-md border border-gray-600/50 bg-gray-500/5 backdrop-blur-md transition-transform duration-200 ease-out"
           [style.transform]="
             'perspective(900px) rotateX(' + tiltX + 'deg) rotateY(' + tiltY + 'deg)'
           "
@@ -113,7 +110,7 @@
           <div class="relative z-10 flex flex-col items-center px-6 py-10 text-center">
             <div class="relative" style="perspective: 800px">
               <div
-                class="absolute inset-0 -m-2 animate-pulse-slow rounded-full"
+                class="absolute inset-0 -m-2 animate-[pulseSlow_4s_ease-in-out_infinite] rounded-full"
                 style="
                   background: conic-gradient(from 0deg, #7ec8e3, #c1435a, #7ec8e3);
                   filter: blur(10px);
@@ -123,7 +120,7 @@
 
               <div
                 #avatarInner
-                class="avatar-flip-inner relative h-24 w-24 overflow-hidden rounded-full shadow-lg ring-1 ring-white/10 cursor-pointer"
+                class="avatar-flip-inner relative h-24 w-24 overflow-hidden rounded-full shadow-lg ring-1 ring-white/10 cursor-pointer [transform-style:preserve-3d] transition-transform duration-250 ease-in-out"
                 (click)="openInstagram($event, identities[currentAvatarIndex].instagramUrl)"
               >
                 @for (src of identities; track $index) {
@@ -162,7 +159,6 @@
               </span>
 
               <span #nameSpan class="name-fade-up inline-block">
-                <!-- Tambahkan (click) -->
                 <a
                   [href]="identities[currentNameIndex].instagramUrl"
                   (click)="openInstagram($event, identities[currentNameIndex].instagramUrl)"
@@ -181,25 +177,6 @@
                   "
                 >
                   {{ identities[currentNameIndex].name }}
-                </a> </span
-              ><span #nameSpan class="name-fade-up inline-block">
-                <a
-                  [href]="identities[currentNameIndex].instagramUrl"
-                  (click)="openInstagram($event, identities[currentNameIndex].instagramUrl)"
-                  class="bg-clip-text text-transparent hover:opacity-80 transition-opacity cursor-pointer"
-                  style="
-                    background-image: linear-gradient(
-                      90deg,
-                      #ffffff,
-                      #7ec8e3,
-                      #c1435a,
-                      #e0b463,
-                      #ffffff
-                    );
-                    background-size: 300% auto;
-                    animation: shine 6s linear infinite;
-                  "
-                >
                 </a>
               </span>
             </h1>
@@ -215,9 +192,9 @@
             <div class="mt-6 flex w-full flex-col gap-3">
               <a
                 href="https://wa.me/6287757639686?text=Halo%20bang%20Maula%2C%20saya%20pundung."
-                class="w-full rounded-md bg-emerald-300 px-5 py-2.5 text-sm font-medium text-gray-500 hover:text-white transition-all hover:scale-[1.02] hover:bg-emerald-400 flex items-center justify-center gap-2"
+                class="w-full rounded-md bg-emerald-300 px-5 py-2.5 text-sm font-medium text-gray-800 hover:text-white transition-all hover:scale-[1.02] hover:bg-emerald-400 flex items-center justify-center gap-2"
               >
-                <i class="pi pi-whatsapp text-2xl text-emerald-600 hover:text-white"></i>
+                <i class="pi pi-whatsapp text-2xl text-emerald-700 hover:text-white"></i>
                 <span>Contact me</span>
               </a>
 
@@ -230,7 +207,7 @@
             </div>
 
             <div
-              class="mt-6 flex items-center gap-4 border-t border-[#1c202b] pt-5 text-sm text-[#9aa1af]"
+              class="mt-6 flex items-center gap-4 border-t border-gray-700/60 pt-5 text-sm text-[#9aa1af]"
             >
               <a
                 href="https://github.com/Sh1rush1i"
@@ -255,7 +232,7 @@
       <!-- KANAN: konten -->
       <div class="min-w-0">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          <div class="d-flex flex-col">
+          <div class="flex flex-col">
             <!-- TENTANG SAYA -->
             <section class="reveal w-full">
               <h2 class="text-xl lg:text-2xl font-bold text-sky-200">About me</h2>
@@ -275,13 +252,17 @@
             <section class="mt-10 reveal">
               <h2 class="text-2xl font-bold text-sky-200">Skills</h2>
 
-              <div class="marquee-wrapper mt-4">
-                <div class="marquee-track">
+              <div
+                class="overflow-hidden py-2 mt-4 [mask-image:linear-gradient(90deg,transparent,black_8%,black_92%,transparent)] [-webkit-mask-image:linear-gradient(90deg,transparent,black_8%,black_92%,transparent)]"
+              >
+                <div class="marquee-track flex gap-6 w-max">
                   @for (skill of skills; track skill.name) {
-                    <div class="skill-chip">
+                    <div
+                      class="flex flex-col items-center justify-center min-w-24 px-3 py-4 rounded-md border border-gray-600/50 bg-gray-500/5 backdrop-blur-md transition-all duration-200 ease-out hover:-translate-y-1 hover:border-sky-300/60"
+                    >
                       <div
-                        class="skill-icon-badge"
-                        [class.skill-icon-badge--light]="skill.needsLightBg"
+                        class="flex items-center justify-center w-12 h-12 rounded-xl bg-white/[0.06]"
+                        [class.bg-white/[0.12]]="skill.needsLightBg"
                       >
                         <i [class]="skill.icon" class="text-3xl"></i>
                       </div>
@@ -290,8 +271,13 @@
                   }
                   <!-- duplikat sekali lagi untuk efek loop tanpa putus -->
                   @for (skill of skills; track skill.name) {
-                    <div class="skill-chip" aria-hidden="true">
-                      <div class="skill-icon-badge">
+                    <div
+                      class="flex flex-col items-center justify-center min-w-24 px-3 py-4 rounded-md border border-gray-600/50 bg-gray-500/5 backdrop-blur-md transition-all duration-200 ease-out hover:-translate-y-1 hover:border-sky-300/60"
+                      aria-hidden="true"
+                    >
+                      <div
+                        class="flex items-center justify-center w-12 h-12 rounded-xl bg-white/[0.06]"
+                      >
                         <i [class]="skill.icon" class="text-3xl"></i>
                       </div>
                       <span class="mt-2 text-xs text-[#9aa1af]">{{ skill.name }}</span>
@@ -301,10 +287,11 @@
               </div>
             </section>
           </div>
+
           <!-- PENGALAMAN -->
           <section class="w-full">
             <h2 class="reveal text-2xl font-bold text-sky-200">Experiences</h2>
-            <div class="mt-4 space-y-6 border-l border-[#1c202b] pl-6 px-4">
+            <div class="mt-4 space-y-6 border-l border-gray-700/60 pl-6 px-4">
               @for (exp of experiences; track $index) {
                 <div
                   class="reveal relative px-4 lg:px-0 transition-opacity duration-500"
@@ -315,9 +302,10 @@
                     [style.background]="exp.accent"
                     [style.box-shadow]="'0 0 8px ' + exp.accent"
                   ></span>
-                  <p class="text-xs text-[#6b7280]">{{ exp.period }}</p>
+                  <p class="text-xs text-gray-500">{{ exp.period }}</p>
                   <h3 class="mt-1 text-sm font-medium text-white">
-                    {{ exp.role }}, <span class="text-sky-400">{{ exp.company }}</span>
+                    {{ exp.role }} <br />
+                    <span class="text-sky-400">{{ exp.company }}</span>
                   </h3>
                   <p class="mt-1 text-sm text-[#9aa1af]">{{ exp.description }}</p>
                 </div>

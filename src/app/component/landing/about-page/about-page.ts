@@ -83,14 +83,14 @@ export class AboutPage implements AfterViewInit, OnDestroy {
     {
       period: '2025',
       role: 'Freelance Front-end Web Developer',
-      company: '-',
+      company: 'Freelance',
       description:
         'Developed CMS and landing pages using Laravel with Blade templates and Bootstrap, focusing on clean architecture, responsive design, and user friendly content management.',
       accent: '#7ec8e3',
     },
     {
       period: '2024 — 2025',
-      role: 'Inter Front-end Web Dev & IT Support',
+      role: 'Intern Front-end Web Dev & IT Support',
       company: 'Center of Excellence (CoE) Smart Tourism & Hospitality, Telkom University',
       description:
         'Designed tourism website in figma, and provided IT support for the organization.',
