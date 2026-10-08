@@ -105,7 +105,8 @@ export class App {
     if (!firstSegment) return 'Dashboard';
 
     const clean = firstSegment.split('?')[0].split('#')[0];
-    return clean.charAt(0).toUpperCase() + clean.slice(1);
+    const withSpaces = clean.replace(/-/g, ' '); // ganti "-" jadi spasi
+    return withSpaces.charAt(0).toUpperCase() + withSpaces.slice(1);
   });
 
   getUserName(name: string) {
