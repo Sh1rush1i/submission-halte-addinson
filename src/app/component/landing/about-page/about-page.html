@@ -28,7 +28,7 @@
         </p>
       </div>
 
-      <div class="flex w-full flex-col items-start gap-2 sm:w-auto sm:items-end">
+      <div class="flex w-full flex-col items-center gap-2 sm:w-auto sm:items-end">
         <p
           class="text-[10px] font-semibold uppercase tracking-widest text-gray-500"
           data-aos="fade-down"
@@ -36,7 +36,7 @@
         >
           Made using
         </p>
-        <div class="flex w-full items-center gap-4 sm:w-auto sm:gap-4">
+        <div class="flex w-full items-center gap-4 sm:w-auto sm:gap-4 select-none">
           <div class="flex flex-1 justify-center sm:flex-none">
             <i
               class="devicon-angularjs-plain colored text-xl"
@@ -120,7 +120,7 @@
 
               <div
                 #avatarInner
-                class="avatar-flip-inner relative h-24 w-24 overflow-hidden rounded-full shadow-lg ring-1 ring-white/10 cursor-pointer [transform-style:preserve-3d] transition-transform duration-250 ease-in-out"
+                class="avatar-flip-inner relative h-24 w-24 overflow-hidden rounded-full shadow-lg ring-1 ring-white/10 cursor-pointer transform-3d transition-transform duration-250 ease-in-out"
                 (click)="openInstagram($event, identities[currentAvatarIndex].instagramUrl)"
               >
                 @for (src of identities; track $index) {
@@ -136,33 +136,16 @@
             </div>
 
             <h1
-              class="mt-5 flex items-center justify-center gap-2 text-2xl font-semibold"
+              class="mt-5 flex items-center justify-center text-2xl font-semibold"
               style="font-family: 'Space Grotesk', 'Segoe UI', sans-serif"
             >
-              <span
-                class="flex items-center gap-2 bg-clip-text text-transparent"
-                style="
-                  background-image: linear-gradient(
-                    90deg,
-                    #ffffff,
-                    #7ec8e3,
-                    #c1435a,
-                    #e0b463,
-                    #ffffff
-                  );
-                  background-size: 300% auto;
-                  animation: shine 6s linear infinite;
-                "
+              <a
+                [href]="identities[currentNameIndex].instagramUrl"
+                (click)="openInstagram($event, identities[currentNameIndex].instagramUrl)"
+                class="flex items-center hover:opacity-80 transition-opacity cursor-pointer"
               >
-                <i class="pi pi-instagram text-2xl"></i>
-                if.
-              </span>
-
-              <span #nameSpan class="name-fade-up inline-block">
-                <a
-                  [href]="identities[currentNameIndex].instagramUrl"
-                  (click)="openInstagram($event, identities[currentNameIndex].instagramUrl)"
-                  class="bg-clip-text text-transparent hover:opacity-80 transition-opacity cursor-pointer"
+                <i
+                  class="pi pi-instagram text-2xl me-2 bg-clip-text text-transparent"
                   style="
                     background-image: linear-gradient(
                       90deg,
@@ -175,10 +158,41 @@
                     background-size: 300% auto;
                     animation: shine 6s linear infinite;
                   "
+                ></i>
+                <span
+                  class="bg-clip-text text-transparent inline-block"
+                  style="
+                    background-image: linear-gradient(
+                      90deg,
+                      #ffffff,
+                      #7ec8e3,
+                      #c1435a,
+                      #e0b463,
+                      #ffffff
+                    );
+                    background-size: 300% auto;
+                    animation: shine 6s linear infinite;
+                  "
+                  >if.</span
+                ><span #nameSpan class="inline-block animate-[nameSlideIn_0.28s_ease-out_forwards]"
+                  ><span
+                    class="bg-clip-text text-transparent inline-block"
+                    style="
+                      background-image: linear-gradient(
+                        90deg,
+                        #ffffff,
+                        #7ec8e3,
+                        #c1435a,
+                        #e0b463,
+                        #ffffff
+                      );
+                      background-size: 300% auto;
+                      animation: shine 6s linear infinite;
+                    "
+                    >{{ identities[currentNameIndex].name }}</span
+                  ></span
                 >
-                  {{ identities[currentNameIndex].name }}
-                </a>
-              </span>
+              </a>
             </h1>
 
             <p class="mt-1 text-sm text-[#7ec8e3]">Maula | Front-End Developer</p>
@@ -253,7 +267,7 @@
               <h2 class="text-2xl font-bold text-sky-200">Skills</h2>
 
               <div
-                class="overflow-hidden py-2 mt-4 [mask-image:linear-gradient(90deg,transparent,black_8%,black_92%,transparent)] [-webkit-mask-image:linear-gradient(90deg,transparent,black_8%,black_92%,transparent)]"
+                class="overflow-hidden py-2 mt-4 mask-[linear-gradient(90deg,transparent,black_8%,black_92%,transparent)] [-webkit-mask-image:linear-gradient(90deg,transparent,black_8%,black_92%,transparent)]"
               >
                 <div class="marquee-track flex gap-6 w-max">
                   @for (skill of skills; track skill.name) {
@@ -261,7 +275,7 @@
                       class="flex flex-col items-center justify-center min-w-24 px-3 py-4 rounded-md border border-gray-600/50 bg-gray-500/5 backdrop-blur-md transition-all duration-200 ease-out hover:-translate-y-1 hover:border-sky-300/60"
                     >
                       <div
-                        class="flex items-center justify-center w-12 h-12 rounded-xl bg-white/[0.06]"
+                        class="flex items-center justify-center w-12 h-12 rounded-xl bg-white/6"
                         [class.bg-white/[0.12]]="skill.needsLightBg"
                       >
                         <i [class]="skill.icon" class="text-3xl"></i>
@@ -275,9 +289,7 @@
                       class="flex flex-col items-center justify-center min-w-24 px-3 py-4 rounded-md border border-gray-600/50 bg-gray-500/5 backdrop-blur-md transition-all duration-200 ease-out hover:-translate-y-1 hover:border-sky-300/60"
                       aria-hidden="true"
                     >
-                      <div
-                        class="flex items-center justify-center w-12 h-12 rounded-xl bg-white/[0.06]"
-                      >
+                      <div class="flex items-center justify-center w-12 h-12 rounded-xl bg-white/6">
                         <i [class]="skill.icon" class="text-3xl"></i>
                       </div>
                       <span class="mt-2 text-xs text-[#9aa1af]">{{ skill.name }}</span>

@@ -42,12 +42,12 @@ export class AboutPage implements AfterViewInit, OnDestroy {
   identities: { name: string; avatarImage: string; instagramUrl: string }[] = [
     {
       name: 'sh1rush1',
-      avatarImage: '/pernah malam.jpg',
+      avatarImage: '/hsr-march-7th.gif',
       instagramUrl: 'https://instagram.com/if.sh1rush1',
     },
     {
       name: 'm4ul4',
-      avatarImage: '/maret.jpg',
+      avatarImage: '/bweh.gif',
       instagramUrl: 'https://instagram.com/if.m4ul4',
     },
   ];
@@ -204,28 +204,38 @@ export class AboutPage implements AfterViewInit, OnDestroy {
     }
   }
 
+  private readonly nameSlideOutClass = 'animate-[nameSlideOut_0.25s_ease-in_forwards]';
+  private readonly nameSlideInClass = 'animate-[nameSlideIn_0.28s_ease-out_forwards]';
+
   private cycleName(): void {
-    this.currentNameIndex = (this.currentNameIndex + 1) % this.identities.length;
+    const nextIndex = (this.currentNameIndex + 1) % this.identities.length;
     const avatarEl = this.avatarInner?.nativeElement;
+    const nameEl = this.nameSpan?.nativeElement;
 
     if (avatarEl) {
       avatarEl.classList.add('avatar-flipping');
-
-      this.avatarTimeoutId = setTimeout(() => {
-        this.currentAvatarIndex = this.currentNameIndex;
-        this.cdr.detectChanges();
-        avatarEl.classList.remove('avatar-flipping');
-      }, 250);
     }
 
-    this.cdr.detectChanges();
+    if (nameEl) {
+      nameEl.classList.remove(this.nameSlideInClass);
+      nameEl.classList.add(this.nameSlideOutClass);
+    }
 
-    const el = this.nameSpan?.nativeElement;
-    if (!el) return;
+    this.avatarTimeoutId = setTimeout(() => {
+      this.currentNameIndex = nextIndex;
+      this.currentAvatarIndex = nextIndex;
+      this.cdr.detectChanges();
 
-    el.classList.remove('name-fade-up');
-    void el.offsetWidth;
-    el.classList.add('name-fade-up');
+      if (avatarEl) {
+        avatarEl.classList.remove('avatar-flipping');
+      }
+
+      if (nameEl) {
+        nameEl.classList.remove(this.nameSlideOutClass);
+        void nameEl.offsetWidth; // Force reflow
+        nameEl.classList.add(this.nameSlideInClass);
+      }
+    }, 250);
   }
 
   private getContainerSize(): { width: number; height: number } {
