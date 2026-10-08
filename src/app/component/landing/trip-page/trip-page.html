@@ -223,15 +223,20 @@
           }"
         >
           <p-table
+            #dt
             [value]="isLoading() ? skeletonRows : records()"
             stripedRows
             [paginator]="!isLoading()"
             [rows]="10"
+            [pageLinks]="3"
+            [totalRecords]="isLoading() ? skeletonRows.length : records().length"
             [scrollable]="true"
             [rowsPerPageOptions]="[5, 10, 20]"
+            [showCurrentPageReport]="!isMobile()"
+            currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
             scrollHeight="flex"
             dataKey="id"
-            styleClass="w-full table-fixed min-w-[56rem] "
+            styleClass="w-full table-fixed min-w-[56rem] [&_.p-paginator]:!bg-transparent [&_.p-paginator]:!p-2 sm:[&_.p-paginator]:!p-3 [&_.p-paginator]:!border-t [&_.p-paginator]:!border-white/5 [&_.p-paginator]:!flex-wrap [&_.p-paginator]:!justify-center [&_.p-paginator]:!gap-1 max-sm:[&_.p-paginator-current]:!hidden sm:[&_.p-paginator-current]:!inline-block sm:[&_.p-paginator-current]:!mr-auto [&_.p-paginator-current]:!text-xs [&_.p-paginator-current]:!text-gray-400 [&_.p-paginator-page]:!min-w-7 sm:[&_.p-paginator-page]:!min-w-8 [&_.p-paginator-page]:!h-7 sm:[&_.p-paginator-page]:!h-8 [&_.p-paginator-page]:!text-xs [&_.p-paginator-page]:!rounded-md [&_.p-paginator-first]:!min-w-7 sm:[&_.p-paginator-first]:!min-w-8 [&_.p-paginator-first]:!h-7 sm:[&_.p-paginator-first]:!h-8 [&_.p-paginator-prev]:!min-w-7 sm:[&_.p-paginator-prev]:!min-w-8 [&_.p-paginator-prev]:!h-7 sm:[&_.p-paginator-prev]:!h-8 [&_.p-paginator-next]:!min-w-7 sm:[&_.p-paginator-next]:!min-w-8 [&_.p-paginator-next]:!h-7 sm:[&_.p-paginator-next]:!h-8 [&_.p-paginator-last]:!min-w-7 sm:[&_.p-paginator-last]:!min-w-8 [&_.p-paginator-last]:!h-7 sm:[&_.p-paginator-last]:!h-8 [&_.p-select]:!h-7 sm:[&_.p-select]:!h-8 [&_.p-select]:!text-xs [&_.p-dropdown]:!h-7 sm:[&_.p-dropdown]:!h-8 [&_.p-dropdown]:!text-xs [&_.p-select-label]:!py-0.5 [&_.p-select-label]:!text-xs [&_.p-dropdown-label]:!py-0.5 [&_.p-dropdown-label]:!text-xs"
             data-aos="zoom-out"
             data-aos-delay="100"
           >

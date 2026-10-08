@@ -16,7 +16,6 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs';
-
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
@@ -25,8 +24,6 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
-
-import { FullPageLoading } from '../../misc/full-page-loading/full-page-loading';
 import { ExportService } from '../../../service/export.service';
 import { DynamicDialogServices } from '../../../service/dynamic-dialog.service';
 import { HalteEntry, TripRecord, TripService } from '../../../service/trip.service';
@@ -176,6 +173,10 @@ export class TripPage implements OnInit, OnDestroy {
 
   private dragDepth = 0;
 
+  readonly isMobile = signal<boolean>(
+    typeof window !== 'undefined' ? window.innerWidth < 640 : false,
+  );
+
   private canvasRef = viewChild<ElementRef<HTMLCanvasElement>>('canvas');
 
   constructor(
@@ -189,6 +190,14 @@ export class TripPage implements OnInit, OnDestroy {
     private destroyRef: DestroyRef,
     private zone: NgZone,
   ) {
+    if (typeof window !== 'undefined') {
+      const mql = window.matchMedia('(max-width: 639px)');
+      const updateMobile = (e: MediaQueryListEvent | MediaQueryList) => this.isMobile.set(e.matches);
+      updateMobile(mql);
+      mql.addEventListener('change', updateMobile);
+      this.destroyRef.onDestroy(() => mql.removeEventListener('change', updateMobile));
+    }
+
     this.startGreetingTimer();
 
     afterRenderEffect((onCleanup) => {
