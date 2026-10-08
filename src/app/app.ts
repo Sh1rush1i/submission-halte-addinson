@@ -11,13 +11,24 @@ import { ToastModule } from 'primeng/toast';
 import { User } from '@auth0/auth0-angular';
 import * as AOS from 'aos';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { jwtDecode } from 'jwt-decode';
+import { PopoverModule } from 'primeng/popover';
+import { DatePipe } from '@angular/common';
 
 // import { PrimeNG } from 'primeng/config';
 // import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, Sidebars, SidebarModule, ButtonModule, ToastModule],
+  imports: [
+    RouterOutlet,
+    Sidebars,
+    SidebarModule,
+    ButtonModule,
+    ToastModule,
+    PopoverModule,
+    DatePipe,
+  ],
   templateUrl: './app.html',
   styleUrl: './app.css',
   providers: [MessageService],
@@ -26,6 +37,13 @@ export class App {
   protected readonly title = signal('Halte 🥀');
   private loginSub!: Subscription;
   private authFailedSub!: Subscription;
+  private timerInterval: ReturnType<typeof setInterval> | null = null;
+
+  readonly tokenCountdown = signal<string | null>(null);
+  readonly isExpiringSoon = signal<boolean>(false);
+
+  readonly tokenIssuedAt = signal<Date | null>(null);
+  readonly tokenExpiresAt = signal<Date | null>(null);
 
   username: string = '';
 
@@ -63,6 +81,7 @@ export class App {
   ngOnInit() {
     this.newLogin();
     this.onAuthFailed();
+    this.startTokenCountdown();
 
     const user = this.currentUser();
     if (user?.name) {
@@ -93,11 +112,73 @@ export class App {
     this.username = name;
   }
 
+  startTokenCountdown(): void {
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+    }
+    this.updateTokenCountdown();
+    this.timerInterval = setInterval(() => {
+      this.updateTokenCountdown();
+    }, 1000);
+  }
+
+  private updateTokenCountdown(): void {
+    const token = localStorage.getItem('id_token') || localStorage.getItem('access_token');
+    if (!token) {
+      this.resetTokenInfo();
+      return;
+    }
+
+    try {
+      const decoded: { exp?: number; iat?: number } = jwtDecode(token);
+      if (!decoded?.exp) {
+        this.resetTokenInfo();
+        return;
+      }
+
+      const expMs = decoded.exp * 1000;
+      this.tokenExpiresAt.set(new Date(expMs));
+      this.tokenIssuedAt.set(decoded.iat ? new Date(decoded.iat * 1000) : null);
+
+      const diffMs = expMs - Date.now();
+
+      if (diffMs <= 0) {
+        this.tokenCountdown.set('00:00:00');
+        this.isExpiringSoon.set(true);
+        if (this.timerInterval) {
+          clearInterval(this.timerInterval);
+          this.timerInterval = null;
+        }
+        this.authService.logout();
+        this.authService.triggerAuthFailed();
+        return;
+      }
+
+      const totalSeconds = Math.floor(diffMs / 1000);
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
+
+      const pad = (n: number) => n.toString().padStart(2, '0');
+      this.tokenCountdown.set(`${pad(hours)}:${pad(minutes)}:${pad(seconds)}`);
+      this.isExpiringSoon.set(totalSeconds < 300);
+    } catch {
+      this.resetTokenInfo();
+    }
+  }
+
+  private resetTokenInfo(): void {
+    this.tokenCountdown.set(null);
+    this.tokenIssuedAt.set(null);
+    this.tokenExpiresAt.set(null);
+  }
+
   newLogin() {
     this.loginSub = this.authService.loginSuccess$
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => {
         this.invokeToast('Login success.', 'success');
+        this.startTokenCountdown();
       });
   }
 
@@ -111,6 +192,10 @@ export class App {
   }
 
   ngOnDestroy() {
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+      this.timerInterval = null;
+    }
     if (this.loginSub) {
       this.loginSub.unsubscribe();
     }

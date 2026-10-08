@@ -20,11 +20,74 @@
             <i class="pi pi-bars"></i>
           </button>
           <span class="text-sm font-medium">{{ pageLabel() }}</span>
-          <span
-            class="ml-auto text-xs text-muted-color rounded-md bg-gray-100/10 dark:bg-gray-600/20 px-2 py-1 select-none"
-            (click)="openRickRoll($event)"
-            >{{ viewState() }}</span
-          >
+          <div class="ml-auto flex items-center gap-1">
+            @if (tokenCountdown()) {
+              <div
+                class="flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-xs tabular-nums transition-colors duration-200 cursor-default"
+                [class]="
+                  isExpiringSoon()
+                    ? 'bg-rose-500/10 text-rose-400 animate-pulse'
+                    : 'bg-gray-600/20 text-gray-300'
+                "
+                (mouseenter)="tokenPop.show($event)"
+                (mouseleave)="tokenPop.hide()"
+              >
+                <i
+                  class="pi pi-clock text-xs"
+                  [class.text-rose-400]="isExpiringSoon()"
+                  [class.text-sky-400]="!isExpiringSoon()"
+                ></i>
+                <span class="hidden sm:block">Expire in :</span>
+                <span class="font-mono mt-1">{{ tokenCountdown() }}</span>
+              </div>
+
+              <p-popover #tokenPop appendTo="body">
+                <div class="flex flex-col gap-2 w-64 text-xs p-2">
+                  <div class="font-bold text-sm text-green-300">Session Token Detail</div>
+
+                  <div class="flex justify-between gap-4">
+                    <span class="text-muted-color">Status</span>
+                    <span
+                      class="font-mono uppercase font-bold"
+                      [class]="isExpiringSoon() ? 'text-rose-400' : 'text-emerald-300'"
+                    >
+                      {{ isExpiringSoon() ? 'Expiring soon' : 'Active' }}
+                    </span>
+                  </div>
+
+                  <div class="flex justify-between gap-4">
+                    <span class="text-muted-color">Remaining Time</span>
+                    <span class="font-mono tabular-nums text-yellow-300">{{
+                      tokenCountdown()
+                    }}</span>
+                  </div>
+
+                  @if (tokenIssuedAt()) {
+                    <div class="flex justify-between gap-4">
+                      <span class="text-muted-color">Created at</span>
+                      <span class="text-blue-200">{{
+                        tokenIssuedAt() | date: 'dd MMM yyyy, HH:mm:ss'
+                      }}</span>
+                    </div>
+                  }
+
+                  @if (tokenExpiresAt()) {
+                    <div class="flex justify-between gap-4">
+                      <span class="text-muted-color">End in</span>
+                      <span class="text-blue-200">{{
+                        tokenExpiresAt() | date: 'dd MMM yyyy, HH:mm:ss'
+                      }}</span>
+                    </div>
+                  }
+                </div>
+              </p-popover>
+            }
+            <span
+              class="text-xs text-muted-color rounded-sm bg-gray-100/10 dark:bg-gray-600/20 select-none py-1.5 px-2.5"
+              (click)="openRickRoll($event)"
+              >{{ viewState() }}</span
+            >
+          </div>
         </header>
 
         <div class="flex-1 min-w-0 min-h-0 overflow-y-auto styled-scrollbar">

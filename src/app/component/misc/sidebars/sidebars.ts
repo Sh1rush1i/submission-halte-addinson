@@ -1,8 +1,12 @@
-import { Component, Output, signal, EventEmitter, effect, Input } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { Component, Output, signal, EventEmitter, effect, Input, inject } from '@angular/core';
+import { Router, RouterModule } from '@angular/router';
 import { AvatarModule } from 'primeng/avatar';
 import { SidebarModule } from 'primeng/sidebar';
 import { ButtonModule } from 'primeng/button';
+import { Popover } from 'primeng/popover';
+import { MessageService } from 'primeng/api';
+import { AuthService } from '../../../service/auth.service';
+import { DynamicDialogServices } from '../../../service/dynamic-dialog.service';
 
 interface NavItem {
   icon: string;
@@ -18,7 +22,7 @@ interface NavGroup {
 
 @Component({
   selector: 'app-sidebar',
-  imports: [AvatarModule, SidebarModule, ButtonModule, RouterModule],
+  imports: [AvatarModule, SidebarModule, ButtonModule, RouterModule, Popover],
   templateUrl: './sidebars.html',
   styleUrl: './sidebars.css',
 })
@@ -109,9 +113,62 @@ export class Sidebars {
     );
   }
 
+  private authService = inject(AuthService);
+  private router = inject(Router);
+  private dynamicDialogServices = inject(DynamicDialogServices);
+  private messageService = inject(MessageService);
+
+  private hoverTimeout: any;
+
   onNavClick() {
     if (this.isMobile()) {
       this.sidebarOpen.set(false);
     }
+  }
+
+  onAvatarHover(event: Event, popover: Popover): void {
+    clearTimeout(this.hoverTimeout);
+    popover.show(event);
+  }
+
+  onAvatarLeave(popover: Popover): void {
+    this.hoverTimeout = setTimeout(() => {
+      popover.hide();
+    }, 250);
+  }
+
+  cancelLeave(): void {
+    clearTimeout(this.hoverTimeout);
+  }
+
+  onPopoverLeave(popover: Popover): void {
+    popover.hide();
+  }
+
+  onSignOut(popover?: Popover): void {
+    popover?.hide();
+    const ref = this.dynamicDialogServices.confirmModal('Are you sure you want to sign out?');
+    if (!ref) {
+      this.performLogout();
+      return;
+    }
+    ref.onClose.subscribe((result) => {
+      if (result?.isValid) {
+        this.performLogout();
+      }
+    });
+  }
+
+  private performLogout(): void {
+    this.authService.logout();
+    if (this.isMobile()) {
+      this.sidebarOpen.set(false);
+    }
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Signed Out',
+      detail: 'You have been signed out successfully.',
+    });
+    this.router.navigate(['/login']);
   }
 }
