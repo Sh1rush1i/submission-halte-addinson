@@ -1,1 +1,504 @@
-<div class="w-full min-w-0 flex-1 min-h-full text-white px-4 py-8 sm:px-8"></div>
+<div class="relative min-h-full w-full min-w-0 flex-1 text-white">
+  <div class="relative z-10 px-4 py-8 sm:px-8">
+    <!-- ─── Header ──────────────────────────────────────────────────────── -->
+    <div
+      class="flex flex-col gap-6 pb-6 border-b border-gray-700/70 sm:flex-row sm:items-end sm:justify-between"
+    >
+      <div class="transition duration-700 ease-out starting:opacity-0 starting:-translate-y-4">
+        <div class="flex items-center gap-2 flex-wrap">
+          <span
+            class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[11px] font-semibold uppercase tracking-wider bg-sky-500/10 text-sky-400"
+          >
+            <span class="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse"></span>
+            Automated Changelog
+          </span>
+          @if (deployedCount() > 0) {
+            <span
+              class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[11px] font-semibold bg-emerald-500/10 text-emerald-400"
+            >
+              <i class="pi pi-check-circle text-[10px]"></i>
+              {{ deployedCount() }} deployed
+            </span>
+          }
+          @if (lastUpdated()) {
+            <span class="text-[11px] text-gray-500 hidden sm:inline">
+              · Updated {{ lastUpdated() | date: 'HH:mm:ss' }}
+            </span>
+          }
+        </div>
+        <h1 class="mt-2 text-2xl font-bold tracking-tight text-gray-100 sm:text-3xl">
+          Update <span class="text-sky-400">Log</span>
+        </h1>
+        <p class="mt-1 text-sm text-gray-400 max-w-xl">
+          System changelog and update history automatically synchronized from GitHub commits —
+          including Vercel production deployment status.
+        </p>
+      </div>
+
+      <!-- Actions -->
+      <div
+        class="flex items-center gap-2.5 flex-wrap sm:flex-nowrap transition duration-700 delay-150 ease-out starting:opacity-0 starting:-translate-y-4"
+      >
+        <a
+          [href]="repoUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center justify-between sm:justify-start gap-2 w-full sm:w-auto min-w-0 px-3.5 py-2 rounded-md bg-gray-500/10 hover:bg-gray-500/20 text-[11px] sm:text-xs font-medium text-gray-200 hover:text-white transition-all"
+          pTooltip="Open repository on GitHub"
+          tooltipPosition="bottom"
+        >
+          <i class="pi pi-github text-xs sm:text-sm shrink-0"></i>
+          <span class="font-mono truncate min-w-0 flex-1 sm:flex-none"
+            >{{ repoOwner }}/{{ repoName }}</span
+          >
+          <i class="pi pi-external-link text-[10px] text-gray-400 shrink-0"></i>
+        </a>
+
+        <button
+          type="button"
+          (click)="fetchAll()"
+          [disabled]="isLoading()"
+          class="w-full sm:w-auto sm:grow inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-md bg-sky-500/20 hover:bg-sky-500/30 text-xs font-medium text-sky-300 hover:text-sky-200 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          pTooltip="Sync latest commits & deployments"
+          tooltipPosition="top"
+        >
+          <i class="pi pi-refresh text-xs" [class.animate-spin]="isLoading()"></i>
+          <span>Sync</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ─── Rate Limit Notice Banner ─────────────────────────────────────── -->
+    @if (isRateLimited()) {
+      <div
+        class="mt-4 p-3.5 rounded-md bg-amber-500/10 flex items-start sm:items-center gap-3 text-xs transition duration-700 ease-out starting:opacity-0 starting:-translate-y-4"
+      >
+        <i class="pi pi-info-circle text-amber-400 text-sm shrink-0"></i>
+        <div>
+          <span class="font-semibold text-amber-300">GitHub API rate limit reached.</span>
+          <span class="text-amber-200/80 ml-1">
+            Displaying cached history.
+            @if (rateLimitResetTime()) {
+              Quota will reset at
+              <strong class="text-amber-200 font-mono">
+                {{ rateLimitResetTime() | date: 'HH:mm:ss' }} </strong
+              >.
+            }
+          </span>
+        </div>
+      </div>
+    }
+
+    <!-- ─── Filters & Search ─────────────────────────────────────────────── -->
+    <div
+      class="mt-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 pb-4 transition duration-700 delay-300 ease-out starting:opacity-0 starting:-translate-y-4"
+    >
+      <!-- Category Tabs -->
+      <div class="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 select-none">
+        @for (cat of categories; track cat.id) {
+          <button
+            type="button"
+            (click)="selectCategory(cat.id)"
+            class="flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer shrink-0"
+            [class]="
+              selectedCategory() === cat.id
+                ? cat.activeClass
+                : 'bg-gray-500/5 text-gray-400 hover:text-gray-200 hover:bg-gray-500/10'
+            "
+          >
+            <i [class]="cat.icon + ' text-xs'"></i>
+            <span>{{ cat.label }}</span>
+            <span
+              class="px-1.5 rounded-md text-[10px] font-mono tabular-nums"
+              [class]="
+                selectedCategory() === cat.id ? cat.countClass : 'bg-gray-700/60 text-gray-400'
+              "
+            >
+              {{ getCategoryCount(cat.id) }}
+            </span>
+          </button>
+        }
+      </div>
+
+      <!-- Search -->
+      <div class="relative w-full sm:w-72">
+        <i
+          class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none"
+        ></i>
+        <input
+          type="text"
+          [(ngModel)]="searchQuery"
+          placeholder="Search commits, hash, or author..."
+          class="w-full pl-8 pr-8 py-1.5 text-xs bg-gray-500/5 focus:bg-gray-500/10 rounded-md text-gray-200 placeholder-gray-500 outline-none transition-colors"
+        />
+        @if (searchQuery()) {
+          <button
+            type="button"
+            (click)="clearSearch()"
+            class="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200 cursor-pointer"
+          >
+            <i class="pi pi-times text-[10px]"></i>
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- ─── Skeleton Loading ──────────────────────────────────────────────── -->
+    @if (isLoading() && commits().length === 0) {
+      <div class="flex flex-col gap-4 mt-4">
+        @for (n of [1, 2, 3, 4, 5]; track n) {
+          <div class="p-5 rounded-md bg-gray-500/5 animate-pulse flex flex-col gap-3">
+            <div class="flex items-center justify-between gap-4">
+              <div class="flex items-center gap-2">
+                <div class="h-5 w-20 bg-gray-700/50 rounded-md"></div>
+                <div class="h-5 w-28 bg-gray-700/30 rounded-md"></div>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="h-5 w-20 bg-emerald-900/20 rounded-md"></div>
+                <div class="h-5 w-16 bg-gray-700/40 rounded-md"></div>
+              </div>
+            </div>
+            <div class="h-4 w-3/4 bg-gray-700/50 rounded-md"></div>
+            <div class="flex items-center gap-3 pt-1">
+              <div class="w-5 h-5 rounded-md bg-gray-700/50"></div>
+              <div class="h-3 w-24 bg-gray-700/40 rounded-md"></div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- ─── Error ─────────────────────────────────────────────────────────── -->
+    @if (errorMessage() && commits().length === 0) {
+      <div
+        class="p-8 rounded-md bg-rose-500/5 text-center flex flex-col items-center justify-center my-6"
+      >
+        <div
+          class="w-12 h-12 rounded-md bg-rose-500/10 flex items-center justify-center text-rose-400 mb-3"
+        >
+          <i class="pi pi-exclamation-triangle text-xl"></i>
+        </div>
+        <h3 class="text-base font-semibold text-gray-200">Failed to Load Changelog</h3>
+        <p class="mt-1 text-xs text-gray-400 max-w-md">{{ errorMessage() }}</p>
+        <button
+          type="button"
+          (click)="fetchAll()"
+          class="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-md bg-rose-500/20 hover:bg-rose-500/30 text-xs font-medium text-rose-300 transition-colors cursor-pointer"
+        >
+          <i class="pi pi-refresh text-xs"></i>
+          Try Again
+        </button>
+      </div>
+    }
+
+    <!-- ─── Empty Search ──────────────────────────────────────────────────── -->
+    @if (!isLoading() && filteredCommits().length === 0 && commits().length > 0) {
+      <div class="p-10 rounded-md bg-gray-500/5 text-center flex flex-col items-center my-6">
+        <div
+          class="w-12 h-12 rounded-md bg-gray-700/30 flex items-center justify-center text-gray-400 mb-3"
+        >
+          <i class="pi pi-search text-xl"></i>
+        </div>
+        <h3 class="text-base font-semibold text-gray-200">No updates found</h3>
+        <p class="mt-1 text-xs text-gray-400">No commits matched your search or selected filter.</p>
+        <button
+          type="button"
+          (click)="clearSearch(); selectCategory('all')"
+          class="mt-4 px-4 py-2 rounded-md bg-gray-500/10 hover:bg-gray-500/20 text-xs text-gray-300 hover:text-white transition-colors cursor-pointer"
+        >
+          Reset Filters
+        </button>
+      </div>
+    }
+
+    <!-- ─── Timeline List ────────────────────────────────────────────────── -->
+    <div id="timeline-top"></div>
+    @if (filteredCommits().length > 0) {
+      <div class="relative pl-6 sm:pl-8 border-l border-gray-700/60 mt-4 space-y-5">
+        @for (item of pagedCommits(); track item.sha; let idx = $index) {
+          <div
+            class="relative group transition duration-500 ease-out starting:opacity-0 starting:translate-y-4"
+            [style.transition-delay.ms]="revealDelay(idx)"
+          >
+            <!-- Timeline Dot -->
+            <div
+              class="absolute -left-7.75 sm:-left-9.75 top-4 w-4 h-4 rounded-md border-2 border-gray-900 flex items-center justify-center transition-transform group-hover:scale-125"
+              [class]="
+                typeStyle(item.type).dot +
+                (activePage() === 1 && idx === 0 ? ' ring-4 ' + typeStyle(item.type).ring : '')
+              "
+            >
+              @if (activePage() === 1 && idx === 0) {
+                <span
+                  class="absolute inset-0 rounded-md animate-ping opacity-75"
+                  [class]="typeStyle(item.type).dot"
+                ></span>
+              }
+            </div>
+
+            <!-- Commit Card -->
+            <div
+              class="rounded-md p-4 sm:p-5 transition-all duration-200 shadow-sm"
+              [class]="typeStyle(item.type).card"
+            >
+              <!-- Card Header -->
+              <div
+                class="flex flex-wrap items-center justify-between gap-2.5 pb-2.5 border-b border-gray-800/80"
+              >
+                <div class="flex flex-wrap items-center gap-2">
+                  <!-- Commit Type Badge -->
+                  <span
+                    class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-medium border"
+                    [class]="item.typeBadgeClass"
+                  >
+                    <i [class]="item.typeIcon + ' text-[11px]'"></i>
+                    {{ item.typeLabel }}
+                  </span>
+
+                  <!-- Scope -->
+                  @if (item.scope) {
+                    <span
+                      class="px-2 py-0.5 rounded-md text-xs font-mono bg-gray-800/80 border border-gray-700 text-gray-300"
+                    >
+                      {{ item.scope }}
+                    </span>
+                  }
+
+                  <!-- Relative Time -->
+                  <span
+                    class="text-xs text-gray-400 flex items-center gap-1 cursor-default"
+                    [pTooltip]="(item.date | date: 'EEEE, MMMM d, y, HH:mm:ss') ?? ''"
+                    tooltipPosition="top"
+                  >
+                    <i class="pi pi-clock text-[10px] text-gray-500"></i>
+                    {{ item.relativeTime }}
+                  </span>
+                </div>
+
+                <!-- Right: Deployment badge + SHA -->
+                <div class="flex items-center gap-2 flex-wrap">
+                  <!-- Deployment Status Badge -->
+                  @if (item.deployment) {
+                    <span
+                      class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-medium border cursor-default"
+                      [class]="deploymentBadgeClass(item.deployment)"
+                      [pTooltip]="
+                        'Deployed to ' +
+                        item.deployment.environment +
+                        ' · ' +
+                        ((item.deployment.deployedAt | date: 'MMM d, y, HH:mm') ?? '')
+                      "
+                      tooltipPosition="bottom"
+                    >
+                      <i [class]="deploymentIcon(item.deployment) + ' text-[11px]'"></i>
+                      {{ deploymentLabel(item.deployment) }}
+                    </span>
+                  }
+
+                  <!-- Short SHA + Link -->
+                  <a
+                    [href]="item.htmlUrl"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-mono bg-gray-800/70 hover:bg-gray-700/70 text-sky-300 hover:text-sky-200 transition-colors"
+                    pTooltip="View commit on GitHub"
+                    tooltipPosition="left"
+                  >
+                    <i class="pi pi-code text-[11px] text-gray-400"></i>
+                    {{ item.shortSha }}
+                  </a>
+
+                  <!-- Copy SHA -->
+                  <button
+                    type="button"
+                    (click)="copySha(item.sha)"
+                    class="p-1 rounded-md hover:bg-gray-700/60 text-gray-400 hover:text-gray-200 transition-colors cursor-pointer"
+                    [pTooltip]="copiedSha() === item.sha ? 'Copied!' : 'Copy SHA'"
+                    tooltipPosition="top"
+                  >
+                    <i
+                      [class]="
+                        copiedSha() === item.sha
+                          ? 'pi pi-check text-emerald-400 text-xs'
+                          : 'pi pi-copy text-xs'
+                      "
+                    ></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Commit Title -->
+              <h2 class="mt-3 text-sm sm:text-base font-semibold text-gray-100 leading-snug">
+                {{ item.title }}
+              </h2>
+
+              <!-- Commit Body -->
+              @if (item.body) {
+                <div
+                  class="mt-2.5 p-3 rounded-md bg-black/30 text-xs font-mono text-gray-300 whitespace-pre-wrap leading-relaxed select-text overflow-x-auto"
+                >
+                  {{ item.body }}
+                </div>
+              }
+
+              <!-- Deployment Detail Row (if deployed) -->
+              @if (item.deployment?.status === 'success') {
+                <div class="mt-3 flex flex-wrap items-center gap-2 text-[11px] text-emerald-500/70">
+                  <i class="pi pi-server text-[10px]"></i>
+                  <span>
+                    Production · Deployed
+                    {{ item.deployment!.deployedAt | date: 'MMM d, y, HH:mm' }}
+                  </span>
+                  @if (item.deployment!.environmentUrl) {
+                    <a
+                      [href]="item.deployment!.environmentUrl"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="inline-flex items-center gap-1 text-emerald-400 hover:text-emerald-300 transition-colors"
+                    >
+                      <i class="pi pi-external-link text-[10px]"></i>
+                      <span>View deployment</span>
+                    </a>
+                  }
+                </div>
+              }
+
+              <!-- Card Footer: Author -->
+              <div
+                class="mt-4 pt-3 border-t border-gray-800/60 flex items-center justify-between text-xs text-gray-400"
+              >
+                <div class="flex items-center gap-2">
+                  @if (item.authorAvatarUrl) {
+                    <img
+                      [src]="item.authorAvatarUrl"
+                      [alt]="item.authorName"
+                      class="w-5 h-5 rounded-md object-cover border border-gray-700"
+                    />
+                  } @else {
+                    <div class="w-5 h-5 rounded-md bg-gray-700 flex items-center justify-center">
+                      <i class="pi pi-user text-[10px] text-gray-300"></i>
+                    </div>
+                  }
+
+                  @if (item.authorUrl) {
+                    <a
+                      [href]="item.authorUrl"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="font-medium text-gray-300 hover:text-sky-300 transition-colors"
+                    >
+                      {{ item.authorUsername || item.authorName }}
+                    </a>
+                  } @else {
+                    <span class="font-medium text-gray-300">{{ item.authorName }}</span>
+                  }
+
+                  <span class="text-gray-600 hidden sm:inline">·</span>
+                  <span class="text-gray-500 hidden sm:inline">
+                    {{ item.date | date: 'MMM d, y, HH:mm' }}
+                  </span>
+                </div>
+
+                <a
+                  [href]="item.htmlUrl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="inline-flex items-center gap-1 text-[11px] text-gray-400 hover:text-sky-300 transition-colors"
+                >
+                  Commit Details
+                  <i class="pi pi-arrow-up-right text-[10px]"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- ─── Pagination ─────────────────────────────────────────────────── -->
+      <div
+        class="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between text-xs text-gray-400"
+      >
+        <!-- Row 1: Showing (kiri) + Page size (kanan) -->
+        <div class="flex items-center justify-between sm:justify-start gap-x-4 gap-y-2">
+          <span>
+            Showing
+            <span class="font-mono tabular-nums text-gray-200"
+              >{{ pageStart() }}–{{ pageEnd() }}</span
+            >
+            of
+            <span class="font-mono tabular-nums text-gray-200">{{ filteredCommits().length }}</span>
+          </span>
+
+          <div class="flex items-center gap-1.5">
+            <span class="text-gray-500 hidden sm:inline">Per page</span>
+            @for (size of pageSizeOptions; track size) {
+              <button
+                type="button"
+                (click)="setPageSize(size)"
+                class="px-2.5 py-1 rounded-md font-mono tabular-nums transition-colors cursor-pointer"
+                [class]="
+                  pageSize() === size
+                    ? 'bg-sky-500/20 text-sky-300'
+                    : 'bg-gray-500/5 text-gray-400 hover:text-gray-200 hover:bg-gray-500/10'
+                "
+              >
+                {{ size }}
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- Row 2: Nav full width di mobile -->
+        @if (totalPages() > 1) {
+          <nav
+            class="flex items-center justify-center gap-1 w-full sm:w-auto select-none"
+            aria-label="Pagination"
+          >
+            <button
+              type="button"
+              (click)="goToPage(activePage() - 1)"
+              [disabled]="activePage() === 1"
+              class="inline-flex items-center justify-center flex-1 sm:flex-none h-8 sm:w-8 rounded-md bg-gray-500/5 hover:bg-gray-500/10 text-gray-300 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              aria-label="Previous page"
+            >
+              <i class="pi pi-chevron-left text-[10px]"></i>
+            </button>
+
+            @for (p of visiblePages(); track $index) {
+              @if (p === -1) {
+                <span
+                  class="inline-flex items-center justify-center flex-1 sm:flex-none h-8 sm:w-8 text-gray-500"
+                  >…</span
+                >
+              } @else {
+                <button
+                  type="button"
+                  (click)="goToPage(p)"
+                  class="flex-1 sm:flex-none h-8 sm:min-w-8 sm:px-2 rounded-md font-mono tabular-nums transition-colors cursor-pointer"
+                  [class]="
+                    p === activePage()
+                      ? 'bg-sky-500/20 text-sky-300'
+                      : 'bg-gray-500/5 text-gray-400 hover:text-gray-200 hover:bg-gray-500/10'
+                  "
+                  [attr.aria-current]="p === activePage() ? 'page' : null"
+                >
+                  {{ p }}
+                </button>
+              }
+            }
+
+            <button
+              type="button"
+              (click)="goToPage(activePage() + 1)"
+              [disabled]="activePage() === totalPages()"
+              class="inline-flex items-center justify-center flex-1 sm:flex-none h-8 sm:w-8 rounded-md bg-gray-500/5 hover:bg-gray-500/10 text-gray-300 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              aria-label="Next page"
+            >
+              <i class="pi pi-chevron-right text-[10px]"></i>
+            </button>
+          </nav>
+        }
+      </div>
+    }
+  </div>
+</div>
