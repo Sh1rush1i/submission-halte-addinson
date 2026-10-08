@@ -130,11 +130,39 @@ export class TripForm implements OnInit, OnDestroy {
     return trip.haltes.map((halte, index) => ({ index, name: HALTE_NAMES[index], halte }));
   });
 
-  /** Computed filled-halte count — only recalculates when trip data changes */
   readonly filledHalteCountComputed = computed(() => {
     const trip = this.tripSignal();
     if (!trip) return 0;
     return trip.haltes.filter((h) => this.isHalteFilled(h)).length;
+  });
+
+  readonly selectedHalteIndex = signal<number | null>(null);
+
+  readonly cumulativePassengerStats = computed(() => {
+    const trip = this.tripSignal();
+    const selectedIndex = this.selectedHalteIndex();
+
+    if (!trip || selectedIndex === null) {
+      return { totalNaik: 0, totalTurun: 0, totalDiKendaraan: 0, currentIndex: null };
+    }
+
+    let totalNaik = 0;
+    let totalTurun = 0;
+
+    for (let i = 0; i <= selectedIndex && i < trip.haltes.length; i++) {
+      const halte = trip.haltes[i];
+      if (halte.waktuKedatangan) {
+        totalNaik += halte.penumpangNaik ?? 0;
+        totalTurun += halte.penumpangTurun ?? 0;
+      }
+    }
+
+    return {
+      totalNaik,
+      totalTurun,
+      totalDiKendaraan: totalNaik - totalTurun,
+      currentIndex: selectedIndex,
+    };
   });
 
   get trip(): TripRecord | null {
@@ -688,6 +716,7 @@ export class TripForm implements OnInit, OnDestroy {
   // ── HALTE SELECTION & NAVIGATION ────────────────────────────────────────────
 
   onHalteSelected(index: number | null): void {
+    this.selectedHalteIndex.set(index);
     if (index === null || !this.trip) return;
     const halte = this.trip.haltes[index];
 

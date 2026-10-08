@@ -431,65 +431,92 @@
               </h2>
               @if (trip) {
                 <span class="text-xs text-gray-500"
-                  >{{ filledHalteCount() }} / {{ trip.haltes.length }} filled</span
+                  >{{ filledHalteCount() }} / {{ trip.haltes.length }} Halte data filled</span
                 >
               }
             </div>
 
-            <div class="bg-gray-500/5 border border-gray-600 rounded-md p-6">
-              <div class="mb-2.5 flex items-center justify-between">
-                <label for="halteIndex" class="block text-xs font-medium text-gray-400"
-                  >Halte</label
-                >
-                @if (
-                  halteForm.controls.halteIndex.value !== null &&
-                  hasDraft(halteForm.controls.halteIndex.value!)
-                ) {
-                  <span class="flex items-center gap-1 text-[10px] text-amber-400">
-                    <i class="pi pi-exclamation-triangle"></i>Unsaved draft
-                  </span>
+            <!-- Test -->
+
+            <div class="grid sm:grid-cols-4 grid-cols-2 gap-4">
+              <div
+                class="sm:col-span-1 col-span-2 bg-gray-500/5 border border-gray-600 rounded-md p-6 flex flex-col items-center justify-center gap-1"
+              >
+                <label class="grow block text-xs font-medium text-gray-400"> Passanger </label>
+
+                @let stats = cumulativePassengerStats();
+                @if (stats.currentIndex !== null) {
+                  <span
+                    class="text-3xl font-bold tabular-nums leading-none"
+                    [class.text-sky-300]="stats.totalDiKendaraan >= 0"
+                    [class.text-red-400]="stats.totalDiKendaraan < 0"
+                    >{{ stats.totalDiKendaraan }}</span
+                  >
+                } @else {
+                  <span class="text-3xl font-bold tabular-nums leading-none text-gray-600">—</span>
                 }
               </div>
-              <div class="sm:flex items-center grid grid-cols-1 gap-2">
-                <button
-                  type="button"
-                  pButton
-                  (click)="previousHalte()"
-                  [disabled]="!canGoPreviousHalte()"
-                  pTooltip="Previous halte"
-                  tooltipPosition="top"
-                  class="flex shrink-0 items-center bg-transparent rounded-md border border-gray-700 px-3 py-2 text-sky-400 transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  <i class="pi pi-chevron-left hidden sm:inline"></i>
-                </button>
-                <p-select
-                  inputId="halteIndex"
-                  formControlName="halteIndex"
-                  [options]="halteOptions"
-                  optionLabel="label"
-                  optionValue="value"
-                  placeholder="Select a stop"
-                  pTooltip="Select a stop"
-                  tooltipPosition="top"
-                  [style]="{ width: '100%' }"
-                  class="flex-1"
-                  appendTo="body"
-                />
-                <button
-                  type="button"
-                  pButton
-                  (click)="nextHalte()"
-                  [disabled]="!canGoNextHalte()"
-                  class="flex shrink-0 items-center bg-transparent rounded-md border border-gray-700 px-3 py-2 text-sky-400 transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-40"
-                  pTooltip="Next halte"
-                  tooltipPosition="top"
-                >
-                  <i class="pi pi-chevron-right hidden sm:inline"></i>
-                </button>
+
+              <!-- Halte input lebih besar -->
+              <div
+                class="sm:col-span-3 col-span-2 bg-gray-500/5 border border-gray-600 rounded-md p-6"
+              >
+                <div class="mb-2.5 flex items-center justify-between">
+                  <label for="halteIndex" class="block text-xs font-medium text-gray-400">
+                    Halte
+                  </label>
+                  @if (
+                    halteForm.controls.halteIndex.value !== null &&
+                    hasDraft(halteForm.controls.halteIndex.value!)
+                  ) {
+                    <span class="flex items-center gap-1 text-[10px] text-amber-400">
+                      <i class="pi pi-exclamation-triangle"></i>Unsaved draft
+                    </span>
+                  }
+                </div>
+                <div class="sm:flex items-center grid grid-cols-1 gap-2">
+                  <button
+                    type="button"
+                    pButton
+                    (click)="previousHalte()"
+                    [disabled]="!canGoPreviousHalte()"
+                    pTooltip="Previous halte"
+                    tooltipPosition="top"
+                    class="flex shrink-0 items-center bg-transparent rounded-md border border-gray-700 px-3 py-2 text-sky-400 transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    <i class="pi pi-chevron-left hidden sm:inline"></i>
+                  </button>
+                  <p-select
+                    inputId="halteIndex"
+                    formControlName="halteIndex"
+                    [options]="halteOptions"
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder="Select a stop"
+                    pTooltip="Select a stop"
+                    tooltipPosition="top"
+                    [style]="{ width: '100%' }"
+                    class="flex-1"
+                    appendTo="body"
+                  />
+                  <button
+                    type="button"
+                    pButton
+                    (click)="nextHalte()"
+                    [disabled]="!canGoNextHalte()"
+                    class="flex shrink-0 items-center bg-transparent rounded-md border border-gray-700 px-3 py-2 text-sky-400 transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-40"
+                    pTooltip="Next halte"
+                    tooltipPosition="top"
+                  >
+                    <i class="pi pi-chevron-right hidden sm:inline"></i>
+                  </button>
+                </div>
+                @if (
+                  halteForm.controls.halteIndex.invalid && halteForm.controls.halteIndex.touched
+                ) {
+                  <p class="mt-1 text-xs text-red-400">Select a stop before updating its data.</p>
+                }
               </div>
-              @if (halteForm.controls.halteIndex.invalid && halteForm.controls.halteIndex.touched) {
-                <p class="mt-1 text-xs text-red-400">Select a stop before updating its data.</p>
-              }
             </div>
 
             @if (halteForm.controls.halteIndex.value !== null) {
@@ -770,7 +797,7 @@
               </h2>
               @if (trip) {
                 <span class="text-xs text-gray-500"
-                  >{{ filledHalteCount() }} / {{ trip.haltes.length }} filled</span
+                  >{{ filledHalteCount() }} / {{ trip.haltes.length }} Halte data filled</span
                 >
               }
             </div>
