@@ -6,6 +6,7 @@ import { authGuard } from './auth.guard';
 import { TripPage } from './component/landing/trip-page/trip-page';
 import { TripForm } from './component/forms/trip-form/trip-form';
 import { AboutPage } from './component/landing/about-page/about-page';
+import { UpdateLogPage } from './component/landing/update-log-page/update-log-page';
 
 export const routes: Routes = [
   { path: 'login', component: LoginPage, canActivate: [authGuard] },
@@ -14,6 +15,8 @@ export const routes: Routes = [
   { path: 'trip', component: TripPage, canActivate: [authGuard] },
   { path: 'trip/:id', component: TripForm, canActivate: [authGuard] },
   { path: 'arrival', component: FullPageLoading, canActivate: [authGuard] },
+  { path: 'update-log', component: UpdateLogPage, canActivate: [authGuard] },
+
   { path: '', redirectTo: 'home', pathMatch: 'full' },
   { path: '**', redirectTo: 'home' },
 ];

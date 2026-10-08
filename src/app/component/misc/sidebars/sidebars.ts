@@ -40,6 +40,7 @@ export class Sidebars {
         { icon: 'pi pi-home', label: 'Home', route: '/dashboard' },
         { icon: 'pi pi-file-o', label: 'Trip', route: '/trip' },
         { icon: 'pi pi-user', label: 'About Developer', route: '/about' },
+        { icon: 'pi pi-cog', label: 'Update Log', route: '/update-log' },
       ],
     },
     // {
