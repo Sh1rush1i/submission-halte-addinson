@@ -40,16 +40,10 @@ export class Sidebars {
         { icon: 'pi pi-home', label: 'Home', route: '/dashboard' },
         { icon: 'pi pi-file-o', label: 'Trip', route: '/trip' },
         { icon: 'pi pi-user', label: 'About Developer', route: '/about' },
-        { icon: 'pi pi-history', label: 'Update Log', route: '/update-log' },
+        { icon: 'pi pi-history', label: 'Change Log', route: '/change-log' },
       ],
     },
-    // {
-    //   label: 'Traffic',
-    //   items: [
-    //     { icon: 'pi pi-file-o', label: 'Traffic 1', route: '/red-light' },
-    //     { icon: 'pi pi-cloud', label: 'Traffic 2', route: '/green-light' },
-    //   ],
-    // },
+
     {
       label: 'Form',
       items: [{ icon: 'pi pi-file-plus', label: 'Trip Form', route: '/trip/new' }],

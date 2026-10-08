@@ -15,7 +15,7 @@ export const routes: Routes = [
   { path: 'trip', component: TripPage, canActivate: [authGuard] },
   { path: 'trip/:id', component: TripForm, canActivate: [authGuard] },
   { path: 'arrival', component: FullPageLoading, canActivate: [authGuard] },
-  { path: 'update-log', component: UpdateLogPage, canActivate: [authGuard] },
+  { path: 'change-log', component: UpdateLogPage, canActivate: [authGuard] },
 
   { path: '', redirectTo: 'home', pathMatch: 'full' },
   { path: '**', redirectTo: 'home' },
