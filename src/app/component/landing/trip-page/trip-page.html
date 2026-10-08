@@ -236,32 +236,41 @@
             currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
             scrollHeight="flex"
             dataKey="id"
-            styleClass="w-full table-fixed min-w-[56rem] [&_.p-paginator]:!bg-transparent [&_.p-paginator]:!p-2 sm:[&_.p-paginator]:!p-3 [&_.p-paginator]:!border-t [&_.p-paginator]:!border-white/5 [&_.p-paginator]:!flex-wrap [&_.p-paginator]:!justify-center [&_.p-paginator]:!gap-1 max-sm:[&_.p-paginator-current]:!hidden sm:[&_.p-paginator-current]:!inline-block sm:[&_.p-paginator-current]:!mr-auto [&_.p-paginator-current]:!text-xs [&_.p-paginator-current]:!text-gray-400 [&_.p-paginator-page]:!min-w-7 sm:[&_.p-paginator-page]:!min-w-8 [&_.p-paginator-page]:!h-7 sm:[&_.p-paginator-page]:!h-8 [&_.p-paginator-page]:!text-xs [&_.p-paginator-page]:!rounded-md [&_.p-paginator-first]:!min-w-7 sm:[&_.p-paginator-first]:!min-w-8 [&_.p-paginator-first]:!h-7 sm:[&_.p-paginator-first]:!h-8 [&_.p-paginator-prev]:!min-w-7 sm:[&_.p-paginator-prev]:!min-w-8 [&_.p-paginator-prev]:!h-7 sm:[&_.p-paginator-prev]:!h-8 [&_.p-paginator-next]:!min-w-7 sm:[&_.p-paginator-next]:!min-w-8 [&_.p-paginator-next]:!h-7 sm:[&_.p-paginator-next]:!h-8 [&_.p-paginator-last]:!min-w-7 sm:[&_.p-paginator-last]:!min-w-8 [&_.p-paginator-last]:!h-7 sm:[&_.p-paginator-last]:!h-8 [&_.p-select]:!h-7 sm:[&_.p-select]:!h-8 [&_.p-select]:!text-xs [&_.p-dropdown]:!h-7 sm:[&_.p-dropdown]:!h-8 [&_.p-dropdown]:!text-xs [&_.p-select-label]:!py-0.5 [&_.p-select-label]:!text-xs [&_.p-dropdown-label]:!py-0.5 [&_.p-dropdown-label]:!text-xs"
+            styleClass="w-full min-w-[56rem] [&_.p-paginator]:!bg-transparent [&_.p-paginator]:!p-2 sm:[&_.p-paginator]:!p-3 [&_.p-paginator]:!border-t [&_.p-paginator]:!border-white/5 [&_.p-paginator]:!flex-wrap [&_.p-paginator]:!justify-center [&_.p-paginator]:!gap-1 max-sm:[&_.p-paginator-current]:!hidden sm:[&_.p-paginator-current]:!inline-block sm:[&_.p-paginator-current]:!mr-auto [&_.p-paginator-current]:!text-xs [&_.p-paginator-current]:!text-gray-400 [&_.p-paginator-page]:!min-w-7 sm:[&_.p-paginator-page]:!min-w-8 [&_.p-paginator-page]:!h-7 sm:[&_.p-paginator-page]:!h-8 [&_.p-paginator-page]:!text-xs [&_.p-paginator-page]:!rounded-md [&_.p-paginator-first]:!min-w-7 sm:[&_.p-paginator-first]:!min-w-8 [&_.p-paginator-first]:!h-7 sm:[&_.p-paginator-first]:!h-8 [&_.p-paginator-prev]:!min-w-7 sm:[&_.p-paginator-prev]:!min-w-8 [&_.p-paginator-prev]:!h-7 sm:[&_.p-paginator-prev]:!h-8 [&_.p-paginator-next]:!min-w-7 sm:[&_.p-paginator-next]:!min-w-8 [&_.p-paginator-next]:!h-7 sm:[&_.p-paginator-next]:!h-8 [&_.p-paginator-last]:!min-w-7 sm:[&_.p-paginator-last]:!min-w-8 [&_.p-paginator-last]:!h-7 sm:[&_.p-paginator-last]:!h-8 [&_.p-select]:!h-7 sm:[&_.p-select]:!h-8 [&_.p-select]:!text-xs [&_.p-dropdown]:!h-7 sm:[&_.p-dropdown]:!h-8 [&_.p-dropdown]:!text-xs [&_.p-select-label]:!py-0.5 [&_.p-select-label]:!text-xs [&_.p-dropdown-label]:!py-0.5 [&_.p-dropdown-label]:!text-xs"
             data-aos="zoom-out"
             data-aos-delay="100"
           >
+            <!-- HEADER -->
             <ng-template #header>
               <tr>
                 @for (col of columnsField; track col.field) {
                   <th
+                    pFrozenColumn
+                    [frozen]="col.type === 'action'"
+                    alignFrozen="right"
                     class="transition duration-250 ease-in-out hover:scale-105 text-ms py-3"
-                    [ngClass]="col.widthClass + (col.align === 'center' ? ' text-center' : '')"
+                    [ngClass]="[
+                      col.widthClass,
+                      col.align === 'center' ? 'text-center' : '',
+                      col.type === 'action' ? '!bg-surface-900 !z-20' : '',
+                    ]"
                     [style.minWidth]="col.minWidth"
                     data-aos="zoom-out"
                     data-aos-delay="100"
                   >
-                    <div class="flex items-center gap-2">
+                    <div
+                      class="flex items-center gap-2"
+                      [class.justify-center]="col.align === 'center'"
+                    >
                       <span>{{ col.header }}</span>
 
                       @switch (col.type) {
                         @case ('text') {
                           <p-column-filter type="text" [field]="col.field" display="menu" />
                         }
-
                         @case ('date') {
                           <p-column-filter type="date" [field]="col.field" display="menu" />
                         }
-
                         @case ('progress') {
                           <p-column-filter type="numeric" [field]="col.field" display="menu" />
                         }
@@ -272,18 +281,17 @@
               </tr>
             </ng-template>
 
+            <!-- BODY -->
             <ng-template #body let-record let-rowIndex="rowIndex">
-              <tr
-                class="transition duration-250 ease-in-out hover:scale-103 py-1.5"
-                (click)="!isLoading() && openItem(record.id)"
-              >
+              <tr class="cursor-pointer py-1.5" (click)="!isLoading() && openItem(record.id)">
                 @for (col of columnsField; track col.field) {
                   <td
+                    pFrozenColumn
+                    [frozen]="col.type === 'action'"
+                    alignFrozen="right"
                     [ngClass]="[
-                      col.align === 'center' ? 'tabular-nums ' : '',
-                      col.type !== 'action' && col.type !== 'progress' && col.type !== 'index'
-                        ? 'transition duration-250 ease-in-out hover:scale-110'
-                        : '',
+                      col.align === 'center' ? 'tabular-nums text-center' : '',
+                      col.type === 'action' ? '!bg-inherit' : '',
                     ]"
                   >
                     @if (isLoading()) {
@@ -322,12 +330,16 @@
                           <span class="text-gray-400">{{ rowIndex + 1 }}</span>
                         }
                         @case ('text') {
-                          <span class="text-sm font-medium" [ngClass]="col.rowClass">{{
-                            record[col.field]
-                          }}</span>
+                          <span
+                            class="inline-block text-sm font-medium transition duration-250 ease-in-out hover:scale-110"
+                            [ngClass]="col.rowClass"
+                            >{{ record[col.field] }}</span
+                          >
                         }
                         @case ('date') {
-                          <span class="text-sm text-gray-300">
+                          <span
+                            class="inline-block text-sm text-gray-300 transition duration-250 ease-in-out hover:scale-110"
+                          >
                             <i class="pi pi-calendar me-2 text-green-200"></i>
                             {{ record[col.field] | date: 'dd MMM yyyy' }}
                           </span>
@@ -347,7 +359,7 @@
                             pTooltip="Open Trip Data"
                             tooltipPosition="top"
                             class="text-purple-300 transition hover:text-purple-100 hover:scale-110 inline-block"
-                            (click)="openItem(record.id)"
+                            (click)="$event.stopPropagation(); openItem(record.id)"
                           >
                             <i class="pi pi-external-link"></i>
                           </a>
@@ -358,9 +370,11 @@
                 }
               </tr>
             </ng-template>
+
+            <!-- EMPTY -->
             <ng-template #emptymessage>
               <tr>
-                <td colspan="9" class="p-0">
+                <td [attr.colspan]="columnsField.length" class="p-0">
                   <div
                     class="flex flex-col items-center justify-center w-full min-h-[65vh] text-center bg-transparent"
                   >
